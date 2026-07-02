@@ -38,3 +38,8 @@ scratch/
 # local dev database (use Postgres via DATABASE_URL)
 prisma/dev.db
 prisma/*.db
+
+# Firebase Admin service-account key — NEVER commit
+serviceAccountKey.json
+*serviceAccount*.json
+firebase-adminsdk*.json

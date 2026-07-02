@@ -24,6 +24,7 @@ import chatRouter from './routes/chat.js';
 import notificationsRouter from './routes/notifications.js';
 import partnerLocationsRouter from './routes/partnerLocations.js';
 import partnersRouter from './routes/partners.js';
+import supportRouter from './routes/support.js';
 import catalogRouter from './routes/catalog.js';
 
 const app = express();
@@ -31,7 +32,8 @@ const PORT = process.env.PORT || 3001;
 
 app.use(helmet());
 app.use(cors({
-  origin: (process.env.CORS_ORIGIN || 'http://localhost:5173').split(','),
+  // 5173 = Vite web apps; 8081/19006 = Expo web (consumer/partner mobile apps).
+  origin: (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:8081,http://localhost:19006').split(','),
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
@@ -59,6 +61,7 @@ api.use('/chat', chatRouter);
 api.use('/notifications', notificationsRouter);
 api.use('/partner-locations', partnerLocationsRouter);
 api.use('/partners', partnersRouter);
+api.use('/support', supportRouter);
 
 // /api stays the canonical mount; /api/v1 is the forward-compatible alias the
 // mobile clients will use (Phase 1 makes v1 canonical).

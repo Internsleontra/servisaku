@@ -4,6 +4,7 @@ import { servisaku } from '@/api/servisakuClient';
 import {
   Clock, MapPin, ToggleLeft, ToggleRight, Star, Calendar, Wallet,
   GraduationCap, SlidersHorizontal, CheckCircle2, XCircle, Repeat, Gauge, ShieldCheck, ChevronRight,
+  BarChart3, LifeBuoy, Package,
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import { MetricCard } from '@/components/partner/MetricCard';
@@ -226,6 +227,23 @@ export default function PartnerDashboard() {
               <MetricCard key={p.label} icon={p.icon} tone={p.tone} label={p.label} value={p.value} />
             ))}
           </div>
+        </div>
+
+        {/* More */}
+        <div className="bg-surface rounded-2xl border border-hairline/10 shadow-e1 divide-y divide-hairline/10">
+          {[
+            { icon: Star, label: 'Reviews', to: '/partner/reviews' },
+            { icon: BarChart3, label: 'Analytics', to: '/partner/analytics' },
+            { icon: ShieldCheck, label: 'Verification', to: '/partner/verification' },
+            { icon: Package, label: 'Inventory', to: '/partner/inventory' },
+            { icon: LifeBuoy, label: 'Support', to: '/partner/support' },
+          ].map((m) => (
+            <Link key={m.label} to={m.to} className="flex items-center gap-3 px-4 py-3 hover:bg-raised/40 transition-colors first:rounded-t-2xl last:rounded-b-2xl">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-tint text-brand"><m.icon className="h-4 w-4" /></div>
+              <span className="flex-1 text-sm font-semibold text-ink">{m.label}</span>
+              <ChevronRight className="h-4 w-4 text-ink-tertiary" />
+            </Link>
+          ))}
         </div>
 
         {/* Jobs */}

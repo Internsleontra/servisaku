@@ -211,6 +211,47 @@ Verified (curl): answer keys stripped; wrong answers → fail (score 0, not reco
 > document verification into a single go-live gate. That unified activation gate (docs + training +
 > matching) is a later cross-cutting pass.
 
+## Phase 9 — Reviews · Support · Inventory (done)
+
+One migration `…_reviews_support_inventory`: `Review` gained `reply/repliedAt/reported/reportReason`;
+new `SupportTicket` + `InventoryItem` models (+ User relations).
+
+**Reviews** (`server/routes/reviews.js`): `GET /reviews/mine` (partner's reviews + service + reviewer),
+`POST /reviews/:id/reply`, `POST /reviews/:id/report` (assigned-partner-only). Page
+`PartnerReviews.jsx` (`/partner/reviews`): rating summary + distribution, reply inline, report.
+
+**Support** (new `server/routes/support.js`, mounted `/support`): `GET /support` (own tickets),
+`POST /support` (category: technical/payment/booking/report_customer/other). Page `PartnerSupport.jsx`
+(`/partner/support`): call/emergency (tel:) + live-chat actions, FAQ accordion, raise-ticket form, ticket list.
+
+**Inventory** (`server/routes/partners.js`): `GET/POST /me/inventory`, `PATCH/DELETE /me/inventory/:id`
+(`low_stock` computed = qty ≤ threshold). Page `PartnerInventory.jsx` (`/partner/inventory`): grouped
+by product/consumable/equipment, qty steppers, add/delete, low-stock alert banner.
+
+Client: `servisaku.{reviews,support,inventory}.*`. Dashboard gained a "More" list (Reviews, Analytics,
+Verification, Inventory, Support).
+
+Verified (curl): reviews list/reply/report + non-owner reply 403; support create/list; inventory
+create(low-stock)/restock/delete.
+
+## Phase 10 — Onboarding / registration expansion (done)
+
+Schema: `User.partnerProfile Json?` + `onboardingDraft Json?` + `onboardedAt` (migration `…_partner_onboarding_profile`).
+Backend (`server/routes/partners.js`):
+- **`GET /partners/me/onboarding`** — draft + profile + submitted flag + account prefill.
+- **`PATCH /partners/me/onboarding/draft`** — autosave (merge).
+- **`POST /partners/me/onboarding/submit`** — writes `partnerProfile` + base fields, clears draft, sets
+  `onboardedAt`, and **syncs preferred areas/categories/radius into `availability`** (so matching has them).
+- Client: `servisaku.onboarding.{get,saveDraft,submit}`.
+
+Frontend: `PartnerOnboarding.jsx` rebuilt (was on the old green theme **and its submit was broken** —
+it called a non-existent `PartnerAvailability.bulkCreate`). New 6-step flow in the partner design system
+with **draft autosave** + resume: Personal (name/phone/gender/DOB) → Professional (bio/experience/skills/
+categories/languages) → Coverage (areas/radius/vehicle/business) → Portfolio (image upload) → Payments
+(bank/IC/LHDN) → Review. Identity KYC files still go through the Verification Center.
+
+Verified (curl): prefill, draft save+persist, submit clears draft + sets profile + syncs availability.
+
 ## Required backend APIs (not yet available)
 
 Phase 1 computes what booking data allows and shows `—` for the rest. These need real endpoints:
@@ -235,8 +276,8 @@ Phase 1 computes what booking data allows and shows `—` for the rest. These ne
 6. ✅ Verification Center + Documents (Malaysia: MyKad/SSM/CIDB/ST/insurance)
 7. ✅ Analytics (charts)
 8. ✅ Training Center
-9. Reviews, Support, Inventory
-10. Onboarding/registration expansion (drafts, identity, portfolio, payments)
+9. ✅ Reviews, Support, Inventory
+10. ✅ Onboarding/registration expansion (drafts, identity, portfolio, payments)
 11. Auth upgrade (refresh token, remember-me, WebAuthn biometric)
 12. Perf/offline (React Query migration, pagination, error boundaries); optional TS migration
 

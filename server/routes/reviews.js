@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { asyncHandler, ApiError, getBookingOr404, emailsByIds } from '../lib/access.js';
+import { asyncHandler, ApiError, getBookingOr404, emailsByIds, isAdmin } from '../lib/access.js';
 
 const router = Router();
 
@@ -30,10 +30,54 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(await mapManyOut(items));
 }));
 
+// GET /api/reviews/mine — the partner's own reviews (with service + reviewer + reply).
+router.get('/mine', authenticate, asyncHandler(async (req, res) => {
+  if (req.user.role !== 'partner' && !isAdmin(req.user)) throw new ApiError(403, 'Partners only');
+  const items = await prisma.review.findMany({
+    where: { booking: { partnerId: req.user.id } },
+    include: { booking: { select: { serviceType: true } }, user: { select: { fullName: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+  res.json(items.map((r) => ({
+    id: r.id,
+    booking_id: r.bookingId,
+    rating: r.rating,
+    comment: r.comment,
+    photos: Array.isArray(r.photos) ? r.photos : [],
+    created_date: r.createdAt,
+    reply: r.reply,
+    replied_at: r.repliedAt,
+    reported: r.reported,
+    service_type: r.booking?.serviceType,
+    reviewer_name: r.user?.fullName,
+  })));
+}));
+
 router.get('/:id', asyncHandler(async (req, res) => {
   const item = await prisma.review.findUnique({ where: { id: req.params.id } });
   if (!item) throw new ApiError(404, 'Not found');
   res.json((await mapManyOut([item]))[0]);
+}));
+
+// Partner reply / report (only the booking's assigned partner).
+async function reviewForPartner(id, user) {
+  const review = await prisma.review.findUnique({ where: { id }, include: { booking: { select: { partnerId: true } } } });
+  if (!review) throw new ApiError(404, 'Review not found');
+  if (review.booking?.partnerId !== user.id && !isAdmin(user)) throw new ApiError(403, 'Forbidden');
+  return review;
+}
+
+router.post('/:id/reply', authenticate, validate(z.object({ reply: z.string().min(1).max(1000) })), asyncHandler(async (req, res) => {
+  const review = await reviewForPartner(req.params.id, req.user);
+  const updated = await prisma.review.update({ where: { id: review.id }, data: { reply: req.body.reply, repliedAt: new Date() } });
+  res.json({ id: updated.id, reply: updated.reply, replied_at: updated.repliedAt });
+}));
+
+router.post('/:id/report', authenticate, validate(z.object({ reason: z.string().min(1).max(500) })), asyncHandler(async (req, res) => {
+  const review = await reviewForPartner(req.params.id, req.user);
+  const updated = await prisma.review.update({ where: { id: review.id }, data: { reported: true, reportReason: req.body.reason } });
+  res.json({ id: updated.id, reported: updated.reported });
 }));
 
 const createSchema = z.object({

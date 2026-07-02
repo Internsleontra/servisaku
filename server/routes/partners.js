@@ -205,4 +205,149 @@ router.post('/me/training/:courseId/complete', validate(completeSchema), asyncHa
   res.json({ passed: true, score, ...(await buildTraining(req.user.id)) });
 }));
 
+// ─── Inventory ───────────────────────────────────────────────────────────────
+function mapItem(i) {
+  return {
+    id: i.id, name: i.name, type: i.type, qty: i.qty, unit: i.unit,
+    low_stock_threshold: i.lowStockThreshold,
+    low_stock: i.qty <= i.lowStockThreshold,
+    updated_at: i.updatedAt,
+  };
+}
+
+router.get('/me/inventory', asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const items = await prisma.inventoryItem.findMany({ where: { partnerId: req.user.id }, orderBy: { name: 'asc' } });
+  res.json(items.map(mapItem));
+}));
+
+const itemSchema = z.object({
+  name: z.string().min(1).max(120),
+  type: z.enum(['product', 'consumable', 'equipment']),
+  qty: z.number().int().min(0).max(100000).optional(),
+  unit: z.string().max(20).optional(),
+  low_stock_threshold: z.number().int().min(0).max(100000).optional(),
+});
+router.post('/me/inventory', validate(itemSchema), asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const item = await prisma.inventoryItem.create({
+    data: {
+      partnerId: req.user.id,
+      name: req.body.name,
+      type: req.body.type,
+      qty: req.body.qty ?? 0,
+      unit: req.body.unit ?? null,
+      lowStockThreshold: req.body.low_stock_threshold ?? 0,
+    },
+  });
+  res.status(201).json(mapItem(item));
+}));
+
+const itemPatchSchema = z.object({
+  qty: z.number().int().min(0).max(100000).optional(),
+  name: z.string().min(1).max(120).optional(),
+  unit: z.string().max(20).nullish(),
+  low_stock_threshold: z.number().int().min(0).max(100000).optional(),
+});
+router.patch('/me/inventory/:id', validate(itemPatchSchema), asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const existing = await prisma.inventoryItem.findUnique({ where: { id: req.params.id } });
+  if (!existing || existing.partnerId !== req.user.id) throw new ApiError(404, 'Item not found');
+  const data = {};
+  if (req.body.qty !== undefined) data.qty = req.body.qty;
+  if (req.body.name !== undefined) data.name = req.body.name;
+  if (req.body.unit !== undefined) data.unit = req.body.unit;
+  if (req.body.low_stock_threshold !== undefined) data.lowStockThreshold = req.body.low_stock_threshold;
+  const item = await prisma.inventoryItem.update({ where: { id: req.params.id }, data });
+  res.json(mapItem(item));
+}));
+
+router.delete('/me/inventory/:id', asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const existing = await prisma.inventoryItem.findUnique({ where: { id: req.params.id } });
+  if (!existing || existing.partnerId !== req.user.id) throw new ApiError(404, 'Item not found');
+  await prisma.inventoryItem.delete({ where: { id: req.params.id } });
+  res.json({ ok: true });
+}));
+
+// ─── Onboarding (registration profile + drafts) ─────────────────────────────
+router.get('/me/onboarding', asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const u = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { onboardingDraft: true, partnerProfile: true, onboardedAt: true, fullName: true, phone: true, email: true },
+  });
+  res.json({
+    draft: u?.onboardingDraft || null,
+    profile: u?.partnerProfile || null,
+    submitted: !!u?.onboardedAt,
+    onboarded_at: u?.onboardedAt || null,
+    account: { full_name: u?.fullName, phone: u?.phone, email: u?.email },
+  });
+}));
+
+// PATCH /me/onboarding/draft — body is the partial draft; merged onto current.
+router.patch('/me/onboarding/draft', validate(z.record(z.any())), asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const u = await prisma.user.findUnique({ where: { id: req.user.id }, select: { onboardingDraft: true } });
+  const next = { ...(u?.onboardingDraft || {}), ...req.body };
+  await prisma.user.update({ where: { id: req.user.id }, data: { onboardingDraft: next } });
+  res.json({ ok: true, draft: next });
+}));
+
+const submitSchema = z.object({
+  full_name: z.string().min(2).max(120).optional(),
+  phone: z.string().max(30).optional(),
+  city: z.string().max(100).optional(),
+  gender: z.string().max(20).optional(),
+  dob: z.string().max(20).optional(),
+  bio: z.string().max(2000).optional(),
+  experience_years: z.number().int().min(0).max(70).optional(),
+  skills: z.array(z.string().max(60)).max(40).optional(),
+  categories: z.array(z.string().max(80)).max(40).optional(),
+  languages: z.array(z.string().max(40)).max(20).optional(),
+  service_areas: z.array(z.string().max(80)).max(50).optional(),
+  coverage_radius_km: z.number().int().min(1).max(200).optional(),
+  vehicle_type: z.string().max(40).optional(),
+  business_name: z.string().max(120).optional(),
+  bank_name: z.string().max(60).optional(),
+  bank_account: z.string().max(60).optional(),
+  ic_number: z.string().max(40).optional(),
+  tax_number: z.string().max(60).optional(),
+  portfolio: z.array(z.object({ url: z.string().max(2000), caption: z.string().max(140).optional() })).max(30).optional(),
+});
+router.post('/me/onboarding/submit', validate(submitSchema), asyncHandler(async (req, res) => {
+  assertPartner(req);
+  const b = req.body;
+  const profile = {
+    gender: b.gender ?? null, dob: b.dob ?? null, experience_years: b.experience_years ?? null,
+    skills: b.skills ?? [], categories: b.categories ?? [], languages: b.languages ?? [],
+    service_areas: b.service_areas ?? [], coverage_radius_km: b.coverage_radius_km ?? null,
+    vehicle_type: b.vehicle_type ?? null, business_name: b.business_name ?? null,
+    bank_name: b.bank_name ?? null, ic_number: b.ic_number ?? null, tax_number: b.tax_number ?? null,
+    portfolio: b.portfolio ?? [],
+  };
+  const current = await prisma.user.findUnique({ where: { id: req.user.id }, select: { availability: true } });
+  const avail = (current?.availability && typeof current.availability === 'object') ? current.availability : {};
+  const data = {
+    partnerProfile: profile,
+    onboardingDraft: null,
+    onboardedAt: new Date(),
+    // Onboarding feeds the availability config so matching has areas/categories.
+    availability: {
+      ...avail,
+      preferred_areas: b.service_areas ?? avail.preferred_areas ?? [],
+      preferred_categories: b.categories ?? avail.preferred_categories ?? [],
+      coverage_radius_km: b.coverage_radius_km ?? avail.coverage_radius_km ?? 10,
+    },
+  };
+  if (b.full_name) data.fullName = b.full_name;
+  if (b.phone !== undefined) data.phone = b.phone;
+  if (b.city !== undefined) data.city = b.city;
+  if (b.bio !== undefined) data.bio = b.bio;
+  if (b.bank_account !== undefined) data.bankAccount = b.bank_account;
+  await prisma.user.update({ where: { id: req.user.id }, data });
+  res.json({ ok: true });
+}));
+
 export default router;

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { adminAuth } from '../firebaseAdmin.js';
 
 const router = Router();
 
@@ -57,6 +58,54 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
     const token = signToken(user);
     res.json({ access_token: token, user: sanitize(user) });
   } catch (err) { next(err); }
+});
+
+// POST /api/auth/firebase
+router.post('/firebase', async (req, res, next) => {
+  try {
+    const { token, role = 'consumer' } = req.body;
+    if (!token) return res.status(400).json({ error: 'Token is required' });
+    if (!adminAuth) return res.status(503).json({ error: 'Phone/Google sign-in is not configured on the server' });
+
+    // Verify the Firebase ID token
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const { uid, email, phone_number, name } = decodedToken;
+
+    // We search by firebaseUid first. If not found, try by email or phone (to link existing accounts)
+    let user = await prisma.user.findUnique({ where: { firebaseUid: uid } });
+
+    if (!user) {
+      if (email) {
+        user = await prisma.user.findUnique({ where: { email } });
+      }
+      
+      // If user still not found, we create a new one
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            firebaseUid: uid,
+            email: email || null,
+            phone: phone_number || null,
+            fullName: name || 'User',
+            role,
+          },
+        });
+      } else {
+        // Link existing user to this Firebase UID
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { firebaseUid: uid },
+        });
+      }
+    }
+
+    // Issue our internal JWT for the rest of the application
+    const internalToken = signToken(user);
+    res.json({ access_token: internalToken, user: sanitize(user) });
+  } catch (err) {
+    console.error('Firebase Auth Error:', err);
+    res.status(401).json({ error: 'Invalid or expired Firebase token' });
+  }
 });
 
 // POST /api/auth/login

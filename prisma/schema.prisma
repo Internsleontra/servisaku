@@ -25,7 +25,8 @@ datasource db {
 
 model User {
   id              String   @id @default(cuid())
-  email           String   @unique
+  email           String?  @unique
+  firebaseUid     String?  @unique
   passwordHash    String?
   fullName        String
   role            String   @default("consumer") // consumer | partner | admin | super_admin
@@ -38,6 +39,9 @@ model User {
   partnerCategory String?
   bankAccount     String?
   availability    Json? // partner availability config (working days/hours, vacation, radius, …)
+  partnerProfile  Json? // extended onboarding profile (gender, dob, experience, languages, vehicle, business, portfolio, tax)
+  onboardingDraft Json? // in-progress onboarding form (autosaved)
+  onboardedAt     DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -48,8 +52,44 @@ model User {
   specializations    PartnerSpecialization[]
   documents          PartnerDocument[]
   training           TrainingProgress[]
+  supportTickets     SupportTicket[]
+  inventory          InventoryItem[]
 
   @@index([role, partnerVerified])
+}
+
+// Support tickets raised by partners (or consumers).
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String // technical | payment | booking | report_customer | other
+  subject   String
+  message   String
+  status    String   @default("open") // open | resolved
+  bookingId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Partner-managed inventory (tools, consumables, equipment).
+model InventoryItem {
+  id                String   @id @default(cuid())
+  partnerId         String
+  name              String
+  type              String // product | consumable | equipment
+  qty               Int      @default(0)
+  unit              String?
+  lowStockThreshold Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  partner User @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId])
 }
 
 // Per-partner training progress (course catalogue is authored in code).
@@ -151,13 +191,17 @@ model Coupon {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  bookingId String   @unique
-  userId    String
-  rating    Float
-  comment   String?
-  photos    Json? // was JSON-in-string on SQLite
-  createdAt DateTime @default(now())
+  id           String    @id @default(cuid())
+  bookingId    String    @unique
+  userId       String
+  rating       Float
+  comment      String?
+  photos       Json? // was JSON-in-string on SQLite
+  reply        String? // partner's public reply
+  repliedAt    DateTime?
+  reported     Boolean   @default(false) // partner flagged for moderation
+  reportReason String?
+  createdAt    DateTime  @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id])
   user    User    @relation(fields: [userId], references: [id])

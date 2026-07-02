@@ -219,6 +219,20 @@ export const mockClient = {
       localStorage.setItem('mock_active_user_id', user.id);
       window.location.href = '/';
     },
+    async loginWithFirebase(firebaseIdToken) {
+      // In mock/demo mode, simulate a Firebase-authenticated user
+      await delay(500);
+      const users = JSON.parse(localStorage.getItem('mock_User') || '[]');
+      let user = users.find(u => u.email === 'firebase@demo.com');
+      if (!user) {
+        user = { id: generateId(), email: 'firebase@demo.com', full_name: 'Firebase User', role: 'consumer', created_date: new Date().toISOString() };
+        users.push(user);
+        localStorage.setItem('mock_User', JSON.stringify(users));
+      }
+      localStorage.setItem('mock_active_user_id', user.id);
+      localStorage.setItem('auth_token', 'mock-jwt-' + user.id);
+      return user;
+    },
     async register(email, password, full_name) {
       await delay(400);
       const users = JSON.parse(localStorage.getItem('mock_User') || '[]');
@@ -304,5 +318,29 @@ export const mockClient = {
   training: {
     async list() { return { courses: [], total: 0, completed: 0, mandatory_total: 0, mandatory_completed: 0, certified: false, progress: 0 }; },
     async complete() { throw new Error('Training requires the backend (demo mode)'); },
+  },
+
+  reviews: {
+    async mine() { return []; },
+    async reply() { throw new Error('Requires the backend (demo mode)'); },
+    async report() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  support: {
+    async list() { return []; },
+    async create() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  inventory: {
+    async list() { return []; },
+    async create() { throw new Error('Requires the backend (demo mode)'); },
+    async update() { throw new Error('Requires the backend (demo mode)'); },
+    async remove() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  onboarding: {
+    async get() { return { draft: null, profile: null, submitted: false, account: {} }; },
+    async saveDraft(draft) { return { ok: true, draft }; },
+    async submit() { throw new Error('Requires the backend (demo mode)'); },
   },
 };

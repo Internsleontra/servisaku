@@ -14,6 +14,9 @@ const PartnerVerification = lazy(() => import('@/pages/PartnerVerification'));
 const PartnerAnalytics = lazy(() => import('@/pages/PartnerAnalytics'));
 const PartnerTraining = lazy(() => import('@/pages/PartnerTraining'));
 const PartnerTrainingCourse = lazy(() => import('@/pages/PartnerTrainingCourse'));
+const PartnerReviews = lazy(() => import('@/pages/PartnerReviews'));
+const PartnerSupport = lazy(() => import('@/pages/PartnerSupport'));
+const PartnerInventory = lazy(() => import('@/pages/PartnerInventory'));
 
 const LiveTracking = lazy(() => import('@/pages/LiveTracking'));
 const ChatScreen = lazy(() => import('@/pages/ChatScreen'));
@@ -50,6 +53,9 @@ export default function PartnerRoutes() {
         <Route path="/partner/analytics" element={<ProtectedRoute><PartnerAnalytics /></ProtectedRoute>} />
         <Route path="/partner/training" element={<ProtectedRoute><PartnerTraining /></ProtectedRoute>} />
         <Route path="/partner/training/:courseId" element={<ProtectedRoute><PartnerTrainingCourse /></ProtectedRoute>} />
+        <Route path="/partner/reviews" element={<ProtectedRoute><PartnerReviews /></ProtectedRoute>} />
+        <Route path="/partner/support" element={<ProtectedRoute><PartnerSupport /></ProtectedRoute>} />
+        <Route path="/partner/inventory" element={<ProtectedRoute><PartnerInventory /></ProtectedRoute>} />
 
         {/* Shared job surfaces */}
         <Route path="/tracking/:bookingId" element={<ProtectedRoute><LiveTracking /></ProtectedRoute>} />

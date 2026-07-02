@@ -51,6 +51,7 @@ function mapBookingOut(b) {
     created_date: b.createdAt,
     consumer_email: b.consumer?.email,
     consumer_name: b.consumer?.fullName,
+    consumer_phone: b.consumer?.phone,
     partner_email: b.partner?.email,
     partner_name: b.partner?.fullName,
   };

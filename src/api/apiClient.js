@@ -137,6 +137,11 @@ export const apiClient = {
       clearToken();
       window.location.href = '/';
     },
+    async loginWithFirebase(firebaseIdToken) {
+      const data = await post('/auth/firebase', { token: firebaseIdToken });
+      setToken(data.access_token);
+      return data.user;
+    },
     async loginWithProvider() {
       // OAuth not yet wired to a real provider; fall through to OTP login
       window.location.href = '/otp-login';
@@ -201,6 +206,34 @@ export const apiClient = {
   training: {
     list: () => get('/partners/me/training'),
     complete: (courseId, answers) => post(`/partners/me/training/${courseId}/complete`, { answers }),
+  },
+
+  // Partner reviews (view / reply / report).
+  reviews: {
+    mine: () => get('/reviews/mine'),
+    reply: (id, text) => post(`/reviews/${id}/reply`, { reply: text }),
+    report: (id, reason) => post(`/reviews/${id}/report`, { reason }),
+  },
+
+  // Support tickets.
+  support: {
+    list: () => get('/support'),
+    create: (payload) => post('/support', payload),
+  },
+
+  // Partner inventory.
+  inventory: {
+    list: () => get('/partners/me/inventory'),
+    create: (payload) => post('/partners/me/inventory', payload),
+    update: (id, payload) => patch(`/partners/me/inventory/${id}`, payload),
+    remove: (id) => del(`/partners/me/inventory/${id}`),
+  },
+
+  // Partner onboarding (registration profile + autosaved draft).
+  onboarding: {
+    get: () => get('/partners/me/onboarding'),
+    saveDraft: (draft) => patch('/partners/me/onboarding/draft', draft),
+    submit: (payload) => post('/partners/me/onboarding/submit', payload),
   },
 };
 
