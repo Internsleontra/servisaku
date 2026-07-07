@@ -42,6 +42,10 @@ model User {
   partnerProfile  Json? // extended onboarding profile (gender, dob, experience, languages, vehicle, business, portfolio, tax)
   onboardingDraft Json? // in-progress onboarding form (autosaved)
   onboardedAt     DateTime?
+  consumerProfile Json?    // consumer onboarding: { gender, birthday, referralCode, referredBy }
+  addresses       Json?    // saved service addresses: [{ id, label, ...fields, lat, lng, isDefault }]
+  profileComplete Boolean  @default(false) // false after phone-only signup until profile is completed
+  tokenVersion    Int      @default(0)     // bump to revoke all refresh tokens (logout everywhere)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -80,7 +80,7 @@ export default function Home() {
     const bySlug = Object.fromEntries(allServices.map((s) => [s.slug, s]));
     const picked = POPULAR_SLUGS.map((sl) => bySlug[sl]).filter(Boolean);
     const rest = allServices.filter((s) => !POPULAR_SLUGS.includes(s.slug));
-    return [...picked, ...rest].slice(0, 12);
+    return [...picked, ...rest].slice(0, 3);
   })();
 
   return (

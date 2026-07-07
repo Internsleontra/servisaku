@@ -1,12 +1,14 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useAuth } from '@/context/auth';
 import { CategoryTile, ServiceCardTall } from '@/components/cards';
-import { HERO_IMAGE } from '@/lib/images';
+import Reels from '@/components/Reels';
+import { HERO_IMAGE, LOGO_IMAGE } from '@/lib/images';
 import { Loading, Muted } from '@/components/ui';
 import { CITIES } from '@/lib/booking-meta';
 import { colors, font, radius, shadow, spacing } from '@/theme/tokens';
@@ -40,125 +42,126 @@ export default function Home() {
   })();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-      {/* ---- Hero ---- */}
-      <View style={{ backgroundColor: '#f8f1e9', paddingTop: insets.top + 12, paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, borderBottomWidth: 1, borderBottomColor: colors.hairline }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      contentContainerStyle={{ paddingBottom: 32 }}
+      stickyHeaderIndices={[0]}
+      showsVerticalScrollIndicator={false}>
+
+      {/* 0 — Sticky header: logo + search, stays pinned while scrolling */}
+      <View style={{ backgroundColor: colors.surface, paddingTop: insets.top + 8, paddingHorizontal: spacing.lg, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.hairline, gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 20 }}>🧰</Text>
-            <Text style={{ fontSize: font.size.lg, fontWeight: '800', color: colors.ink }}>ServisAku</Text>
-          </View>
-          <Pressable onPress={() => router.push(user ? '/notifications' : '/login')} hitSlop={8}>
-            <Text style={{ fontSize: 20 }}>🔔</Text>
+          <Image source={LOGO_IMAGE} style={{ width: 132, height: 30 }} contentFit="contain" />
+          <Pressable onPress={() => router.push(user ? '/notifications' : '/login')} hitSlop={8}
+            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.raised, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name={user ? 'notifications-outline' : 'person-outline'} size={20} color={colors.ink} />
           </Pressable>
         </View>
-
-        <View style={{ flexDirection: 'row', gap: 6, marginTop: 16, flexWrap: 'wrap' }}>
-          <Pill text="❤️ Malaysia-ready home services" />
-          <Pill text="📍 Klang Valley" />
-        </View>
-
-        <Text style={{ fontSize: 34, fontWeight: '800', color: colors.ink, lineHeight: 38, marginTop: 14 }}>
-          Book trusted help for every Malaysian home
-        </Text>
-        <Text style={{ fontSize: font.size.base, color: colors.inkSecondary, marginTop: 10, lineHeight: 22 }}>
-          Verified cleaners, AC techs, plumbers, electricians, painters and pest experts — with upfront RM pricing.
-        </Text>
-
-        {/* Search → Explore */}
         <Pressable
           onPress={() => router.push('/(tabs)/explore')}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 14, marginTop: 18, ...shadow.e2 }}>
-          <Text style={{ fontSize: 16 }}>🔍</Text>
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.bg, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.hairline, paddingHorizontal: 16, paddingVertical: 12 }}>
+          <Ionicons name="search" size={18} color={colors.brand} />
           <Text style={{ color: colors.inkTertiary, fontSize: font.size.base }}>Search cleaning, plumbing, AC…</Text>
         </Pressable>
-
-        {/* City chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 14 }}>
-          {CITIES.slice(0, 5).map((c) => (
-            <Pressable key={c} onPress={() => router.push('/(tabs)/explore')} style={{ backgroundColor: colors.surface, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.hairline, paddingHorizontal: 14, paddingVertical: 8 }}>
-              <Text style={{ fontSize: font.size.xs, fontWeight: '700', color: colors.inkSecondary }}>{c}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {/* Hero image + stat card */}
-        <View style={{ marginTop: 18, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface, ...shadow.e2 }}>
-          <Image source={HERO_IMAGE} style={{ width: '100%', height: 180 }} contentFit="cover" transition={200} />
-        </View>
-        <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.lg, marginTop: -28, marginHorizontal: 16, paddingVertical: 14, ...shadow.e2 }}>
-          {[['32K+', 'jobs done'], ['4.8', 'rating'], ['30m', 'fast slots']].map(([n, l], i) => (
-            <View key={l} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i ? 1 : 0, borderLeftColor: colors.hairline }}>
-              <Text style={{ fontSize: font.size.xl, fontWeight: '800', color: colors.ink }}>{n}</Text>
-              <Text style={{ fontSize: 11, color: colors.inkTertiary }}>{l}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Booking steps */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
-          {STEPS.map((s) => (
-            <View key={s.label} style={{ width: '47.5%', backgroundColor: colors.surface, borderRadius: radius.md, padding: 12, ...shadow.e1 }}>
-              <Text style={{ fontSize: 18 }}>{s.icon}</Text>
-              <Text style={{ fontSize: font.size.sm, fontWeight: '700', color: colors.ink, marginTop: 6 }}>{s.label}</Text>
-              <Text style={{ fontSize: 11, color: colors.inkTertiary, marginTop: 1 }}>{s.sub}</Text>
-            </View>
-          ))}
-        </View>
       </View>
 
-      {/* ---- Body ---- */}
-      <View style={{ padding: spacing.lg, gap: spacing.xl }}>
-        {/* Categories */}
-        <View>
-          <SectionTitle eyebrow="Explore" title="Browse categories" onSeeAll={() => router.push('/(tabs)/explore')} />
-          {categories.isLoading ? <Loading /> : (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-              {(categories.data ?? []).map((c) => <CategoryTile key={c.id} category={c} />)}
-            </View>
-          )}
-        </View>
-
-        {/* Popular */}
-        <View>
-          <SectionTitle eyebrow="Curated packages" title="Popular around Malaysia" onSeeAll={() => router.push('/(tabs)/explore')} />
-          {services.isLoading ? <Loading /> : popular.length ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {popular.map((s) => <ServiceCardTall key={s.id} service={s} />)}
-            </ScrollView>
-          ) : <Muted>No services available. Is the API running?</Muted>}
-        </View>
-
-        {/* Promos */}
-        <View style={{ gap: spacing.md }}>
-          {PROMOS.map((p) => (
-            <View key={p.title} style={{ backgroundColor: p.bg, borderWidth: 1, borderColor: p.bd, borderRadius: radius.lg, padding: spacing.lg }}>
-              <Text style={{ fontSize: 24 }}>{p.icon}</Text>
-              <Text style={{ fontSize: font.size.lg, fontWeight: '800', color: colors.ink, marginTop: 8 }}>{p.title}</Text>
-              <Text style={{ fontSize: font.size.sm, color: colors.inkSecondary, marginTop: 4, lineHeight: 20 }}>{p.body}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Dark CTA */}
-        <View style={{ backgroundColor: colors.ink, borderRadius: radius.lg, padding: spacing.xl }}>
-          <Text style={{ color: '#d1d5db', fontSize: font.size.sm, fontWeight: '700' }}>🔔 For condos, landed homes, offices & rentals</Text>
-          <Text style={{ color: colors.inkInverse, fontSize: font.size.xl, fontWeight: '800', marginTop: 8, lineHeight: 28 }}>
-            Keep your home running without calling five contractors.
+      {/* 1 — Scrollable body */}
+      <View>
+        {/* Hero (beige) */}
+        <View style={{ backgroundColor: '#f8f1e9', paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, borderBottomWidth: 1, borderBottomColor: colors.hairline }}>
+          <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+            <Pill text="❤️ Malaysia-ready home services" />
+            <Pill text="📍 Klang Valley" />
+          </View>
+          <Text style={{ fontSize: 30, fontWeight: '800', color: colors.ink, lineHeight: 36 }}>
+            Book trusted help for every Malaysian home
           </Text>
-          <Pressable onPress={() => router.push('/(tabs)/explore')} style={{ marginTop: 16, backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: 13, alignItems: 'center' }}>
-            <Text style={{ fontWeight: '800', color: colors.ink }}>Start booking →</Text>
-          </Pressable>
+          <Text style={{ fontSize: font.size.base, color: colors.inkSecondary, marginTop: 10, lineHeight: 22 }}>
+            Verified cleaners, AC techs, plumbers, electricians, painters and pest experts — with upfront RM pricing.
+          </Text>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 16 }}>
+            {CITIES.slice(0, 5).map((c) => (
+              <Pressable key={c} onPress={() => router.push('/(tabs)/explore')} style={{ backgroundColor: colors.surface, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.hairline, paddingHorizontal: 14, paddingVertical: 8 }}>
+                <Text style={{ fontSize: font.size.xs, fontWeight: '700', color: colors.inkSecondary }}>{c}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* Hero photo — full portrait, not cropped */}
+          <View style={{ marginTop: 18, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, ...shadow.e2 }}>
+            <Image source={HERO_IMAGE} style={{ width: '100%', height: 300 }} contentFit="contain" contentPosition="bottom" transition={200} />
+          </View>
+          <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.lg, marginTop: -28, marginHorizontal: 16, paddingVertical: 14, ...shadow.e2 }}>
+            {[['32K+', 'jobs done'], ['4.8', 'rating'], ['30m', 'fast slots']].map(([n, l], i) => (
+              <View key={l} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i ? 1 : 0, borderLeftColor: colors.hairline }}>
+                <Text style={{ fontSize: font.size.xl, fontWeight: '800', color: colors.ink }}>{n}</Text>
+                <Text style={{ fontSize: 11, color: colors.inkTertiary }}>{l}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
+            {STEPS.map((s) => (
+              <View key={s.label} style={{ width: '47.5%', backgroundColor: colors.surface, borderRadius: radius.md, padding: 12, ...shadow.e1 }}>
+                <Text style={{ fontSize: 18 }}>{s.icon}</Text>
+                <Text style={{ fontSize: font.size.sm, fontWeight: '700', color: colors.ink, marginTop: 6 }}>{s.label}</Text>
+                <Text style={{ fontSize: 11, color: colors.inkTertiary, marginTop: 1 }}>{s.sub}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
-        {/* Trust strip */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around', backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.hairline, paddingVertical: 16 }}>
-          {[['🛡️', 'Verified pros'], ['💯', 'Quality guarantee'], ['💬', '24/7 support']].map(([icon, label]) => (
-            <View key={label} style={{ alignItems: 'center', gap: 4 }}>
-              <Text style={{ fontSize: 22 }}>{icon}</Text>
-              <Text style={{ fontSize: font.size.xs, color: colors.inkSecondary, fontWeight: '600' }}>{label}</Text>
-            </View>
-          ))}
+        {/* White body */}
+        <View style={{ padding: spacing.lg, gap: spacing.xl }}>
+          <View>
+            <SectionTitle eyebrow="Explore" title="Browse categories" onSeeAll={() => router.push('/(tabs)/explore')} />
+            {categories.isLoading ? <Loading /> : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                {(categories.data ?? []).map((c) => <CategoryTile key={c.id} category={c} />)}
+              </View>
+            )}
+          </View>
+
+          <Reels />
+
+          <View>
+            <SectionTitle eyebrow="Curated packages" title="Popular around Malaysia" onSeeAll={() => router.push('/(tabs)/explore')} />
+            {services.isLoading ? <Loading /> : popular.length ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {popular.map((s) => <ServiceCardTall key={s.id} service={s} />)}
+              </ScrollView>
+            ) : <Muted>No services available. Is the API running?</Muted>}
+          </View>
+
+          <View style={{ gap: spacing.md }}>
+            {PROMOS.map((p) => (
+              <View key={p.title} style={{ backgroundColor: p.bg, borderWidth: 1, borderColor: p.bd, borderRadius: radius.lg, padding: spacing.lg }}>
+                <Text style={{ fontSize: 24 }}>{p.icon}</Text>
+                <Text style={{ fontSize: font.size.lg, fontWeight: '800', color: colors.ink, marginTop: 8 }}>{p.title}</Text>
+                <Text style={{ fontSize: font.size.sm, color: colors.inkSecondary, marginTop: 4, lineHeight: 20 }}>{p.body}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={{ backgroundColor: colors.ink, borderRadius: radius.lg, padding: spacing.xl }}>
+            <Text style={{ color: '#d1d5db', fontSize: font.size.sm, fontWeight: '700' }}>🔔 For condos, landed homes, offices & rentals</Text>
+            <Text style={{ color: colors.inkInverse, fontSize: font.size.xl, fontWeight: '800', marginTop: 8, lineHeight: 28 }}>
+              Keep your home running without calling five contractors.
+            </Text>
+            <Pressable onPress={() => router.push('/(tabs)/explore')} style={{ marginTop: 16, backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: 13, alignItems: 'center' }}>
+              <Text style={{ fontWeight: '800', color: colors.ink }}>Start booking →</Text>
+            </Pressable>
+          </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around', backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.hairline, paddingVertical: 16 }}>
+            {[['🛡️', 'Verified pros'], ['💯', 'Quality guarantee'], ['💬', '24/7 support']].map(([icon, label]) => (
+              <View key={label} style={{ alignItems: 'center', gap: 4 }}>
+                <Text style={{ fontSize: 22 }}>{icon}</Text>
+                <Text style={{ fontSize: font.size.xs, color: colors.inkSecondary, fontWeight: '600' }}>{label}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
     </ScrollView>

@@ -242,6 +242,15 @@ export const mockClient = {
       localStorage.setItem('mock_User', JSON.stringify(users));
       return newUser;
     },
+    async forgotPassword() {
+      // Demo mode: no email backend; pretend success.
+      await delay(300);
+      return { ok: true };
+    },
+    async resetPassword() {
+      await delay(300);
+      throw new Error('Password reset is unavailable in demo mode');
+    },
     async updateMe(data) {
       await delay(200);
       const activeId = localStorage.getItem('mock_active_user_id');
@@ -249,6 +258,16 @@ export const mockClient = {
       const users = JSON.parse(localStorage.getItem('mock_User') || '[]');
       const index = users.findIndex(u => u.id === activeId);
       users[index] = { ...users[index], ...data };
+      localStorage.setItem('mock_User', JSON.stringify(users));
+      return users[index];
+    },
+    async updateConsumerProfile(data) {
+      await delay(200);
+      const activeId = localStorage.getItem('mock_active_user_id');
+      if (!activeId) throw new Error("Not authenticated");
+      const users = JSON.parse(localStorage.getItem('mock_User') || '[]');
+      const index = users.findIndex(u => u.id === activeId);
+      users[index] = { ...users[index], consumerProfile: { ...(users[index].consumerProfile || {}), ...data } };
       localStorage.setItem('mock_User', JSON.stringify(users));
       return users[index];
     },
@@ -342,5 +361,29 @@ export const mockClient = {
     async get() { return { draft: null, profile: null, submitted: false, account: {} }; },
     async saveDraft(draft) { return { ok: true, draft }; },
     async submit() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  // Saved addresses (localStorage-backed in demo mode).
+  addresses: {
+    _read() { return JSON.parse(localStorage.getItem('mock_addresses') || '[]'); },
+    _write(list) { localStorage.setItem('mock_addresses', JSON.stringify(list)); },
+    async list() { await delay(150); return this._read(); },
+    async add(a) {
+      await delay(200);
+      const list = this._read();
+      const entry = { id: generateId(), ...a };
+      if (entry.is_default || list.length === 0) { list.forEach(x => { x.is_default = false; }); entry.is_default = true; }
+      list.push(entry); this._write(list); return entry;
+    },
+    async update(id, a) {
+      await delay(200);
+      const list = this._read();
+      const i = list.findIndex(x => x.id === id);
+      if (i === -1) throw new Error('Address not found');
+      list[i] = { ...list[i], ...a };
+      if (a.is_default) list.forEach((x, j) => { x.is_default = j === i; });
+      this._write(list); return list[i];
+    },
+    async remove(id) { await delay(150); this._write(this._read().filter(x => x.id !== id)); return { ok: true }; },
   },
 };

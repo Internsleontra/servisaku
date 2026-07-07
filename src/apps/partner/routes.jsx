@@ -25,6 +25,7 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const ConsumerProfile = lazy(() => import('@/pages/ConsumerProfile'));
 const ProfileSetup = lazy(() => import('@/pages/ProfileSetup'));
 const OTPLogin = lazy(() => import('@/pages/OTPLogin'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/AdminUsers'));
@@ -67,6 +68,7 @@ export default function PartnerRoutes() {
         <Route path="/profile/edit" element={<ProtectedRoute><ConsumerProfile /></ProtectedRoute>} />
         <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="/otp-login" element={<OTPLogin />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin / ops console (role-gated) */}
         <Route path="/admin" element={<ProtectedRoute roles={adminRoles}><AdminDashboard /></ProtectedRoute>} />

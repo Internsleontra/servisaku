@@ -21,6 +21,15 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const ConsumerProfile = lazy(() => import('@/pages/ConsumerProfile'));
 const ProfileSetup = lazy(() => import('@/pages/ProfileSetup'));
 const OTPLogin = lazy(() => import('@/pages/OTPLogin'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Wallet = lazy(() => import('@/pages/Wallet'));
+const PaymentMethods = lazy(() => import('@/pages/PaymentMethods'));
+const Membership = lazy(() => import('@/pages/Membership'));
+const Loyalty = lazy(() => import('@/pages/Loyalty'));
+const Offers = lazy(() => import('@/pages/Offers'));
+const Wishlist = lazy(() => import('@/pages/Wishlist'));
+const Reviews = lazy(() => import('@/pages/Reviews'));
+const NotificationSettings = lazy(() => import('@/pages/NotificationSettings'));
 const HowItWorks = lazy(() => import('@/pages/HowItWorks'));
 const ForBusiness = lazy(() => import('@/pages/ForBusiness'));
 const Promotions = lazy(() => import('@/pages/Promotions'));
@@ -53,6 +62,15 @@ export default function ConsumerRoutes() {
         <Route path="/profile/edit" element={<ProtectedRoute><ConsumerProfile /></ProtectedRoute>} />
         <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="/otp-login" element={<OTPLogin />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><PaymentMethods /></ProtectedRoute>} />
+        <Route path="/membership" element={<ProtectedRoute><Membership /></ProtectedRoute>} />
+        <Route path="/loyalty" element={<ProtectedRoute><Loyalty /></ProtectedRoute>} />
+        <Route path="/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/reviews" element={<ProtectedRoute><Reviews /></ProtectedRoute>} />
+        <Route path="/notification-settings" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
 
         {/* Marketing / info */}
         <Route path="/how-it-works" element={<HowItWorks />} />

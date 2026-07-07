@@ -26,6 +26,7 @@ import partnerLocationsRouter from './routes/partnerLocations.js';
 import partnersRouter from './routes/partners.js';
 import supportRouter from './routes/support.js';
 import catalogRouter from './routes/catalog.js';
+import addressesRouter from './routes/addresses.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,6 +52,7 @@ api.use('/', catalogRouter);
 
 api.use('/auth', authLimiter, authRouter);
 api.use('/bookings', bookingsRouter);
+api.use('/addresses', addressesRouter);
 api.use('/coupons', couponsRouter);
 api.use('/users', usersRouter);
 api.use('/reviews', reviewsRouter);

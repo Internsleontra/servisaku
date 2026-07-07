@@ -1,11 +1,40 @@
-import { getToken, setToken, clearToken } from '@/lib/storage';
+import { getToken, setToken, setTokens, getRefreshToken, getDeviceId, clearToken } from '@/lib/storage';
 
 // Base URL of the existing ServisAku Express API. On a physical device, localhost
 // won't reach your dev machine — set EXPO_PUBLIC_API_BASE to your LAN IP, e.g.
 // EXPO_PUBLIC_API_BASE="http://192.168.0.10:3001/api"
 export const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3001/api';
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+// Single-flight refresh: on a 401, swap the expired access token for a fresh one
+// using the stored refresh token, then retry the original request once.
+let refreshing: Promise<boolean> | null = null;
+async function tryRefresh(): Promise<boolean> {
+  const rt = await getRefreshToken();
+  if (!rt) return false;
+  if (!refreshing) {
+    refreshing = (async () => {
+      try {
+        const deviceId = await getDeviceId();
+        const res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: rt, device_id: deviceId }),
+        });
+        if (!res.ok) { await clearToken(); return false; }
+        const data = (await res.json()) as { access_token: string; refresh_token?: string };
+        await setTokens(data.access_token, data.refresh_token);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshing = null;
+      }
+    })();
+  }
+  return refreshing;
+}
+
+async function request<T>(method: string, path: string, body?: unknown, retry = false): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   const token = await getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -15,6 +44,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  if (res.status === 401 && !retry && path !== '/auth/refresh') {
+    if (await tryRefresh()) return request<T>(method, path, body, true);
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || 'Request failed');
@@ -25,18 +58,38 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 const get = <T>(p: string) => request<T>('GET', p);
 const post = <T>(p: string, b?: unknown) => request<T>('POST', p, b);
 const patch = <T>(p: string, b?: unknown) => request<T>('PATCH', p, b);
+const del = <T>(p: string) => request<T>('DELETE', p);
 
 /* ------------------------------------------------------------------ types --- */
 
+// Matches the backend's sanitized Prisma user (camelCase).
 export interface User {
   id: string;
-  email: string;
-  full_name?: string;
-  phone_number?: string;
+  email?: string;
+  fullName?: string;
+  phone?: string;
   city?: string;
   role: string;
-  avatar_url?: string;
+  avatarUrl?: string;
+  profileComplete?: boolean;
+  consumerProfile?: ConsumerProfile | null;
 }
+export interface CommsPrefs {
+  marketing?: { push?: boolean; sms?: boolean; email?: boolean; whatsapp?: boolean };
+  transactional?: { push?: boolean; sms?: boolean; email?: boolean; whatsapp?: boolean };
+}
+export interface ConsumerProfile {
+  gender?: string | null;
+  birthday?: string | null;
+  referralCode?: string | null;
+  language?: string | null;
+  nationality?: string | null;
+  timezone?: string | null;
+  comms?: CommsPrefs;
+  notifPrefs?: Record<string, Record<string, boolean>>;
+  muteUntil?: string | null;
+}
+export type ConsumerProfilePatch = Partial<Omit<ConsumerProfile, 'referralCode'>>;
 
 export interface Category {
   id: string;
@@ -149,12 +202,21 @@ export interface Booking {
   payment_method?: string;
   payment_status?: string;
   answers?: Record<string, unknown>;
-  price_breakdown?: PriceLine[] | null;
+  // Dynamic bookings snapshot the WHOLE pricing object here (with a `.breakdown`
+  // array inside); legacy rows may be a bare array. Use breakdownLines() to read.
+  price_breakdown?: Quote | PriceLine[] | null;
   photos?: { before?: { url: string }[]; after?: { url: string }[] } | null;
   lifecycle?: LifecycleEntry[] | null;
   extras?: BookingExtra[];
   rating?: number;
   created_date?: string;
+}
+
+// Normalise price_breakdown (whole pricing object OR bare array) → line array.
+export function breakdownLines(pb: Booking['price_breakdown']): PriceLine[] {
+  if (!pb) return [];
+  if (Array.isArray(pb)) return pb;
+  return Array.isArray(pb.breakdown) ? pb.breakdown : [];
 }
 
 export interface ChatMessage {
@@ -204,6 +266,40 @@ export interface CreateBookingPayload {
 
 /* ------------------------------------------------------------------- client --- */
 
+export interface OtpRequestResult {
+  existing_user: boolean;
+  expires_in: number;
+  resend_in: number;
+  sends_left?: number;
+  dev_code?: string; // dev only (no SMS provider)
+}
+export interface OtpVerifyResult { user: User; is_new_user: boolean }
+
+export interface Address {
+  id: string;
+  label: string;
+  house_number?: string;
+  building?: string;
+  street?: string;
+  area?: string;
+  city?: string;
+  state?: string;
+  postal?: string;
+  country?: string;
+  landmark?: string;
+  lat?: number;
+  lng?: number;
+  is_default?: boolean;
+}
+export type AddressInput = Partial<Omit<Address, 'id'>>;
+export interface CompleteProfilePayload {
+  full_name: string;
+  email?: string;
+  gender?: 'male' | 'female' | 'prefer_not_to_say';
+  birthday?: string;
+  referral_code?: string;
+}
+
 export const api = {
   // --- auth ---
   async login(email: string, password: string): Promise<User> {
@@ -211,8 +307,15 @@ export const api = {
     await setToken(res.access_token);
     return res.user;
   },
-  async loginWithFirebase(token: string): Promise<User> {
-    const res = await post<{ access_token: string; user: User }>('/auth/firebase', { token });
+  async loginWithFirebase(token: string, fullName?: string): Promise<User> {
+    const res = await post<{ access_token: string; user: User }>('/auth/firebase', { token, fullName });
+    await setToken(res.access_token);
+    return res.user;
+  },
+  forgotPassword: (email: string) =>
+    post<{ ok: boolean; dev_reset_link?: string }>('/auth/forgot-password', { email }),
+  async resetPassword(token: string, password: string): Promise<User> {
+    const res = await post<{ access_token: string; user: User }>('/auth/reset-password', { token, password });
     await setToken(res.access_token);
     return res.user;
   },
@@ -222,9 +325,29 @@ export const api = {
     return res.user;
   },
   me: () => get<User>('/auth/me'),
-  updateMe: (patchBody: Partial<{ fullName: string; phone: string; city: string; bio: string }>) =>
+  updateMe: (patchBody: Partial<{ fullName: string; phone: string; city: string; bio: string; avatarUrl: string }>) =>
     patch<User>('/auth/me', patchBody),
+  updateConsumerProfile: (body: ConsumerProfilePatch) => patch<User>('/auth/consumer-profile', body),
   async logout() { await clearToken(); },
+
+  // --- phone OTP (custom, passwordless) ---
+  otpRequest: (phone: string) => post<OtpRequestResult>('/auth/otp/request', { phone }),
+  async otpVerify(phone: string, code: string, fullName?: string): Promise<OtpVerifyResult> {
+    const device_id = await getDeviceId();
+    const res = await post<{ access_token: string; refresh_token: string; user: User; is_new_user: boolean }>(
+      '/auth/otp/verify', { phone, code, device_id, full_name: fullName },
+    );
+    await setTokens(res.access_token, res.refresh_token);
+    return { user: res.user, is_new_user: res.is_new_user };
+  },
+  completeProfile: (payload: CompleteProfilePayload) => post<User>('/auth/complete-profile', payload),
+  logoutAll: () => post<{ ok: boolean }>('/auth/logout-all'),
+
+  // --- saved addresses ---
+  addresses: () => get<Address[]>('/addresses'),
+  addAddress: (a: AddressInput) => post<Address>('/addresses', a),
+  updateAddress: (id: string, a: AddressInput) => patch<Address>(`/addresses/${id}`, a),
+  deleteAddress: (id: string) => del<{ ok: boolean }>(`/addresses/${id}`),
 
   // --- catalog / discovery ---
   categories: () => get<Category[]>('/categories'),

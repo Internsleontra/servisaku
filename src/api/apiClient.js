@@ -133,12 +133,25 @@ export const apiClient = {
       if (updateData.partner_rating !== undefined) mapped.partnerRating = updateData.partner_rating;
       return patch('/auth/me', mapped);
     },
+    async updateConsumerProfile(data) {
+      // { gender, birthday, language, nationality, timezone, comms } merged server-side.
+      return patch('/auth/consumer-profile', data);
+    },
     async logout() {
       clearToken();
       window.location.href = '/';
     },
-    async loginWithFirebase(firebaseIdToken) {
-      const data = await post('/auth/firebase', { token: firebaseIdToken });
+    async loginWithFirebase(firebaseIdToken, fullName) {
+      const data = await post('/auth/firebase', { token: firebaseIdToken, fullName });
+      setToken(data.access_token);
+      return data.user;
+    },
+    async forgotPassword(email) {
+      // Always resolves 200; may include dev_reset_link when SMTP isn't configured.
+      return post('/auth/forgot-password', { email });
+    },
+    async resetPassword(token, password) {
+      const data = await post('/auth/reset-password', { token, password });
       setToken(data.access_token);
       return data.user;
     },
@@ -182,6 +195,14 @@ export const apiClient = {
     getService: (slug) => get(`/services/${slug}`),
     calculate: (payload) => post('/bookings/calculate', payload),
     createBooking: (payload) => post('/bookings/dynamic', payload),
+  },
+
+  // Saved service addresses (consumer).
+  addresses: {
+    list: () => get('/addresses'),
+    add: (a) => post('/addresses', a),
+    update: (id, a) => patch(`/addresses/${id}`, a),
+    remove: (id) => del(`/addresses/${id}`),
   },
 
   // Partner wallet (computed balance + withdrawals).

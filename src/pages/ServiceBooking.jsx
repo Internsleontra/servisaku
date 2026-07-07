@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { safeMotion, variants } from '@/lib/design/motion';
 import { servisaku } from '@/api/servisakuClient';
 import { formatMYR } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -176,14 +178,18 @@ export default function ServiceBooking() {
         <div className="mt-2 text-sm font-medium text-ink-secondary">Step {step + 1} of {STEPS.length} · {STEPS[step]}</div>
       </div>
 
-      {/* Step body */}
+      {/* Step body — animate between steps */}
       <div>
-        {step === 0 && <StepA service={service} answers={answers} setAnswer={setAnswer} />}
-        {step === 1 && <StepB property={property} setProperty={setProperty} />}
-        {step === 2 && <StepC schedule={schedule} setSchedule={setSchedule} />}
-        {step === 3 && <StepD address={address} setAddress={setAddress} savedCity={savedCity} />}
-        {step === 4 && <StepE extras={extras} setExtras={setExtras} />}
-        {step === 5 && <StepF service={service} quote={quote} quoteError={quoteError} payment={payment} setPayment={setPayment} />}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={step} {...safeMotion(variants.fadeUp)}>
+            {step === 0 && <StepA service={service} answers={answers} setAnswer={setAnswer} />}
+            {step === 1 && <StepB property={property} setProperty={setProperty} />}
+            {step === 2 && <StepC schedule={schedule} setSchedule={setSchedule} />}
+            {step === 3 && <StepD address={address} setAddress={setAddress} savedCity={savedCity} />}
+            {step === 4 && <StepE extras={extras} setExtras={setExtras} />}
+            {step === 5 && <StepF service={service} quote={quote} quoteError={quoteError} payment={payment} setPayment={setPayment} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Sticky footer: live total + nav */}

@@ -20,7 +20,7 @@ import {
   signInWithPopup,
 } from '@/lib/firebase';
 
-const STEP = { ROLE: 'role', INPUT: 'input', OTP: 'otp', DONE: 'done' };
+const STEP = { ROLE: 'role', INPUT: 'input', OTP: 'otp', FORGOT: 'forgot', DONE: 'done' };
 const MODE = { EMAIL: 'email', PHONE: 'phone' };
 
 const ALL_ROLES = {
@@ -59,6 +59,7 @@ export default function OTPLogin() {
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(null); // { devLink? } once a reset email is requested
 
   // Firebase Phone Auth state
   const [confirmationResult, setConfirmationResult] = useState(null);
@@ -168,8 +169,9 @@ export default function OTPLogin() {
       const userCredential = await confirmationResult.confirm(otp);
       const firebaseIdToken = await userCredential.user.getIdToken();
 
-      // Send the Firebase token to our backend to get our internal JWT
-      await servisaku.auth.loginWithFirebase(firebaseIdToken);
+      // Send the Firebase token to our backend to get our internal JWT.
+      // Pass the name so a brand-new phone signup gets a proper display name.
+      await servisaku.auth.loginWithFirebase(firebaseIdToken, fullName?.trim() || undefined);
       if (checkUserAuth) await checkUserAuth();
       auditLog('LOGIN_SUCCESS', { role, method: 'otp_firebase' });
       setStep(STEP.DONE);
@@ -210,6 +212,20 @@ export default function OTPLogin() {
         recaptchaVerifierRef.current = null;
       }
       toast.error(err.message || 'Failed to resend OTP.');
+    }
+    setLoading(false);
+  };
+
+  // ---- Forgot password ----
+  const handleForgotPassword = async () => {
+    if (!email) { toast.error('Enter your email first'); return; }
+    setLoading(true);
+    try {
+      const res = await servisaku.auth.forgotPassword(email);
+      setResetSent({ devLink: res?.dev_reset_link || null });
+      toast.success('If that email has an account, a reset link is on its way.');
+    } catch (err) {
+      toast.error(err.message || 'Could not send reset link');
     }
     setLoading(false);
   };
@@ -436,6 +452,14 @@ export default function OTPLogin() {
                         </div>
                       </div>
 
+                      {!isRegister && (
+                        <div className="text-right -mt-1">
+                          <button type="button" onClick={() => { setResetSent(null); setStep(STEP.FORGOT); }} className="text-sm font-semibold text-brand hover:underline">
+                            Forgot password?
+                          </button>
+                        </div>
+                      )}
+
                       <Button onClick={handleEmailAuth} disabled={loading || !email || !password || (isRegister && !fullName)}
                         className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 mt-4 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
                         {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'} <ArrowRight className="h-5 w-5 ml-2" />
@@ -470,6 +494,14 @@ export default function OTPLogin() {
                   ) : (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-ink pl-1">Full Name <span className="text-ink-tertiary font-normal">(for new accounts)</span></label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
+                          <input type="text" placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)}
+                            className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
                         <label className="text-sm font-medium text-ink pl-1">Mobile Number</label>
                         <div className="flex gap-2">
                           <div className="flex items-center gap-2 bg-raised rounded-xl px-4 py-3.5 text-sm font-medium shrink-0 border border-transparent">
@@ -489,6 +521,53 @@ export default function OTPLogin() {
                       
                       <Button onClick={handleSendOTP} disabled={phone.length < 8 || loading} className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 mt-4 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
                         {loading ? 'Sending...' : 'Send OTP'} <ArrowRight className="h-5 w-5 ml-2" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* STEP: Forgot password */}
+              {step === STEP.FORGOT && (
+                <div>
+                  <button onClick={() => { setStep(STEP.INPUT); setResetSent(null); }} className="flex items-center gap-1.5 text-sm font-medium text-ink-secondary mb-8 hover:text-ink transition-colors">
+                    <ArrowLeft className="h-4 w-4" /> Back to sign in
+                  </button>
+
+                  <div className="mb-8">
+                    <h2 className="text-3xl font-display font-bold mb-2 text-ink">Reset your password</h2>
+                    <p className="text-ink-secondary">Enter your email and we'll send you a link to set a new password.</p>
+                  </div>
+
+                  {resetSent ? (
+                    <div className="space-y-4">
+                      <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-800 flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                        <p>If an account exists for <span className="font-semibold">{email}</span>, a reset link has been sent. The link expires in 30 minutes.</p>
+                      </div>
+                      {resetSent.devLink && (
+                        <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 text-xs text-blue-800 break-all">
+                          <div className="font-semibold mb-1">Dev mode (SMTP not configured) — open this link:</div>
+                          <a href={resetSent.devLink} className="underline font-medium">{resetSent.devLink}</a>
+                        </div>
+                      )}
+                      <Button onClick={() => setStep(STEP.INPUT)} className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 font-semibold text-base">
+                        Back to sign in
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-ink pl-1">Email Address</label>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
+                          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)}
+                            className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
+                            onKeyDown={e => e.key === 'Enter' && handleForgotPassword()} autoFocus />
+                        </div>
+                      </div>
+                      <Button onClick={handleForgotPassword} disabled={loading || !email} className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
+                        {loading ? 'Sending...' : 'Send reset link'} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
                   )}

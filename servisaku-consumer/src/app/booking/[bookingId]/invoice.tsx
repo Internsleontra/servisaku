@@ -1,7 +1,7 @@
 import { ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import { api, breakdownLines } from '@/api/client';
 import { ScreenHeader, Loading, Card, Divider, Muted, EmptyState } from '@/components/ui';
 import { PAYMENT_METHODS } from '@/lib/booking-meta';
 import { formatMYR, formatDay } from '@/lib/format';
@@ -19,7 +19,7 @@ export default function Invoice() {
   if (!b) return <View style={{ flex: 1, backgroundColor: colors.bg }}><ScreenHeader title="Invoice" /><EmptyState emoji="🧾" title="Invoice not found" /></View>;
 
   const payMethod = PAYMENT_METHODS.find((m) => m.id === b.payment_method);
-  const lines = b.price_breakdown ?? [];
+  const lines = breakdownLines(b.price_breakdown);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>

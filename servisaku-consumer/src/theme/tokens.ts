@@ -48,3 +48,23 @@ export const shadow = {
     shadowOffset: { width: 0, height: 6 }, elevation: 5,
   },
 } as const;
+
+// Loyalty tier accents (badge bg + fg).
+export const tierColors = {
+  Bronze:   { bg: '#f5e9df', fg: '#8a5a2b' },
+  Silver:   { bg: '#eceef0', fg: '#5b6673' },
+  Gold:     { bg: '#fdf3d6', fg: '#a8791b' },
+  Platinum: { bg: '#e8eef2', fg: '#3f5568' },
+  Diamond:  { bg: '#e6f1fb', fg: '#1f6fb2' },
+} as const;
+export type TierName = keyof typeof tierColors;
+
+// Motion tokens (durations in ms).
+export const motion = {
+  micro: 150,
+  standard: 250,
+  modal: 400,
+} as const;
+
+// Minimum accessible touch target.
+export const HIT = 44;

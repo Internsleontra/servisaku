@@ -5,20 +5,35 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useAuth } from '@/context/auth';
 import { BookingCard } from '@/components/cards';
-import { Chip, Loading, EmptyState, Title, Button } from '@/components/ui';
+import { Skeleton } from '@/components/kit';
+import { Chip, EmptyState, Title, Button } from '@/components/ui';
 import { router } from 'expo-router';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, radius, spacing } from '@/theme/tokens';
 
 const TABS: { key: string; label: string; statuses: string[] }[] = [
-  { key: 'active', label: 'Active', statuses: ['pending', 'assigned', 'accepted', 'en_route', 'arrived', 'started'] },
+  { key: 'upcoming', label: 'Upcoming', statuses: ['pending', 'assigned', 'accepted'] },
+  { key: 'ongoing', label: 'Ongoing', statuses: ['en_route', 'arrived', 'started'] },
   { key: 'completed', label: 'Completed', statuses: ['completed'] },
   { key: 'cancelled', label: 'Cancelled', statuses: ['cancelled', 'disputed'] },
 ];
 
+function BookingSkeleton() {
+  return (
+    <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.hairline, padding: spacing.md, marginBottom: spacing.md, flexDirection: 'row', gap: 12 }}>
+      <Skeleton width={56} height={56} radius={12} />
+      <View style={{ flex: 1, gap: 8, paddingVertical: 2 }}>
+        <Skeleton width="70%" height={14} />
+        <Skeleton width="45%" height={11} />
+        <Skeleton width="55%" height={11} />
+      </View>
+    </View>
+  );
+}
+
 export default function Bookings() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const [tab, setTab] = useState('active');
+  const [tab, setTab] = useState('upcoming');
 
   const q = useQuery({
     queryKey: ['my-bookings'],
@@ -52,7 +67,7 @@ export default function Bookings() {
       </View>
 
       {q.isLoading ? (
-        <Loading />
+        <View style={{ padding: spacing.lg }}>{[0, 1, 2].map((i) => <BookingSkeleton key={i} />)}</View>
       ) : (
         <ScrollView
           contentContainerStyle={{ padding: spacing.lg, paddingBottom: insets.bottom + 24 }}

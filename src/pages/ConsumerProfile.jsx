@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, MapPin, Globe, Heart, Shield, LogOut, ChevronRight, Plus, Trash2, Star, Bell } from 'lucide-react';
+import { User, MapPin, Globe, Heart, Shield, LogOut, ChevronRight, Plus, Trash2, Star, Bell, CreditCard } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,10 @@ export default function ConsumerProfile() {
   const [addresses, setAddresses] = useState([]);
   const [city, setCity] = useState('');
   const [language, setLanguage] = useState('en');
+  const [fullName, setFullName] = useState('');
+  const [gender, setGender] = useState('');
+  const [dob, setDob] = useState('');
+  const [marketing, setMarketing] = useState({ push: true, sms: false, email: true, whatsapp: false });
   const [saving, setSaving] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [newAddr, setNewAddr] = useState({ label: '', street: '', area: '', city: '', postcode: '' });
@@ -29,9 +33,18 @@ export default function ConsumerProfile() {
       const me = await servisaku.auth.me();
       setUser(me);
       setCity(me.city || '');
-      setLanguage(me.language || 'en');
-      const addrs = await servisaku.entities.Address.filter({ user_email: me.email });
-      setAddresses(addrs);
+      setFullName(me.fullName || me.full_name || '');
+      const cp = me.consumerProfile || {};
+      setGender(cp.gender || '');
+      setDob(cp.birthday || '');
+      setLanguage(cp.language || me.language || 'en');
+      setMarketing({
+        push: cp.comms?.marketing?.push ?? true,
+        sms: cp.comms?.marketing?.sms ?? false,
+        email: cp.comms?.marketing?.email ?? true,
+        whatsapp: cp.comms?.marketing?.whatsapp ?? false,
+      });
+      try { setAddresses(await servisaku.addresses.list()); } catch { setAddresses([]); }
     };
     load();
   }, []);
@@ -39,27 +52,43 @@ export default function ConsumerProfile() {
   const { checkUserAuth } = useAuth(); // Needs import or destructured from existing
 
   const handleSaveProfile = async () => {
+    if (fullName.trim().length < 2 || /[0-9]/.test(fullName)) return toast.error('Enter a valid name (letters only)');
     setSaving(true);
-    await servisaku.auth.updateMe({ city, language });
-    await checkUserAuth();
-    toast.success('Profile updated!');
+    try {
+      await servisaku.auth.updateMe({ full_name: fullName.trim(), city });
+      await servisaku.auth.updateConsumerProfile({
+        gender: gender || null,
+        birthday: dob || null,
+        language,
+        comms: { marketing, transactional: { push: true, sms: true, email: true } },
+      });
+      if (checkUserAuth) await checkUserAuth();
+      toast.success('Profile updated!');
+    } catch (e) {
+      toast.error(e.message || 'Could not save changes');
+    }
     setSaving(false);
   };
 
   const handleAddAddress = async () => {
     if (!newAddr.street || !newAddr.city) return toast.error('Please fill address details');
-    const me = await servisaku.auth.me();
-    const created = await servisaku.entities.Address.create({ ...newAddr, user_email: me.email });
-    setAddresses(a => [...a, created]);
-    setNewAddr({ label: '', street: '', area: '', city: '', postcode: '' });
-    setShowAddAddress(false);
-    toast.success('Address added!');
+    try {
+      await servisaku.addresses.add({ label: newAddr.label || 'Home', street: newAddr.street, area: newAddr.area, city: newAddr.city, postal: newAddr.postcode });
+      setAddresses(await servisaku.addresses.list());
+      setNewAddr({ label: '', street: '', area: '', city: '', postcode: '' });
+      setShowAddAddress(false);
+      toast.success('Address added!');
+    } catch (e) { toast.error(e.message || 'Could not add address'); }
   };
 
   const handleDeleteAddress = async (id) => {
-    await servisaku.entities.Address.delete(id);
-    setAddresses(a => a.filter(addr => addr.id !== id));
-    toast.success('Address removed');
+    try { await servisaku.addresses.remove(id); setAddresses(await servisaku.addresses.list()); toast.success('Address removed'); }
+    catch (e) { toast.error(e.message || 'Could not remove'); }
+  };
+
+  const handleSetDefault = async (id) => {
+    try { await servisaku.addresses.update(id, { is_default: true }); setAddresses(await servisaku.addresses.list()); toast.success('Default address updated'); }
+    catch (e) { toast.error(e.message || 'Could not update'); }
   };
 
   if (!user) return <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-raised border-t-brand rounded-full animate-spin" /></div>;
@@ -69,9 +98,9 @@ export default function ConsumerProfile() {
       {/* Avatar */}
       <div className="flex flex-col items-center mb-6">
         <div className="w-20 h-20 rounded-full bg-brand/10 flex items-center justify-center mb-3 relative">
-          <span className="text-2xl font-bold text-brand">{user.full_name?.charAt(0) || 'U'}</span>
+          <span className="text-2xl font-bold text-brand">{(user.fullName || user.full_name)?.charAt(0) || 'U'}</span>
         </div>
-        <h2 className="text-lg font-bold">{user.full_name}</h2>
+        <h2 className="text-lg font-bold">{user.fullName || user.full_name}</h2>
         <p className="text-xs text-ink-secondary">{user.email || user.phone || 'ServisAku User'}</p>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-[10px] font-semibold text-brand-ink bg-brand-tint px-2.5 py-0.5 rounded-full capitalize">{user.role}</span>
@@ -79,6 +108,27 @@ export default function ConsumerProfile() {
             <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">✓ Verified</span>
           )}
         </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <button onClick={() => navigate('/wallet')} className="flex items-center gap-2 bg-surface border border-hairline/10 rounded-2xl p-3 hover:bg-raised/30 transition-colors">
+          <span className="w-9 h-9 rounded-xl bg-brand-tint flex items-center justify-center">💰</span>
+          <div className="text-left"><p className="text-sm font-semibold">Wallet</p><p className="text-[11px] text-ink-secondary">Balance & rewards</p></div>
+        </button>
+        <button onClick={() => navigate('/bookings')} className="flex items-center gap-2 bg-surface border border-hairline/10 rounded-2xl p-3 hover:bg-raised/30 transition-colors">
+          <span className="w-9 h-9 rounded-xl bg-brand-tint flex items-center justify-center">📋</span>
+          <div className="text-left"><p className="text-sm font-semibold">Bookings</p><p className="text-[11px] text-ink-secondary">View history</p></div>
+        </button>
+      </div>
+
+      {/* Rewards quick links */}
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        {[['Membership', '🎗️', '/membership'], ['Rewards', '🏅', '/loyalty'], ['Offers', '🎟️', '/offers']].map(([label, icon, to]) => (
+          <button key={to} onClick={() => navigate(to)} className="bg-surface border border-hairline/10 rounded-2xl p-3 flex flex-col items-center gap-1 hover:bg-raised/30 transition-colors">
+            <span className="text-lg">{icon}</span><span className="text-[11px] font-semibold">{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tabs */}
@@ -98,10 +148,38 @@ export default function ConsumerProfile() {
             <label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-brand" /> Full Name
             </label>
-            <input value={user.full_name || ''} readOnly
-              className="w-full bg-raised rounded-xl px-4 py-3 text-sm outline-none text-ink-secondary" />
-            <p className="text-[10px] text-ink-secondary mt-1">Name is managed by your login provider</p>
+            <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your name"
+              className="w-full bg-raised rounded-xl px-4 py-3 text-sm outline-none text-ink placeholder:text-ink-tertiary" />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold mb-1.5 block">Gender</label>
+              <select value={gender} onChange={e => setGender(e.target.value)}
+                className="w-full bg-raised rounded-xl px-4 py-3 text-sm outline-none text-ink">
+                <option value="">Select</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold mb-1.5 block">Birthday</label>
+              <input type="date" value={dob} onChange={e => setDob(e.target.value)}
+                className="w-full bg-raised rounded-xl px-4 py-3 text-sm outline-none text-ink" />
+            </div>
+          </div>
+
+          <div className="bg-surface border border-hairline/10 rounded-2xl p-4 space-y-2">
+            <p className="text-xs font-semibold text-ink-secondary">CONTACT</p>
+            {[['Phone', user.phone, 'Change needs OTP'], ['Email', user.email || 'Not added', 'Change needs verification']].map(([k, v, note]) => (
+              <div key={k} className="flex items-center justify-between">
+                <div><p className="text-[11px] text-ink-tertiary">{k}</p><p className="text-sm font-semibold">{v}</p></div>
+                <button onClick={() => toast.info(note)} className="text-xs text-brand font-semibold border border-hairline/20 rounded-lg px-3 py-1.5">Change</button>
+              </div>
+            ))}
+          </div>
+
           <div>
             <label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 text-brand" /> Your Area
@@ -112,12 +190,13 @@ export default function ConsumerProfile() {
               {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+
           <div>
             <label className="text-xs font-semibold mb-2 flex items-center gap-1.5">
               <Globe className="h-3.5 w-3.5 text-brand" /> Language
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[{ id: 'en', label: '🇬🇧 English' }, { id: 'ms', label: '🇲🇾 Bahasa Malaysia' }].map(l => (
+            <div className="grid grid-cols-3 gap-2">
+              {[{ id: 'en', label: '🇬🇧 English' }, { id: 'ms', label: '🇲🇾 Melayu' }, { id: 'zh', label: '🇨🇳 中文' }].map(l => (
                 <button key={l.id} onClick={() => setLanguage(l.id)}
                   className={`text-xs py-3 rounded-xl border transition-all ${language === l.id ? 'border-brand bg-brand-tint text-brand-ink font-semibold' : 'border-hairline/10 bg-surface text-ink-secondary'}`}>
                   {l.label}
@@ -125,6 +204,25 @@ export default function ConsumerProfile() {
               ))}
             </div>
           </div>
+
+          <div>
+            <label className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+              <Bell className="h-3.5 w-3.5 text-brand" /> Marketing communications
+            </label>
+            <div className="bg-surface border border-hairline/10 rounded-2xl divide-y divide-hairline/10">
+              {[['push', 'Push'], ['sms', 'SMS'], ['email', 'Email'], ['whatsapp', 'WhatsApp']].map(([key, label]) => (
+                <button key={key} onClick={() => setMarketing(m => ({ ...m, [key]: !m[key] }))}
+                  className="w-full flex items-center justify-between px-4 py-3 text-left">
+                  <span className="text-sm">{label}</span>
+                  <span className={`w-10 h-6 rounded-full flex items-center transition-colors px-0.5 ${marketing[key] ? 'bg-brand justify-end' : 'bg-raised justify-start'}`}>
+                    <span className="w-5 h-5 rounded-full bg-white shadow-sm" />
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-ink-secondary mt-1.5">Transactional messages (booking updates, receipts) are always sent.</p>
+          </div>
+
           <Button onClick={handleSaveProfile} disabled={saving} className="w-full h-12 rounded-xl mt-2 bg-brand text-ink-inverse hover:bg-brand/90">
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
@@ -142,12 +240,19 @@ export default function ConsumerProfile() {
                     <p className="font-semibold text-sm">{addr.label || 'Address'}</p>
                     {addr.is_default && <span className="text-[9px] bg-brand/10 text-brand px-2 py-0.5 rounded-full font-semibold">Default</span>}
                   </div>
-                  <p className="text-xs text-ink-secondary">{addr.street}</p>
-                  <p className="text-xs text-ink-secondary">{addr.area}, {addr.city} {addr.postcode}</p>
+                  <p className="text-xs text-ink-secondary">{[addr.house_number, addr.building, addr.street].filter(Boolean).join(', ')}</p>
+                  <p className="text-xs text-ink-secondary">{[addr.area, addr.city, addr.state, addr.postal || addr.postcode].filter(Boolean).join(', ')}</p>
                 </div>
-                <button onClick={() => handleDeleteAddress(addr.id)} className="text-ink-secondary hover:text-danger transition-colors p-1">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  {!addr.is_default && (
+                    <button onClick={() => handleSetDefault(addr.id)} title="Set as default" className="text-ink-secondary hover:text-brand transition-colors p-1">
+                      <Star className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button onClick={() => handleDeleteAddress(addr.id)} title="Delete" className="text-ink-secondary hover:text-danger transition-colors p-1">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
             {addresses.length === 0 && (
@@ -194,10 +299,11 @@ export default function ConsumerProfile() {
       {tab === 'security' && (
         <div className="space-y-3">
           {[
-            { icon: Bell, label: 'Notification Preferences', desc: 'Manage push, SMS, email alerts', action: () => {} },
+            { icon: CreditCard, label: 'Payment Methods', desc: 'Cards, FPX, e-wallets', action: () => navigate('/payments') },
+            { icon: Heart, label: 'Wishlist', desc: 'Saved services, pros & categories', action: () => navigate('/wishlist') },
+            { icon: Star, label: 'My Reviews', desc: 'Reviews you\'ve written', action: () => navigate('/reviews') },
+            { icon: Bell, label: 'Notification Preferences', desc: 'Per-category push, SMS, email, WhatsApp', action: () => navigate('/notification-settings') },
             { icon: Shield, label: 'Two-Factor Auth', desc: 'OTP via SMS is enabled', action: () => {} },
-            { icon: Star, label: 'Biometric Login', desc: 'Enable Face ID / fingerprint', action: () => toast.info('Coming soon') },
-            { icon: Heart, label: 'Favourite Partners', desc: 'Manage your saved partners', action: () => navigate('/bookings') },
           ].map((item, i) => (
             <button key={i} onClick={item.action}
               className="w-full flex items-center gap-3 bg-surface border border-hairline/10 rounded-2xl p-4 hover:bg-raised/30 transition-colors text-left">

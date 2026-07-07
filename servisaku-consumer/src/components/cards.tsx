@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { Category, ServiceSummary, Booking } from '@/api/client';
 import { categoryIcon, statusMeta } from '@/lib/booking-meta';
@@ -23,14 +24,15 @@ export function CategoryTile({ category }: { category: Category }) {
     <Pressable
       onPress={() => router.push(`/catalog/${category.slug}`)}
       style={({ pressed }) => [{ width: '31%', alignItems: 'center', gap: 8, marginBottom: spacing.lg, opacity: pressed ? 0.7 : 1 }]}>
-      <View style={{ width: 74, height: 74, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.brandTint, alignItems: 'center', justifyContent: 'center', ...shadow.e1 }}>
+      <View style={{ width: '100%', aspectRatio: 1, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.raised, alignItems: 'center', justifyContent: 'center', padding: 8, ...shadow.e1 }}>
         {img ? (
-          <Image source={img} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={150} />
+          // `contain` so wide product shots (AC unit, washing machine) show in full.
+          <Image source={img} style={{ width: '100%', height: '100%' }} contentFit="contain" transition={150} />
         ) : (
-          <Text style={{ fontSize: 30 }}>{categoryIcon(category.slug)}</Text>
+          <Text style={{ fontSize: 34 }}>{categoryIcon(category.slug)}</Text>
         )}
       </View>
-      <Text numberOfLines={2} style={{ fontSize: font.size.xs, fontWeight: '700', color: colors.ink, textAlign: 'center' }}>
+      <Text numberOfLines={2} style={{ fontSize: font.size.sm, fontWeight: '700', color: colors.ink, textAlign: 'center' }}>
         {category.name}
       </Text>
     </Pressable>
@@ -89,9 +91,14 @@ export function ServiceCard({ service }: { service: ServiceSummary; wide?: boole
   );
 }
 
+const ACTIVE_STATUSES = ['pending', 'assigned', 'accepted', 'en_route', 'arrived', 'started'];
+
 export function BookingCard({ booking }: { booking: Booking }) {
   const meta = statusMeta(booking.status);
   const img = serviceImage(booking.service_slug);
+  const active = ACTIVE_STATUSES.includes(booking.status);
+  const canRate = booking.status === 'completed' && !booking.rating;
+  const ref = `#${String(booking.id).slice(0, 8).toUpperCase()}`;
   return (
     <Pressable
       onPress={() => router.push(`/booking/${booking.id}`)}
@@ -105,15 +112,38 @@ export function BookingCard({ booking }: { booking: Booking }) {
             <Text numberOfLines={1} style={{ flex: 1, fontSize: font.size.base, fontWeight: '700', color: colors.ink, paddingRight: 8 }}>{booking.service_type}</Text>
             <Badge label={`${meta.icon} ${meta.label}`} tint={meta.tint} fg={meta.fg} />
           </View>
+          <Text style={{ fontSize: font.size.xs, color: colors.inkTertiary, marginTop: 1 }}>{ref}</Text>
           <Text style={{ fontSize: font.size.sm, color: colors.inkSecondary, marginTop: 2 }}>
             {formatDay(booking.date)}{booking.time_slot ? ` · ${booking.time_slot}` : ''}
           </Text>
+          {booking.partner_name ? (
+            <Text style={{ fontSize: font.size.xs, color: colors.inkSecondary, marginTop: 2 }}>
+              👷 {booking.partner_name}{booking.partner_rating ? ` · ⭐ ${booking.partner_rating.toFixed(1)}` : ''}
+            </Text>
+          ) : null}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
             <Text numberOfLines={1} style={{ fontSize: font.size.xs, color: colors.inkTertiary, flex: 1 }}>{booking.city ?? booking.address ?? ''}</Text>
             <Text style={{ fontSize: font.size.base, fontWeight: '700', color: colors.ink }}>{formatMYR(booking.price)}</Text>
           </View>
         </View>
       </View>
+
+      {(active || canRate) ? (
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.hairline }}>
+          {active ? <QuickAction icon="navigate" label="Track" onPress={() => router.push(`/tracking/${booking.id}`)} /> : null}
+          {active ? <QuickAction icon="chatbubble-ellipses" label="Chat" onPress={() => router.push(`/chat/${booking.id}`)} /> : null}
+          {canRate ? <QuickAction icon="star" label="Rate" onPress={() => router.push(`/review/${booking.id}`)} /> : null}
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function QuickAction({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: colors.hairline, borderRadius: radius.md, paddingVertical: 9 }}>
+      <Ionicons name={icon} size={15} color={colors.brand} />
+      <Text style={{ color: colors.ink, fontWeight: '700', fontSize: font.size.sm }}>{label}</Text>
     </Pressable>
   );
 }

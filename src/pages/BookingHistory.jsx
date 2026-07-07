@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { servisaku } from '@/api/servisakuClient';
 import BookingCard from '../components/BookingCard';
-import { CalendarDays, Clock, CheckCircle2 } from 'lucide-react';
+import { CalendarDays, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function BookingHistory() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('active');
+  const [tab, setTab] = useState('upcoming');
 
   useEffect(() => {
     const load = async () => {
@@ -18,13 +18,18 @@ export default function BookingHistory() {
     load();
   }, []);
 
-  const active = bookings.filter(b => ['pending', 'confirmed', 'assigned', 'accepted', 'en_route', 'arrived', 'started'].includes(b.status));
-  const past   = bookings.filter(b => ['completed', 'cancelled'].includes(b.status));
-  const list   = tab === 'active' ? active : past;
+  const upcoming  = bookings.filter(b => ['pending', 'confirmed', 'assigned', 'accepted'].includes(b.status));
+  const ongoing   = bookings.filter(b => ['en_route', 'arrived', 'started'].includes(b.status));
+  const completed = bookings.filter(b => b.status === 'completed');
+  const cancelled = bookings.filter(b => ['cancelled', 'disputed'].includes(b.status));
+  const byTab = { upcoming, ongoing, completed, cancelled };
+  const list  = byTab[tab] ?? [];
 
   const TABS = [
-    { id: 'active', label: 'Active', count: active.length, icon: Clock },
-    { id: 'past',   label: 'History', count: past.length,  icon: CheckCircle2 },
+    { id: 'upcoming',  label: 'Upcoming',  count: upcoming.length,  icon: Clock },
+    { id: 'ongoing',   label: 'Ongoing',   count: ongoing.length,   icon: CalendarDays },
+    { id: 'completed', label: 'Completed', count: completed.length, icon: CheckCircle2 },
+    { id: 'cancelled', label: 'Cancelled', count: cancelled.length, icon: XCircle },
   ];
 
   return (
@@ -34,7 +39,7 @@ export default function BookingHistory() {
         <h1 className="text-2xl font-bold tracking-tight mb-5">My Bookings</h1>
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-0">
+        <div className="flex gap-1 mb-0 overflow-x-auto scrollbar-none">
           {TABS.map(t => (
             <button
               key={t.id}
@@ -80,9 +85,9 @@ export default function BookingHistory() {
             <div className="w-16 h-16 bg-raised rounded-2xl flex items-center justify-center mb-5">
               <CalendarDays className="h-7 w-7 text-ink-secondary" />
             </div>
-            <p className="font-bold text-base mb-1.5">No {tab === 'active' ? 'active' : 'past'} bookings</p>
+            <p className="font-bold text-base mb-1.5">No {tab} bookings</p>
             <p className="text-sm text-ink-secondary max-w-xs">
-              {tab === 'active' ? 'Book a service to get started' : 'Your completed bookings will appear here'}
+              {tab === 'upcoming' || tab === 'ongoing' ? 'Book a service to get started' : `Your ${tab} bookings will appear here`}
             </p>
           </div>
         )}

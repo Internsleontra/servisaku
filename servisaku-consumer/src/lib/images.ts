@@ -92,6 +92,7 @@ export const SERVICE_IMAGES: Record<string, ImageSourcePropType> = {
 };
 
 export const HERO_IMAGE = require('../../assets/img/hero.png') as ImageSourcePropType;
+export const LOGO_IMAGE = require('../../assets/img/logo.png') as ImageSourcePropType;
 
 export const categoryImage = (slug?: string): ImageSourcePropType | undefined =>
   slug ? CATEGORY_IMAGES[slug] : undefined;

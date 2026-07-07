@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, ScrollView, Text, View, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type BookingExtra } from '@/api/client';
+import { api, breakdownLines, type BookingExtra } from '@/api/client';
 import { ScreenHeader, Loading, Card, Badge, Button, Divider, Muted, EmptyState } from '@/components/ui';
 import { statusMeta, LIFECYCLE_ORDER, PAYMENT_METHODS } from '@/lib/booking-meta';
 import { formatMYR, formatDay, initials } from '@/lib/format';
@@ -126,7 +126,7 @@ export default function BookingDetail() {
               <Text style={{ color: colors.brand, fontWeight: '700', fontSize: font.size.sm }}>View full →</Text>
             </Pressable>
           </View>
-          {(b.price_breakdown ?? []).slice(0, 4).map((line, i) => (
+          {breakdownLines(b.price_breakdown).slice(0, 4).map((line, i) => (
             <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ color: colors.inkSecondary, flex: 1 }} numberOfLines={1}>{line.label}</Text>
               <Text style={{ color: colors.ink, fontWeight: '600' }}>{formatMYR(line.amount)}</Text>
