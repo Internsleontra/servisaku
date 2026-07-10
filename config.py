@@ -38,6 +38,13 @@ class Settings(BaseSettings):
 
     PAYMENT_CURRENCY: str = "MYR"
 
+    # Media uploads — Cloudinary free tier. Sign up at
+    # https://cloudinary.com/users/register/free
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+    MAX_UPLOAD_SIZE_MB: int = 10
+
     # CORS
     ALLOWED_ORIGINS: list[str] = ["*"]
 

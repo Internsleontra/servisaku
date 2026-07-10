@@ -165,12 +165,52 @@ Everything else — DB writes, authorization boundaries, validation, the clean
 both `BILLPLZ` and `IPAY88` in the request body) — is verified against the
 live database.
 
+### Uploads (10 endpoints)
+
+Media uploads, Stage 2. Cloudinary (free tier) via `services/cloudinary_service.py`.
+Reuses existing DB fields exactly as they were — no schema changes:
+`partners.profile_photo_s3_key`, `consumer_profiles.profile_photo_s3_key`,
+`partner_documents.s3_key`, `job_photos.photo_url`/`caption` (before/after tags
+stored as a caption prefix). Both a validated server-side upload path
+(multipart through this API) and a signed direct-to-Cloudinary upload path
+are implemented, since the task explicitly listed both.
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 55 | `/api/v1/uploads/avatar` | POST | ✅ | Partner or consumer avatar, resized to fit 500×500, auto quality/format |
+| 56 | `/api/v1/uploads/avatar` | DELETE | ✅ | Removes avatar from Cloudinary + clears the DB field |
+| 57 | `/api/v1/uploads/kyc-documents` | POST | ✅ | Upserts by `document_type` — re-upload replaces the file and resets `verification_status` to `PENDING` |
+| 58 | `/api/v1/uploads/kyc-documents` | GET | ✅ | List my KYC documents |
+| 59 | `/api/v1/uploads/kyc-documents/{document_id}` | DELETE | ✅ | |
+| 60 | `/api/v1/uploads/jobs/{job_id}/photos` | POST | ✅ | `photo_type`: `before`/`after`/`general`, owner-only |
+| 61 | `/api/v1/uploads/jobs/{job_id}/photos` | GET | ✅ | |
+| 62 | `/api/v1/uploads/jobs/{job_id}/photos/{photo_id}` | DELETE | ✅ | |
+| 63 | `/api/v1/uploads/signature` | POST | ✅ | Signed params for a direct client→Cloudinary upload |
+| 64 | `/api/v1/uploads/confirm` | POST | ✅ | Persists a direct upload's result; rejects `public_id`s that don't match a signature this account was actually issued |
+
+**Validated end-to-end with real image files** (JPEG/PNG generated via
+Pillow) against the live database: real images pass magic-byte sniffing and
+correctly reach the Cloudinary-not-configured 503; a text file renamed to
+`.jpg` with a spoofed `image/jpeg` Content-Type header is correctly rejected
+(422) by the magic-byte check rather than trusting the declared header; an
+11MB file is correctly rejected (422) against the 10MB limit; ownership
+checks (KYC/job-photo partner-only, 403 for consumer; job-photo 404 for a
+job the partner doesn't own) all verified.
+
+**Not yet live-tested against real Cloudinary** (credentials pending —
+free self-serve signup): the actual outbound `upload`/`destroy` API calls.
+The signed-upload-URL signature generation was independently cross-checked
+(recomputing the HMAC-SHA1 by hand per Cloudinary's documented algorithm
+matches the SDK's own `cloudinary.utils.api_sign_request` output) — this
+calls Cloudinary's own SDK function rather than a hand-rolled reimplementation,
+unlike the Billplz X-Signature verification, so there's no algorithm-drift risk.
+
 ### Health (2 endpoints)
 
 | # | Endpoint | Method | Status | Notes |
 |---|----------|--------|--------|-------|
-| 53 | `/` | GET | ✅ | App info |
-| 54 | `/health` | GET | ✅ | DB connectivity |
+| 65 | `/` | GET | ✅ | App info |
+| 66 | `/health` | GET | ✅ | DB connectivity |
 
 ---
 
@@ -195,7 +235,7 @@ live database.
 - **Try it out**: Enabled by default for all endpoints
 - **Persist authorization**: Token persists across page reloads
 - **Filter**: Search/filter endpoints by keyword
-- **Tag grouping**: 11 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Health)
+- **Tag grouping**: 12 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Health)
 - **Request examples**: Pre-filled examples for all request bodies
 - **Response models**: Full schema documentation for all responses
 - **Validation errors**: Documented 422 responses with examples

@@ -13,7 +13,7 @@ from routes import (
     auth_router, partner_router, jobs_router,
     earnings_router, wallet_router, reviews_router,
     notifications_router, feedback_router,
-    consumer_router, payments_router,
+    consumer_router, payments_router, uploads_router,
 )
 
 settings = get_settings()
@@ -48,6 +48,10 @@ TAGS_METADATA = [
     {
         "name": "Payments",
         "description": "Create Billplz bills for bookings, verify payment status, manage escrow, and handle the refund approval workflow.",
+    },
+    {
+        "name": "Uploads",
+        "description": "Avatar, KYC document, and job photo uploads via Cloudinary — validated server-side uploads plus signed direct-upload URLs for the mobile client.",
     },
     {
         "name": "Reviews",
@@ -156,7 +160,7 @@ app.include_router(earnings_router, prefix=API_PREFIX)
 app.include_router(wallet_router, prefix=API_PREFIX)
 app.include_router(consumer_router, prefix=API_PREFIX)
 app.include_router(payments_router, prefix=API_PREFIX)
-app.include_router(payments_router, prefix=API_PREFIX)
+app.include_router(uploads_router, prefix=API_PREFIX)
 app.include_router(reviews_router, prefix=API_PREFIX)
 app.include_router(notifications_router, prefix=API_PREFIX)
 app.include_router(feedback_router, prefix=API_PREFIX)

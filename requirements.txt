@@ -23,6 +23,9 @@ supabase>=2.7.2
 # Payments (Billplz via httpx; iPay88 stub — no HTTP client needed until credentials exist)
 httpx>=0.28.0
 
+# Media uploads (Cloudinary free tier)
+cloudinary>=1.40.0,<2.0.0
+
 # Logging
 structlog>=24.4.0
 
