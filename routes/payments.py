@@ -10,7 +10,6 @@ from sqlalchemy.orm import selectinload
 
 from database import get_db
 from auth import oauth2_scheme, decode_token, get_current_user_id, get_current_admin_id, get_current_consumer_id
-from config import get_settings
 from models.auth import User
 from models.partner import Partner
 from models.consumer_profile import ConsumerProfile
@@ -20,10 +19,9 @@ from schemas.payment import (
     BillCreateRequest, BillCreateResponse, PaymentResponse,
     RefundRequest, RefundResponse, RefundCompleteRequest, TransactionResponse,
 )
-from services import billplz_service
+from services.gateway_registry import get_gateway
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
-settings = get_settings()
 
 
 async def _current_role_and_scope_id(
@@ -71,26 +69,56 @@ async def _get_owned_payment(payment_id: UUID, role: str, scope_id: UUID, db: As
     return payment
 
 
-async def _release_escrow(payment: Payment) -> None:
-    if payment.status == "HELD_IN_ESCROW":
-        payment.status = "RELEASED"
+# --- Gateway-agnostic status transitions -----------------------------------
+# Any gateway's callback route (or the manual /sync poll) funnels through
+# these two functions, so the escrow/booking business logic is written once
+# regardless of which gateway confirmed the payment.
+
+async def _mark_payment_paid(payment: Payment, db: AsyncSession) -> None:
+    if payment.status != "INITIATED":
+        return
+    payment.status = "HELD_IN_ESCROW"
+    payment.authorized_at = datetime.utcnow()
+    if payment.booking and payment.booking.booking_status == "PENDING_PAYMENT":
+        payment.booking.booking_status = "CONFIRMED"
+        payment.booking.confirmed_at = datetime.utcnow()
+    await db.flush()
+
+
+async def _mark_payment_failed(payment: Payment, db: AsyncSession, reason: str) -> None:
+    if payment.status != "INITIATED":
+        return
+    payment.status = "FAILED"
+    payment.failed_at = datetime.utcnow()
+    payment.failure_reason = reason
+    await db.flush()
 
 
 @router.post(
     "/bookings/{booking_id}/bill",
     response_model=BillCreateResponse,
-    summary="Create a Billplz bill for a booking",
+    summary="Create a payment gateway bill for a booking",
     description=(
-        "Creates (or reuses a still-pending) Billplz bill for a `PENDING_PAYMENT` booking "
-        "and returns the hosted bill page URL to redirect the consumer to.\n\n"
+        "Creates (or reuses a still-pending) hosted checkout bill for a `PENDING_PAYMENT` "
+        "booking via the selected gateway (`BILLPLZ` by default) and returns the URL to "
+        "redirect the consumer to.\n\n"
         "**Database tables:** `payments`, `bookings`\n\n"
         "**Permissions:** Requires JWT token (role: consumer, owning the booking)"
     ),
     responses={
-        404: {"description": "Booking not found"},
-        409: {"description": "Booking is not awaiting payment"},
+        200: {
+            "description": "Bill created or reused",
+            "content": {"application/json": {"example": {
+                "payment_id": "6f1c1e2e-2b1a-4b7a-9e2d-1a2b3c4d5e6f",
+                "bill_url": "https://www.billplz-sandbox.com/bills/abcd1234",
+                "amount_rm": "150.00",
+                "status": "INITIATED",
+            }}},
+        },
+        404: {"description": "Booking not found", "content": {"application/json": {"example": {"detail": "Booking not found"}}}},
+        409: {"description": "Booking is not awaiting payment", "content": {"application/json": {"example": {"detail": "Booking is not awaiting payment"}}}},
         422: {"description": "Consumer has no email or phone on file"},
-        503: {"description": "Billplz is not configured"},
+        503: {"description": "Gateway is not configured", "content": {"application/json": {"example": {"error": {"code": "payment_gateway_not_configured", "message": "Billplz is not configured...", "status": 503}}}}},
     },
 )
 async def create_bill(
@@ -105,43 +133,45 @@ async def create_bill(
     if booking.booking_status != "PENDING_PAYMENT":
         raise HTTPException(status.HTTP_409_CONFLICT, "Booking is not awaiting payment")
 
+    gateway = get_gateway(body.payment_gateway)
+
     existing = (await db.execute(
         select(Payment)
         .where(Payment.booking_id == booking_id, Payment.status == "INITIATED")
         .order_by(Payment.created_at.desc())
     )).scalars().first()
     if existing:
-        bill = await billplz_service.get_bill(existing.gateway_transaction_id)
+        bill = await gateway.get_bill(existing.gateway_transaction_id)
         return BillCreateResponse(
-            payment_id=existing.id, bill_url=bill["url"],
+            payment_id=existing.id, bill_url=bill.checkout_url,
             amount_rm=existing.amount_rm, status=existing.status,
         )
 
     profile = await db.get(ConsumerProfile, consumer_id)
     user = await db.get(User, profile.user_id)
 
-    bill = await billplz_service.create_bill(
+    bill = await gateway.create_bill(
         amount=booking.total_amount_rm,
         name=profile.full_name,
         email=user.email,
         mobile=user.phone_number,
         description=f"ServisAku booking {booking.booking_reference}",
-        reference_1_label="Booking",
-        reference_1=booking.booking_reference,
+        reference_label="Booking",
+        reference=booking.booking_reference,
     )
 
     payment = Payment(
         booking_id=booking.id, consumer_id=consumer_id,
         payment_reference=f"PAY-{uuid_mod.uuid4().hex[:10].upper()}",
-        payment_method=body.payment_method, payment_gateway="BILLPLZ",
-        gateway_transaction_id=bill["id"], amount_rm=booking.total_amount_rm,
+        payment_method=body.payment_method, payment_gateway=gateway.name,
+        gateway_transaction_id=bill.gateway_transaction_id, amount_rm=booking.total_amount_rm,
         currency="MYR", status="INITIATED",
     )
     db.add(payment)
     await db.flush()
 
     return BillCreateResponse(
-        payment_id=payment.id, bill_url=bill["url"],
+        payment_id=payment.id, bill_url=bill.checkout_url,
         amount_rm=payment.amount_rm, status=payment.status,
     )
 
@@ -151,17 +181,19 @@ async def create_bill(
     summary="Billplz callback receiver",
     description=(
         "Receives payment confirmation from Billplz as a form-encoded POST. Verifies "
-        "`x_signature` against `BILLPLZ_X_SIGNATURE_KEY` before trusting the payload.\n\n"
+        "`x_signature` against `BILLPLZ_X_SIGNATURE_KEY` before trusting the payload, then "
+        "applies the same gateway-agnostic status transition every gateway's callback uses.\n\n"
         "**Database tables:** `payments`, `bookings`\n\n"
         "**Permissions:** Public (authenticated via X-Signature, not a JWT)"
     ),
-    responses={200: {"description": "Callback processed"}},
+    responses={200: {"description": "Callback processed", "content": {"application/json": {"example": {"received": True}}}}},
 )
 async def billplz_callback(request: Request, db: AsyncSession = Depends(get_db)):
     form = await request.form()
     data = dict(form)
 
-    verified = billplz_service.verify_callback_signature(data)
+    gateway = get_gateway("BILLPLZ")
+    verified = gateway.verify_callback_signature(data)
 
     stmt = select(Payment).options(selectinload(Payment.booking)).where(
         Payment.gateway_transaction_id == data.get("id")
@@ -172,21 +204,14 @@ async def billplz_callback(request: Request, db: AsyncSession = Depends(get_db))
 
     payment.hmac_verified = verified
     if not verified:
+        await db.flush()
         return {"received": True}
 
     paid = str(data.get("paid")).lower() == "true"
-    if paid and payment.status == "INITIATED":
-        payment.status = "HELD_IN_ESCROW"
-        payment.authorized_at = datetime.utcnow()
-        if payment.booking and payment.booking.booking_status == "PENDING_PAYMENT":
-            payment.booking.booking_status = "CONFIRMED"
-            payment.booking.confirmed_at = datetime.utcnow()
-        await db.flush()
-    elif not paid and payment.status == "INITIATED":
-        payment.status = "FAILED"
-        payment.failed_at = datetime.utcnow()
-        payment.failure_reason = "Billplz reported bill as unpaid"
-        await db.flush()
+    if paid:
+        await _mark_payment_paid(payment, db)
+    else:
+        await _mark_payment_failed(payment, db, "Billplz reported bill as unpaid")
 
     return {"received": True}
 
@@ -202,12 +227,24 @@ async def billplz_callback(request: Request, db: AsyncSession = Depends(get_db))
         "**Database tables:** `payments`, `refunds`, `bookings`\n\n"
         "**Permissions:** Requires JWT token (role: consumer or partner)"
     ),
+    responses={
+        200: {
+            "description": "Transaction history",
+            "content": {"application/json": {"example": [{
+                "id": "6f1c1e2e-2b1a-4b7a-9e2d-1a2b3c4d5e6f",
+                "booking_id": "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+                "service_name": "Standard Home Cleaning",
+                "amount_rm": "150.00", "status": "HELD_IN_ESCROW", "type": "payment",
+                "created_at": "2026-07-10T09:06:17.709940Z",
+            }]}},
+        },
+    },
 )
 async def get_transactions(
     scope: tuple = Depends(_current_role_and_scope_id),
     db: AsyncSession = Depends(get_db),
-    limit: int = Query(default=20, le=100),
-    offset: int = Query(default=0),
+    limit: int = Query(default=20, le=100, description="Number of results per page (max 100)"),
+    offset: int = Query(default=0, description="Number of results to skip"),
 ):
     role, scope_id = scope
     if role not in ("consumer", "partner"):
@@ -258,6 +295,7 @@ async def get_transactions(
     response_model=list[PaymentResponse],
     summary="Get payments for a booking",
     description="Returns all payment attempts for a booking.\n\n**Database tables:** `payments`\n\n**Permissions:** Requires JWT token (consumer/partner owning the booking, or admin)",
+    responses={404: {"description": "Booking not found", "content": {"application/json": {"example": {"detail": "Booking not found"}}}}},
 )
 async def get_booking_payments(
     booking_id: UUID,
@@ -278,7 +316,7 @@ async def get_booking_payments(
     response_model=PaymentResponse,
     summary="Get payment details",
     description="Returns a single payment by ID.\n\n**Database tables:** `payments`\n\n**Permissions:** Requires JWT token (consumer/partner owning the booking, or admin)",
-    responses={404: {"description": "Payment not found"}},
+    responses={404: {"description": "Payment not found", "content": {"application/json": {"example": {"detail": "Payment not found"}}}}},
 )
 async def get_payment(
     payment_id: UUID,
@@ -293,14 +331,18 @@ async def get_payment(
 @router.post(
     "/{payment_id}/sync",
     response_model=PaymentResponse,
-    summary="Verify payment status against Billplz",
+    summary="Verify payment status against the gateway",
     description=(
-        "Re-fetches the bill from Billplz and updates the local record. Use this during "
-        "local development, where Billplz callbacks may not be able to reach this server.\n\n"
+        "Re-fetches the bill from whichever gateway processed this payment and updates the "
+        "local record. Use this during local development, where gateway callbacks may not "
+        "be able to reach this server.\n\n"
         "**Database tables:** `payments`, `bookings`\n\n"
         "**Permissions:** Requires JWT token (consumer/partner owning the booking, or admin)"
     ),
-    responses={404: {"description": "Payment not found"}, 503: {"description": "Billplz is not configured"}},
+    responses={
+        404: {"description": "Payment not found", "content": {"application/json": {"example": {"detail": "Payment not found"}}}},
+        503: {"description": "Gateway is not configured or not available"},
+    },
 )
 async def sync_payment(
     payment_id: UUID,
@@ -309,18 +351,11 @@ async def sync_payment(
 ):
     role, scope_id = scope
     payment = await _get_owned_payment(payment_id, role, scope_id, db)
-    if payment.payment_gateway != "BILLPLZ":
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Sync is only implemented for the BILLPLZ gateway")
 
-    bill = await billplz_service.get_bill(payment.gateway_transaction_id)
-    paid = bool(bill.get("paid"))
-    if paid and payment.status == "INITIATED":
-        payment.status = "HELD_IN_ESCROW"
-        payment.authorized_at = datetime.utcnow()
-        if payment.booking and payment.booking.booking_status == "PENDING_PAYMENT":
-            payment.booking.booking_status = "CONFIRMED"
-            payment.booking.confirmed_at = datetime.utcnow()
-        await db.flush()
+    gateway = get_gateway(payment.payment_gateway)
+    bill = await gateway.get_bill(payment.gateway_transaction_id)
+    if bill.paid:
+        await _mark_payment_paid(payment, db)
     return PaymentResponse.model_validate(payment)
 
 
@@ -335,7 +370,10 @@ async def sync_payment(
         "**Database tables:** `payments`\n\n"
         "**Permissions:** Requires JWT token (role: admin)"
     ),
-    responses={404: {"description": "Payment not found"}, 409: {"description": "Payment is not held in escrow"}},
+    responses={
+        404: {"description": "Payment not found", "content": {"application/json": {"example": {"detail": "Payment not found"}}}},
+        409: {"description": "Payment is not held in escrow", "content": {"application/json": {"example": {"detail": "Payment is not held in escrow"}}}},
+    },
 )
 async def release_payment(
     payment_id: UUID,
@@ -364,7 +402,7 @@ async def release_payment(
         "**Permissions:** Requires JWT token (consumer owning the booking, or admin)"
     ),
     responses={
-        404: {"description": "Payment not found"},
+        404: {"description": "Payment not found", "content": {"application/json": {"example": {"detail": "Payment not found"}}}},
         409: {"description": "Payment is not refundable, or amount exceeds remaining balance"},
     },
 )
@@ -415,7 +453,10 @@ async def request_refund(
         "**Database tables:** `refunds`\n\n"
         "**Permissions:** Requires JWT token (role: admin)"
     ),
-    responses={404: {"description": "Refund not found"}, 409: {"description": "Refund is not pending approval"}},
+    responses={
+        404: {"description": "Refund not found", "content": {"application/json": {"example": {"detail": "Refund not found"}}}},
+        409: {"description": "Refund is not pending approval"},
+    },
 )
 async def approve_refund(
     refund_id: UUID,
@@ -438,7 +479,10 @@ async def approve_refund(
     response_model=RefundResponse,
     summary="Reject a refund request",
     description="Rejects a pending refund request.\n\n**Database tables:** `refunds`\n\n**Permissions:** Requires JWT token (role: admin)",
-    responses={404: {"description": "Refund not found"}, 409: {"description": "Refund is not pending approval"}},
+    responses={
+        404: {"description": "Refund not found", "content": {"application/json": {"example": {"detail": "Refund not found"}}}},
+        409: {"description": "Refund is not pending approval"},
+    },
 )
 async def reject_refund(
     refund_id: UUID,
@@ -467,7 +511,10 @@ async def reject_refund(
         "**Database tables:** `refunds`, `payments`\n\n"
         "**Permissions:** Requires JWT token (role: admin)"
     ),
-    responses={404: {"description": "Refund not found"}, 409: {"description": "Refund is not approved"}},
+    responses={
+        404: {"description": "Refund not found", "content": {"application/json": {"example": {"detail": "Refund not found"}}}},
+        409: {"description": "Refund is not approved"},
+    },
 )
 async def complete_refund(
     refund_id: UUID,

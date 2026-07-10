@@ -36,6 +36,7 @@ def _booking_to_response(b: Booking) -> BookingResponse:
     response_model=list[ServiceCategoryResponse],
     summary="List service categories",
     description="Returns active service categories (managed by the Admin Catalog module).\n\n**Database tables:** `service_categories`\n\n**Permissions:** Requires JWT token (role: consumer)",
+    responses={401: {"description": "Missing or invalid token"}},
 )
 async def list_categories(
     _consumer_id: UUID = Depends(get_current_consumer_id),
@@ -50,6 +51,7 @@ async def list_categories(
     response_model=list[ServiceResponse],
     summary="List bookable services",
     description="Returns active services, optionally filtered by category.\n\n**Database tables:** `services`\n\n**Permissions:** Requires JWT token (role: consumer)",
+    responses={401: {"description": "Missing or invalid token"}},
 )
 async def list_services(
     category_id: UUID | None = None,
@@ -69,6 +71,7 @@ async def list_services(
     status_code=201,
     summary="Add a saved address",
     description="Creates a saved address for the current consumer, used as a booking's service location.\n\n**Database tables:** `consumer_addresses`\n\n**Permissions:** Requires JWT token (role: consumer)",
+    responses={401: {"description": "Missing or invalid token"}, 422: {"description": "Validation error (e.g. postcode too short)"}},
 )
 async def create_address(
     body: AddressCreate,
@@ -86,6 +89,7 @@ async def create_address(
     response_model=list[AddressResponse],
     summary="List saved addresses",
     description="Returns the current consumer's saved addresses.\n\n**Database tables:** `consumer_addresses`\n\n**Permissions:** Requires JWT token (role: consumer)",
+    responses={401: {"description": "Missing or invalid token"}},
 )
 async def list_addresses(
     consumer_id: UUID = Depends(get_current_consumer_id),
@@ -113,7 +117,9 @@ async def list_addresses(
         "**Permissions:** Requires JWT token (role: consumer)"
     ),
     responses={
-        404: {"description": "Service or address not found"},
+        401: {"description": "Missing or invalid token"},
+        404: {"description": "Service or address not found", "content": {"application/json": {"example": {"detail": "Address not found"}}}},
+        422: {"description": "Validation error (e.g. invalid time_slot)"},
     },
 )
 async def create_booking(
@@ -160,6 +166,7 @@ async def create_booking(
     response_model=list[BookingResponse],
     summary="List my bookings",
     description="Returns the current consumer's bookings, most recent first.\n\n**Database tables:** `bookings`\n\n**Permissions:** Requires JWT token (role: consumer)",
+    responses={401: {"description": "Missing or invalid token"}},
 )
 async def list_bookings(
     consumer_id: UUID = Depends(get_current_consumer_id),
