@@ -14,6 +14,13 @@ class Job(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     partner_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("partners.id"))
     customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("customers.id"), nullable=False)
+    # Additive link to the shared `bookings` table (owned by the Booking Engine
+    # module) — nullable because jobs<->bookings unification is still pending as
+    # a cross-team decision. When set, reviews/notifications for this job can be
+    # created (they FK to bookings.id); when not, those specific writes are blocked
+    # with a clear error rather than faked. Not enforced as a DB-level FK here
+    # since this app doesn't own the `bookings` table.
+    booking_id: Mapped[uuid.UUID | None] = mapped_column()
     status: Mapped[str] = mapped_column(String(20), default="requested", nullable=False)
     category_id: Mapped[str] = mapped_column(String(30), nullable=False)
     service_name: Mapped[str] = mapped_column(String(120), nullable=False)

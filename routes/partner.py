@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database import get_db
-from auth import get_current_partner_id
+from auth import get_current_partner_id, get_current_user_id
+from models.auth import User
 from models.partner import (
     Partner, BankAccount, PartnerCategory,
     PartnerServiceArea, PartnerAvailability,
@@ -19,23 +20,30 @@ from schemas.partner import (
 
 router = APIRouter(prefix="/partner", tags=["Partner Profile"])
 
+# External API keeps 3-letter day codes (mon..sun); live DB stores day_of_week
+# as an integer 0=Mon..6=Sun. Translate at this boundary only.
+_DAY_TO_INT = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+_INT_TO_DAY = {v: k for k, v in _DAY_TO_INT.items()}
+
 
 def _build_partner_response(partner: Partner) -> PartnerResponse:
     return PartnerResponse(
         id=partner.id,
         full_name=partner.full_name,
-        phone=partner.phone,
-        email=partner.email,
-        avatar_url=partner.avatar_url,
-        nric=partner.nric,
-        is_online=partner.is_online,
+        phone=partner.user.phone_number,
+        email=partner.user.email,
+        avatar_url=partner.profile_photo_s3_key,
+        nric=partner.nric_or_passport_number,
+        is_online=partner.is_available,
         kyc_status=partner.kyc_status,
-        rating=float(partner.rating),
-        total_jobs=partner.total_jobs,
-        completion_rate=float(partner.completion_rate),
-        acceptance_rate=float(partner.acceptance_rate),
-        experience_years=partner.experience_years,
-        bio=partner.bio,
+        rating=float(partner.average_rating or 0),
+        total_jobs=partner.total_completed_jobs,
+        completion_rate=float(partner.completion_rate or 0),
+        # No live column for acceptance_rate / experience_years / bio yet —
+        # accepted on requests, returned as safe defaults until a schema addition lands.
+        acceptance_rate=0.0,
+        experience_years=0,
+        bio=None,
         categories=[pc.category_id for pc in partner.categories],
         service_areas=[
             ServiceAreaSchema(id=sa.id, name=sa.name, zone=sa.zone)
@@ -43,8 +51,8 @@ def _build_partner_response(partner: Partner) -> PartnerResponse:
         ],
         availability=[
             AvailabilitySchema(
-                day=a.day_of_week,
-                enabled=a.enabled,
+                day=_INT_TO_DAY.get(a.day_of_week, "mon"),
+                enabled=a.is_active,
                 start=a.start_time.strftime("%H:%M") if isinstance(a.start_time, dt_time) else str(a.start_time),
                 end=a.end_time.strftime("%H:%M") if isinstance(a.end_time, dt_time) else str(a.end_time),
             )
@@ -55,7 +63,7 @@ def _build_partner_response(partner: Partner) -> PartnerResponse:
             account_name=partner.bank_account.account_name,
             account_number=partner.bank_account.account_number,
         ) if partner.bank_account else None,
-        member_since=partner.member_since,
+        member_since=partner.created_at,
     )
 
 
@@ -63,6 +71,7 @@ async def _load_partner(partner_id: UUID, db: AsyncSession) -> Partner:
     stmt = (
         select(Partner)
         .options(
+            selectinload(Partner.user),
             selectinload(Partner.categories),
             selectinload(Partner.service_areas),
             selectinload(Partner.availability),
@@ -83,14 +92,14 @@ async def _load_partner(partner_id: UUID, db: AsyncSession) -> Partner:
     description=(
         "Returns the full profile of the authenticated partner, including personal info, "
         "KYC status, bank account, service categories, service areas, and availability schedule.\n\n"
-        "**Database tables:** `partners`, `bank_accounts`, `partner_categories`, `partner_service_areas`, `partner_availability`\n\n"
+        "**Database tables:** `partners`, `users`, `bank_accounts`, `partner_categories`, `partner_service_areas`, `partner_availability`\n\n"
         "**Permissions:** Requires valid JWT access token (role: partner)"
     ),
     responses={
         200: {"description": "Partner profile returned"},
         401: {"description": "Missing or invalid token", "content": {"application/json": {"example": {"detail": "Invalid or expired token"}}}},
         403: {"description": "Not a partner role", "content": {"application/json": {"example": {"detail": "Insufficient permissions"}}}},
-        404: {"description": "Partner profile not found"},
+        404: {"description": "Partner profile not found — KYC hasn't been submitted yet"},
     },
 )
 async def get_profile(
@@ -108,7 +117,7 @@ async def get_profile(
     description=(
         "Updates editable fields of the partner profile: name, email, bio, experience years. "
         "Only fields included in the request body are updated (partial update).\n\n"
-        "**Database tables:** `partners`\n\n"
+        "**Database tables:** `partners`, `users`\n\n"
         "**Permissions:** Requires valid JWT access token (role: partner)"
     ),
     responses={
@@ -123,8 +132,12 @@ async def update_profile(
     db: AsyncSession = Depends(get_db),
 ):
     partner = await _load_partner(partner_id, db)
-    for field, value in body.model_dump(exclude_unset=True).items():
-        setattr(partner, field, value)
+    updates = body.model_dump(exclude_unset=True)
+    if "full_name" in updates:
+        partner.full_name = updates["full_name"]
+    if "email" in updates:
+        partner.user.email = updates["email"]
+    # bio / experience_years: accepted, not persisted — no live column yet.
     await db.flush()
     return _build_partner_response(partner)
 
@@ -155,9 +168,9 @@ async def toggle_online(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Partner not found")
     if partner.kyc_status != "verified":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "KYC not verified")
-    partner.is_online = body.is_online
+    partner.is_available = body.is_online
     await db.flush()
-    return {"is_online": partner.is_online}
+    return {"is_online": partner.is_available}
 
 
 @router.post(
@@ -166,10 +179,12 @@ async def toggle_online(
     description=(
         "Submits all KYC documents and information: personal details (NRIC, experience, bio), "
         "bank account, service categories, service areas, and weekly availability. "
-        "Sets KYC status to `pending` for admin review.\n\n"
+        "Sets partner status to `SUBMITTED` (kyc_status: pending) for admin review. "
+        "Creates the partner profile on first submission — a partner profile doesn't exist "
+        "until KYC is submitted at least once.\n\n"
         "**Database tables:** `partners`, `bank_accounts`, `partner_categories`, "
         "`partner_service_areas`, `partner_availability`\n\n"
-        "**Permissions:** Requires valid JWT access token (role: partner)"
+        "**Permissions:** Requires valid JWT access token"
     ),
     responses={
         200: {
@@ -177,56 +192,83 @@ async def toggle_online(
             "content": {"application/json": {"example": {"kyc_status": "pending"}}},
         },
         401: {"description": "Missing or invalid token"},
-        422: {"description": "Validation error (missing required fields)"},
+        422: {"description": "Validation error (missing required fields, e.g. full_name on first submission)"},
     },
 )
 async def submit_kyc(
     body: KYCSubmission,
-    partner_id: UUID = Depends(get_current_partner_id),
+    user_id: UUID = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    partner = await _load_partner(partner_id, db)
+    stmt = (
+        select(Partner)
+        .options(
+            selectinload(Partner.user),
+            selectinload(Partner.categories),
+            selectinload(Partner.service_areas),
+            selectinload(Partner.availability),
+            selectinload(Partner.bank_account),
+        )
+        .where(Partner.user_id == user_id)
+    )
+    partner = (await db.execute(stmt)).scalar_one_or_none()
+    is_new = partner is None
 
-    partner.nric = body.personal.nric
-    partner.experience_years = body.personal.experience_years
-    partner.bio = body.personal.bio
+    if is_new:
+        if not body.personal.full_name:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "full_name is required on first KYC submission")
+        partner = Partner(
+            user_id=user_id,
+            full_name=body.personal.full_name,
+            nric_or_passport_number=body.personal.nric,
+        )
+        db.add(partner)
+        await db.flush()
+    else:
+        if body.personal.full_name:
+            partner.full_name = body.personal.full_name
+        partner.nric_or_passport_number = body.personal.nric
+    # experience_years / bio: accepted, not persisted — no live column yet.
 
-    if partner.bank_account:
+    # A freshly-created Partner has no loaded relationships — accessing
+    # partner.bank_account here would trigger an unsupported async lazy-load,
+    # so only check it for an existing (eager-loaded) partner.
+    if not is_new and partner.bank_account:
         partner.bank_account.bank_name = body.bank_account.bank_name
         partner.bank_account.account_name = body.bank_account.account_name
         partner.bank_account.account_number = body.bank_account.account_number
     else:
         db.add(BankAccount(
-            partner_id=partner_id,
+            partner_id=partner.id,
             bank_name=body.bank_account.bank_name,
             account_name=body.bank_account.account_name,
             account_number=body.bank_account.account_number,
         ))
 
-    await db.execute(delete(PartnerCategory).where(PartnerCategory.partner_id == partner_id))
+    await db.execute(delete(PartnerCategory).where(PartnerCategory.partner_id == partner.id))
     for cat_id in body.categories:
-        db.add(PartnerCategory(partner_id=partner_id, category_id=cat_id))
+        db.add(PartnerCategory(partner_id=partner.id, category_id=cat_id))
 
-    await db.execute(delete(PartnerServiceArea).where(PartnerServiceArea.partner_id == partner_id))
+    await db.execute(delete(PartnerServiceArea).where(PartnerServiceArea.partner_id == partner.id))
     for area in body.service_areas:
-        db.add(PartnerServiceArea(partner_id=partner_id, name=area.name, zone=area.zone))
+        db.add(PartnerServiceArea(partner_id=partner.id, name=area.name, zone=area.zone))
 
-    await db.execute(delete(PartnerAvailability).where(PartnerAvailability.partner_id == partner_id))
+    await db.execute(delete(PartnerAvailability).where(PartnerAvailability.partner_id == partner.id))
     for slot in body.availability:
         h_start, m_start = slot.start.split(":")
         h_end, m_end = slot.end.split(":")
         db.add(PartnerAvailability(
-            partner_id=partner_id,
-            day_of_week=slot.day,
-            enabled=slot.enabled,
+            partner_id=partner.id,
+            day_of_week=_DAY_TO_INT[slot.day],
+            is_active=slot.enabled,
             start_time=dt_time(int(h_start), int(m_start)),
             end_time=dt_time(int(h_end), int(m_end)),
         ))
 
-    partner.kyc_status = "pending"
+    partner.status = "SUBMITTED"
 
     await db.flush()
-    return {"kyc_status": "pending"}
+    return {"kyc_status": partner.kyc_status}
 
 
 @router.put(
@@ -323,8 +365,8 @@ async def update_availability(
         h_end, m_end = slot.end.split(":")
         db.add(PartnerAvailability(
             partner_id=partner_id,
-            day_of_week=slot.day,
-            enabled=slot.enabled,
+            day_of_week=_DAY_TO_INT[slot.day],
+            is_active=slot.enabled,
             start_time=dt_time(int(h_start), int(m_start)),
             end_time=dt_time(int(h_end), int(m_end)),
         ))

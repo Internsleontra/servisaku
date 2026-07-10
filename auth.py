@@ -17,6 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def hash_password(password: str) -> str:
+    
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
@@ -59,19 +60,29 @@ def decode_token(token: str) -> dict:
         )
 
 
+async def get_current_user_id(
+    token: str = Depends(oauth2_scheme),
+) -> UUID:
+    """Returns the shared `users.id` from the token, regardless of role.
+    Use this for anything keyed on user identity rather than partner identity
+    (e.g. notifications, which FK to users.id directly)."""
+    payload = decode_token(token)
+    if payload.get("type") != "access":
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token type")
+    return UUID(payload["sub"])
+
+
 async def get_current_partner_id(
+    user_id: UUID = Depends(get_current_user_id),
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> UUID:
     payload = decode_token(token)
-
-    if payload.get("type") != "access":
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token type")
     if payload.get("role") != "partner":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient permissions")
 
     from models.partner import Partner
-    stmt = select(Partner.id).where(Partner.auth_user_id == UUID(payload["sub"]))
+    stmt = select(Partner.id).where(Partner.user_id == user_id)
     partner_id = (await db.execute(stmt)).scalar_one_or_none()
 
     if not partner_id:
@@ -84,8 +95,6 @@ async def require_verified_kyc(
     partner_id: UUID = Depends(get_current_partner_id),
     db: AsyncSession = Depends(get_db),
 ) -> UUID:
-    
-    
     from models.partner import Partner
     partner = await db.get(Partner, partner_id)
     if not partner or partner.kyc_status != "verified":

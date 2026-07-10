@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import async_session, engine, Base
 from auth import hash_password
-from models.auth import AuthUser
+from models.auth import User
 from models.partner import (
     Partner, BankAccount, PartnerCategory,
     PartnerServiceArea, PartnerAvailability,
@@ -53,47 +53,52 @@ SEED_ACCOUNTS = [
 ]
 
 
-async def seed_account(db: AsyncSession, acct: dict) -> tuple[AuthUser, Partner | None]:
+_ROLE_TO_USER_TYPE = {"admin": "ADMIN", "partner": "PARTNER", "customer": "CONSUMER"}
+
+
+async def seed_account(db: AsyncSession, acct: dict) -> tuple[User, Partner | None]:
     existing = (await db.execute(
-        select(AuthUser).where(AuthUser.email == acct["email"])
+        select(User).where(User.email == acct["email"])
     )).scalar_one_or_none()
 
     if existing:
         print(f"  [skip] {acct['email']} already exists")
         partner = (await db.execute(
-            select(Partner).where(Partner.auth_user_id == existing.id)
+            select(Partner).where(Partner.user_id == existing.id)
         )).scalar_one_or_none()
         return existing, partner
 
-    auth_user = AuthUser(
+    user = User(
+        user_type=_ROLE_TO_USER_TYPE[acct["role"]],
         email=acct["email"],
-        phone=acct["phone"],
+        phone_number=acct["phone"],
         password_hash=hash_password(acct["password"]),
-        role=acct["role"],
+        status="ACTIVE",
+        is_phone_verified=True,
+        is_email_verified=True,
     )
-    db.add(auth_user)
+    db.add(user)
     await db.flush()
 
-    partner = Partner(
-        auth_user_id=auth_user.id,
-        full_name=acct["full_name"],
-        phone=acct["phone"],
-        email=acct["email"],
-        kyc_status=acct["kyc_status"],
-        is_online=acct["kyc_status"] == "verified",
-        rating=Decimal("4.80") if acct["kyc_status"] == "verified" else Decimal("0"),
-        total_jobs=15 if acct["role"] == "partner" else 0,
-        completion_rate=Decimal("96.00") if acct["role"] == "partner" else Decimal("0"),
-        acceptance_rate=Decimal("88.00") if acct["role"] == "partner" else Decimal("0"),
-        experience_years=5 if acct["role"] == "partner" else 0,
-        bio="Professional home service partner in Klang Valley" if acct["role"] == "partner" else None,
-        nric="901201-14-5678" if acct["role"] == "partner" else None,
-    )
-    db.add(partner)
-    await db.flush()
+    # Only "partner"-role seed accounts get a Partner row — partners.nric_or_passport_number
+    # is NOT NULL + UNIQUE, so admin/customer accounts (which have no NRIC) don't get one.
+    partner = None
+    if acct["role"] == "partner":
+        partner = Partner(
+            user_id=user.id,
+            full_name=acct["full_name"],
+            nric_or_passport_number="901201-14-5678",
+            status="ACTIVE" if acct["kyc_status"] == "verified" else "DRAFT",
+            is_available=acct["kyc_status"] == "verified",
+            average_rating=Decimal("4.80") if acct["kyc_status"] == "verified" else Decimal("0"),
+            total_completed_jobs=15,
+            completion_rate=Decimal("96.00"),
+        )
+        db.add(partner)
+        await db.flush()
 
     print(f"  [created] {acct['email']} (role={acct['role']})")
-    return auth_user, partner
+    return user, partner
 
 
 async def seed_partner_details(db: AsyncSession, partner: Partner):
@@ -117,20 +122,22 @@ async def seed_partner_details(db: AsyncSession, partner: Partner):
         db.add(PartnerServiceArea(partner_id=partner.id, name=name, zone=zone))
 
     from datetime import time as dt_time
-    for day in ["mon", "tue", "wed", "thu", "fri"]:
+    # day_of_week is an integer live (0=Mon..6=Sun), not the "mon"/"tue" strings
+    # the old model used.
+    for day in range(5):  # Mon-Fri = 0-4
         db.add(PartnerAvailability(
             partner_id=partner.id,
             day_of_week=day,
-            enabled=True,
+            is_active=True,
             start_time=dt_time(9, 0),
             end_time=dt_time(18, 0),
         ))
     db.add(PartnerAvailability(
-        partner_id=partner.id, day_of_week="sat", enabled=True,
+        partner_id=partner.id, day_of_week=5, is_active=True,  # Sat
         start_time=dt_time(9, 0), end_time=dt_time(13, 0),
     ))
     db.add(PartnerAvailability(
-        partner_id=partner.id, day_of_week="sun", enabled=False,
+        partner_id=partner.id, day_of_week=6, is_active=False,  # Sun
         start_time=dt_time(9, 0), end_time=dt_time(18, 0),
     ))
 
@@ -284,39 +291,18 @@ async def seed_sample_jobs(db: AsyncSession, partner: Partner, customer: Custome
 
 
 async def seed_sample_reviews(db: AsyncSession, partner: Partner, customer: Customer):
-    existing = (await db.execute(
-        select(Review).where(Review.partner_id == partner.id).limit(1)
-    )).scalar_one_or_none()
-    if existing:
-        print("  [skip] Sample reviews already exist")
-        return
-
-    completed_jobs = (await db.execute(
-        select(Job).where(Job.partner_id == partner.id, Job.status == "completed")
-    )).scalars().all()
-
-    reviews_data = [
-        (5, "Excellent work! Very thorough cleaning.", ["punctual", "professional", "thorough"]),
-        (4, "Good service, arrived on time.", ["punctual", "friendly"]),
-    ]
-
-    for job, (rating, comment, tags) in zip(completed_jobs, reviews_data):
-        db.add(Review(
-            job_id=job.id,
-            partner_id=partner.id,
-            customer_id=customer.id,
-            rating=rating,
-            comment=comment,
-            tags=tags,
-        ))
-
-    await db.flush()
-    print(f"  [created] {min(len(completed_jobs), len(reviews_data))} sample reviews")
+    # Intentionally skipped: reviews.booking_id is a NOT NULL FK to the shared
+    # `bookings` table (owned by the Booking Engine module), and jobs aren't
+    # linked to real bookings yet (jobs.booking_id is nullable and unset for
+    # this seed data). Fabricating placeholder bookings/consumer_profiles/services
+    # rows just to satisfy that FK risks colliding with real work-in-progress on
+    # a shared database. Revisit once jobs<->bookings unification lands.
+    print("  [skip] Sample reviews not seeded — requires a real bookings row (see comment in seed.py)")
 
 
 async def seed_sample_notifications(db: AsyncSession, partner: Partner):
     existing = (await db.execute(
-        select(Notification).where(Notification.partner_id == partner.id).limit(1)
+        select(Notification).where(Notification.user_id == partner.user_id).limit(1)
     )).scalar_one_or_none()
     if existing:
         print("  [skip] Sample notifications already exist")
@@ -330,10 +316,11 @@ async def seed_sample_notifications(db: AsyncSession, partner: Partner):
     ]
     for ntype, title, body in notifs:
         db.add(Notification(
-            partner_id=partner.id,
-            type=ntype,
+            user_id=partner.user_id,
+            notification_type=ntype,
             title=title,
-            body=body,
+            message=body,
+            channel="IN_APP",
         ))
 
     await db.flush()
@@ -354,9 +341,9 @@ async def main():
             partner_user = None
             partner_record = None
             for acct in SEED_ACCOUNTS:
-                auth_user, partner = await seed_account(db, acct)
+                user, partner = await seed_account(db, acct)
                 if acct["role"] == "partner":
-                    partner_user = auth_user
+                    partner_user = user
                     partner_record = partner
 
             if partner_record:

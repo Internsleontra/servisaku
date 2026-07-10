@@ -6,7 +6,8 @@ from models.review import Review
 from models.notification import Notification
 from models.feedback import Feedback
 from models.customer import Customer
-from models.auth import AuthUser
+from models.auth import User
+from models.consumer_profile import ConsumerProfile
 
 __all__ = [
     "Partner", "PartnerDocument", "BankAccount", "PartnerCategory",
@@ -18,5 +19,6 @@ __all__ = [
     "Notification",
     "Feedback",
     "Customer",
-    "AuthUser",
+    "User",
+    "ConsumerProfile",
 ]

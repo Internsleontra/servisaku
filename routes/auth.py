@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from models.auth import AuthUser
+from models.auth import User
 from models.partner import Partner
 from schemas.auth import (
     RegisterRequest, LoginRequest, VerifyOtpRequest,
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     description=(
         "Creates a new partner account with phone, email, and password. "
         "An OTP is sent to the provided phone number for verification.\n\n"
-        "**Database tables affected:** `auth_users`, `partners`\n\n"
+        "**Database tables affected:** `users` (`partners` is created later, on first KYC submission)\n\n"
         "**Permissions:** Public (no authentication required)"
     ),
     responses={
@@ -46,30 +46,29 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 )
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(
-        select(AuthUser).where(
-            (AuthUser.phone == body.phone) | (AuthUser.email == body.email)
+        select(User).where(
+            (User.phone_number == body.phone) | (User.email == body.email)
         )
     )
     if existing.scalar_one_or_none():
         raise HTTPException(status.HTTP_409_CONFLICT, "Phone or email already registered")
 
-    auth_user = AuthUser(
-        phone=body.phone,
+    user = User(
+        user_type="PARTNER",
+        phone_number=body.phone,
         email=body.email,
         password_hash=hash_password(body.password),
-        role="partner",
+        status="PENDING_VERIFICATION",
     )
-    db.add(auth_user)
+    db.add(user)
     await db.flush()
 
-    partner = Partner(
-        auth_user_id=auth_user.id,
-        full_name=body.full_name,
-        phone=body.phone,
-        email=body.email,
-    )
-    db.add(partner)
-    await db.flush()
+    # Partner row is created during KYC submission (POST /partner/me/kyc), not here —
+    # partners.nric_or_passport_number is NOT NULL + UNIQUE and isn't known yet at
+    # this point. body.full_name isn't persisted here since there's nowhere to put
+    # it yet; KYCSubmission collects full_name again for that reason (see schemas/partner.py).
+    # Until KYC is submitted, this user has no Partner profile — GET/PUT /partner/me
+    # will 404 in the meantime, matching the existing "partner not found" behavior.
 
     return {"message": "OTP sent", "phone": body.phone}
 
@@ -81,7 +80,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     description=(
         "Verifies the OTP sent to the user's phone number and returns JWT tokens.\n\n"
         "**Test OTP:** Use `123456` for development/testing.\n\n"
-        "**Database tables affected:** `auth_users` (read)\n\n"
+        "**Database tables affected:** `users` (read)\n\n"
         "**Permissions:** Public (no authentication required)"
     ),
     responses={
@@ -100,20 +99,20 @@ async def verify_otp(body: VerifyOtpRequest, db: AsyncSession = Depends(get_db))
     if body.otp != "123456":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid OTP")
 
-    stmt = select(AuthUser).where(AuthUser.phone == body.phone)
-    auth_user = (await db.execute(stmt)).scalar_one_or_none()
-    if not auth_user:
+    stmt = select(User).where(User.phone_number == body.phone)
+    user = (await db.execute(stmt)).scalar_one_or_none()
+    if not user:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-    stmt = select(Partner).where(Partner.auth_user_id == auth_user.id)
+    stmt = select(Partner).where(Partner.user_id == user.id)
     partner = (await db.execute(stmt)).scalar_one_or_none()
 
     access_token = create_access_token(
-        sub=str(auth_user.id),
-        role=auth_user.role,
+        sub=str(user.id),
+        role=user.user_type.lower(),
         kyc_status=partner.kyc_status if partner else "not_started",
     )
-    refresh_token = create_refresh_token(sub=str(auth_user.id))
+    refresh_token = create_refresh_token(sub=str(user.id))
 
     return TokenResponse(
         access_token=access_token,
@@ -136,7 +135,7 @@ async def verify_otp(body: VerifyOtpRequest, db: AsyncSession = Depends(get_db))
         "**Test Accounts:**\n"
         "- Partner: `+60100000002` / `Partner@123`\n"
         "- Admin: `+60100000001` / `Admin@123`\n\n"
-        "**Database tables affected:** `auth_users`, `partners` (read)\n\n"
+        "**Database tables affected:** `users`, `partners` (read)\n\n"
         "**Permissions:** Public (no authentication required)"
     ),
     responses={
@@ -162,21 +161,21 @@ async def verify_otp(body: VerifyOtpRequest, db: AsyncSession = Depends(get_db))
     },
 )
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
-    stmt = select(AuthUser).where(AuthUser.phone == body.phone)
-    auth_user = (await db.execute(stmt)).scalar_one_or_none()
+    stmt = select(User).where(User.phone_number == body.phone)
+    user = (await db.execute(stmt)).scalar_one_or_none()
 
-    if not auth_user or not verify_password(body.password, auth_user.password_hash):
+    if not user or not user.password_hash or not verify_password(body.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid phone or password")
 
-    stmt = select(Partner).where(Partner.auth_user_id == auth_user.id)
+    stmt = select(Partner).where(Partner.user_id == user.id)
     partner = (await db.execute(stmt)).scalar_one_or_none()
 
     access_token = create_access_token(
-        sub=str(auth_user.id),
-        role=auth_user.role,
+        sub=str(user.id),
+        role=user.user_type.lower(),
         kyc_status=partner.kyc_status if partner else "not_started",
     )
-    refresh_token = create_refresh_token(sub=str(auth_user.id))
+    refresh_token = create_refresh_token(sub=str(user.id))
 
     return TokenResponse(
         access_token=access_token,

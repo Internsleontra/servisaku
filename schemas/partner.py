@@ -102,9 +102,10 @@ class OnlineToggle(BaseModel):
 
 
 class KYCPersonal(BaseModel):
+    full_name: str | None = Field(None, min_length=2, max_length=120, description="Full name (required the first time KYC is submitted, before a partner profile exists)")
     nric: str = Field(..., max_length=20, description="NRIC number (e.g. 901201-14-5678)")
-    experience_years: int = Field(..., ge=0, le=50, description="Years of professional experience")
-    bio: str | None = Field(None, description="Professional bio/description")
+    experience_years: int = Field(..., ge=0, le=50, description="Years of professional experience (accepted but not yet persisted — no live column for this)")
+    bio: str | None = Field(None, description="Professional bio/description (accepted but not yet persisted — no live column for this)")
 
 
 class KYCSubmission(BaseModel):
