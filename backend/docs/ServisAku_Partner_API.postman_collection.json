@@ -1,0 +1,371 @@
+{
+  "info": {
+    "name": "ServisAku Partner API",
+    "description": "Complete API collection for the ServisAku Partner backend.\n\nBase URL: http://localhost:8000/api/v1\n\nAuthentication:\n1. Run 'Login' request first\n2. The access_token is auto-saved to collection variable\n3. All protected endpoints use Bearer token automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "partner_id", "value": "" },
+    { "key": "job_id", "value": "" },
+    { "key": "notification_id", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Root Health Check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8000/",
+            "auth": { "type": "noauth" }
+          }
+        },
+        {
+          "name": "Detailed Health Check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8000/health",
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/register",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Test Partner\",\n  \"phone\": \"+60199887766\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Test@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/verify-otp",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+60199887766\",\n  \"otp\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (Partner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('access_token', json.access_token);",
+                  "    pm.collectionVariables.set('refresh_token', json.refresh_token);",
+                  "    if (json.partner && json.partner.id) {",
+                  "        pm.collectionVariables.set('partner_id', json.partner.id);",
+                  "    }",
+                  "    pm.test('Login successful', function() { pm.response.to.have.status(200); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+60100000002\",\n  \"password\": \"Partner@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('access_token', json.access_token);",
+                  "    pm.collectionVariables.set('refresh_token', json.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+60100000001\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/refresh",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Partner Profile",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": { "method": "GET", "url": "{{base_url}}/partner/me" }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/partner/me",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Ahmad Rizal Updated\",\n  \"bio\": \"Professional home service partner in Klang Valley\",\n  \"experience_years\": 6\n}"
+            }
+          }
+        },
+        {
+          "name": "Toggle Online",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/partner/me/online",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"is_online\": true\n}" }
+          }
+        },
+        {
+          "name": "Submit KYC",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/partner/me/kyc",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"personal\": {\n    \"nric\": \"901201-14-5678\",\n    \"experience_years\": 5,\n    \"bio\": \"Professional home cleaner\"\n  },\n  \"bank_account\": {\n    \"bank_name\": \"Maybank\",\n    \"account_name\": \"Ahmad Rizal\",\n    \"account_number\": \"1234567890\"\n  },\n  \"categories\": [\"cleaning\", \"ac\"],\n  \"service_areas\": [{\"name\": \"Petaling Jaya\", \"zone\": \"central\"}],\n  \"availability\": [{\"day\": \"mon\", \"enabled\": true, \"start\": \"09:00\", \"end\": \"18:00\"}]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Bank Account",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/partner/me/bank-account",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bank_name\": \"CIMB\",\n  \"account_name\": \"Ahmad Rizal\",\n  \"account_number\": \"9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Categories",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/partner/me/categories",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "[\"cleaning\", \"ac\", \"plumbing\"]" }
+          }
+        },
+        {
+          "name": "Update Availability",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/partner/me/availability",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\"day\": \"mon\", \"enabled\": true, \"start\": \"09:00\", \"end\": \"18:00\"},\n  {\"day\": \"tue\", \"enabled\": true, \"start\": \"09:00\", \"end\": \"18:00\"},\n  {\"day\": \"wed\", \"enabled\": true, \"start\": \"09:00\", \"end\": \"18:00\"}\n]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Get New Requests",
+          "event": [{ "listen": "test", "script": { "exec": ["var json = pm.response.json();", "if (json.length > 0) pm.collectionVariables.set('job_id', json[0].id);"] } }],
+          "request": { "method": "GET", "url": "{{base_url}}/jobs/new" }
+        },
+        {
+          "name": "Get Upcoming Jobs",
+          "request": { "method": "GET", "url": "{{base_url}}/jobs/upcoming" }
+        },
+        {
+          "name": "Get Completed Jobs",
+          "request": { "method": "GET", "url": "{{base_url}}/jobs/completed?limit=20&offset=0" }
+        },
+        {
+          "name": "Get Today's Jobs",
+          "request": { "method": "GET", "url": "{{base_url}}/jobs/today" }
+        },
+        {
+          "name": "Get Job Detail",
+          "request": { "method": "GET", "url": "{{base_url}}/jobs/{{job_id}}" }
+        },
+        {
+          "name": "Accept Job",
+          "request": { "method": "POST", "url": "{{base_url}}/jobs/{{job_id}}/accept" }
+        },
+        {
+          "name": "Decline Job",
+          "request": { "method": "POST", "url": "{{base_url}}/jobs/{{job_id}}/decline" }
+        },
+        {
+          "name": "Update Job Status",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/jobs/{{job_id}}/status",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"en_route\"\n}" }
+          }
+        },
+        {
+          "name": "Complete Job",
+          "request": { "method": "POST", "url": "{{base_url}}/jobs/{{job_id}}/complete" }
+        }
+      ]
+    },
+    {
+      "name": "Earnings",
+      "item": [
+        {
+          "name": "Get Earnings (Daily)",
+          "request": { "method": "GET", "url": "{{base_url}}/earnings?period=daily" }
+        },
+        {
+          "name": "Get Earnings (Weekly)",
+          "request": { "method": "GET", "url": "{{base_url}}/earnings?period=weekly" }
+        },
+        {
+          "name": "Get Earnings (Monthly)",
+          "request": { "method": "GET", "url": "{{base_url}}/earnings?period=monthly" }
+        },
+        {
+          "name": "Get Earnings Summary",
+          "request": { "method": "GET", "url": "{{base_url}}/earnings/summary" }
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "Get Balance",
+          "request": { "method": "GET", "url": "{{base_url}}/wallet/balance" }
+        },
+        {
+          "name": "Get Settlements",
+          "request": { "method": "GET", "url": "{{base_url}}/wallet/settlements?limit=20&offset=0" }
+        },
+        {
+          "name": "Withdraw",
+          "request": { "method": "POST", "url": "{{base_url}}/wallet/withdraw" }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Get Reviews",
+          "request": { "method": "GET", "url": "{{base_url}}/reviews?limit=20&offset=0" }
+        },
+        {
+          "name": "Get Reviews Summary",
+          "request": { "method": "GET", "url": "{{base_url}}/reviews/summary" }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "event": [{ "listen": "test", "script": { "exec": ["var json = pm.response.json();", "if (json.length > 0) pm.collectionVariables.set('notification_id', json[0].id);"] } }],
+          "request": { "method": "GET", "url": "{{base_url}}/notifications?limit=50&offset=0" }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": { "method": "GET", "url": "{{base_url}}/notifications/unread-count" }
+        },
+        {
+          "name": "Mark One as Read",
+          "request": { "method": "PUT", "url": "{{base_url}}/notifications/{{notification_id}}/read" }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": { "method": "PUT", "url": "{{base_url}}/notifications/read-all" }
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/feedback",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"bug\",\n  \"subject\": \"App crashes on job accept\",\n  \"body\": \"When I tap accept on a new job request, the app crashes and returns to home screen.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Feedback List",
+          "request": { "method": "GET", "url": "{{base_url}}/feedback?limit=20&offset=0" }
+        },
+        {
+          "name": "Get Feedback Detail",
+          "request": { "method": "GET", "url": "{{base_url}}/feedback/{{feedback_id}}" }
+        }
+      ]
+    }
+  ]
+}
