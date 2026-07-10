@@ -26,6 +26,25 @@
 - `schemas/upload.py`.
 - Config: `CLOUDINARY_*`, `MAX_UPLOAD_SIZE_MB`.
 
+### Notification Dispatcher (Stage 3)
+- `models/notification_delivery.py` (`DeviceToken`, `NotificationLog`,
+  `NotificationPreference`) — mapped to three more pre-existing, previously
+  empty shared tables.
+- `services/notifications/` package: `push_base.py`/`firebase_push.py`
+  (FCM), `email_base.py` + `resend_email.py`/`brevo_email.py`/
+  `mailersend_email.py` (fallback chain), `sms_base.py`/`mock_sms.py`,
+  `registry.py`, `dispatcher.py` (central orchestration: in-app row always,
+  best-effort delivery per channel, preference checks, logging, retry).
+- `routes/notification_dispatch.py` (12 endpoints, under the existing
+  `/notifications` prefix) — device tokens, preferences, topics, delivery
+  logs, retry.
+- `schemas/notification_dispatch.py`.
+- Config: `FIREBASE_*`, `RESEND_API_KEY`, `BREVO_API_KEY`,
+  `MAILERSEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`.
+- Dispatcher wired into `routes/auth.py` (`verify_otp`), `routes/consumer.py`
+  (`create_booking`), `routes/payments.py` (`_mark_payment_paid`,
+  `complete_refund`), `routes/feedback.py` (`submit_feedback`).
+
 ## Changed
 
 - `routes/jobs.py`: ended the session unchanged from its prior-session state
@@ -49,6 +68,22 @@
 - `main.py`: `payments_router` was registered twice via
   `app.include_router` (duplicated every payment route in the OpenAPI
   schema — harmless but sloppy; found while wiring in `uploads_router`).
+- `routes/consumer.py`: booking-creation notifications were dispatched via
+  `BackgroundTasks` referencing the just-created `booking_id`, which has a
+  live FK constraint — the background task's independent DB session raced
+  against the triggering request's transaction and hit a
+  `ForeignKeyViolationError`. Fixed by dispatching inline (same session,
+  already flushed) for this specific call site.
+- `services/notifications/dispatcher.py`,
+  `services/notifications/firebase_push.py`: an unconfigured/failing
+  notification channel could raise out of `dispatch()` and break whatever
+  business action triggered it (e.g. a payment webhook). Hardened at both
+  the dispatcher level (each channel attempt isolated) and the provider
+  level (`FirebasePushProvider` returns a failed `PushResult` instead of
+  raising for "not configured").
+- Discarded a trivial, pre-existing whitespace-only diff in
+  `backend/schemas/feedback.py` (unrelated to any of this session's work)
+  to leave a clean working tree per the pre-Stage-3 verification ask.
 
 ## Removed
 

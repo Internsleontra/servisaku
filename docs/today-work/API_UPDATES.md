@@ -1,7 +1,8 @@
 # API Updates — 10 July 2026
 
-27 new endpoints across 3 new route groups. Full request/response schemas and
-examples are in Swagger UI (`/docs`) — this is a quick-reference summary. See
+39 new endpoints across 4 route groups (3 new, 1 extending the existing
+Notifications group). Full request/response schemas and examples are in
+Swagger UI (`/docs`) — this is a quick-reference summary. See
 `backend/API_TESTING_REPORT.md` for verification status per endpoint.
 
 ## Consumer (`/api/v1/consumer/*`) — 6 endpoints
@@ -46,6 +47,23 @@ examples are in Swagger UI (`/docs`) — this is a quick-reference summary. See
 | POST | `/uploads/signature` | Get signed params for a direct-to-Cloudinary upload |
 | POST | `/uploads/confirm` | Persist the result of a direct upload |
 
+## Notification Dispatch (`/api/v1/notifications/*`) — 12 endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/notifications/device-tokens` | Register/reactivate a device token (upsert) |
+| GET | `/notifications/device-tokens` | List my device tokens |
+| PUT | `/notifications/device-tokens/{id}` | Update type/active flag |
+| DELETE | `/notifications/device-tokens/{id}` | Remove a device token |
+| GET | `/notifications/preferences` | Get my preferences (auto-creates defaults) |
+| PUT | `/notifications/preferences` | Update preferences |
+| POST | `/notifications/topics/subscribe` | Subscribe my devices to an FCM topic |
+| POST | `/notifications/topics/unsubscribe` | Unsubscribe |
+| POST | `/notifications/topics/{topic}/send` | Admin: broadcast to a topic |
+| GET | `/notifications/logs` | My delivery history across all channels |
+| POST | `/notifications/logs/{id}/retry` | Admin: retry one failed delivery |
+| POST | `/notifications/retry-failed` | Admin: bulk retry recent failures |
+
 ## Breaking changes
 
 None — every existing endpoint's request/response shape is unchanged.
@@ -62,3 +80,16 @@ None — every existing endpoint's request/response shape is unchanged.
   the file straight through this API (validated, simplest), or get a signed
   URL and upload directly to Cloudinary from the mobile client, then call
   `/uploads/confirm` — useful for large files on slow connections.
+- **Notification delivery is best-effort and non-blocking by design**: a
+  failing or unconfigured channel (e.g. Firebase not set up yet) never
+  surfaces as an error to the triggering action — it's logged to
+  `notification_logs` as `FAILED` instead, retryable later via
+  `/notifications/retry-failed`. Confirmed live: submitting feedback with a
+  registered device token but zero notification providers configured still
+  returns `201`, with both the push and email attempts correctly logged as
+  failed.
+- **`GET /notifications/logs` vs. `GET /notifications`**: intentionally
+  distinct. The former is the delivery-attempt log across push/SMS/email
+  (with provider and status); the latter is the pre-existing in-app
+  notification list. A single triggering event produces one row in the
+  latter and up to three in the former (one per requested channel).

@@ -36,6 +36,32 @@ This was discarded and rebuilt against the real schema (see `GIT_COMMITS.md`
 | `service_categories` | 6 (pre-existing, real) | 6 (unchanged) | Admin Catalog module | Read-only — never written to |
 | `consumer_addresses` | 0 | 1 (seed data) | Consumer module | |
 | `consumer_profiles` | 0 | 1 (seed data) | Consumer module | Now writable (was read-only before this session, for reviews only) |
+| `device_tokens` | 0 | 1 (test data from verification, see below) | (this session, Stage 3) | |
+| `notification_logs` | 0 | several (verification attempts) | (this session, Stage 3) | All `FAILED` — no real provider configured yet, exactly as expected |
+| `notification_preferences` | 0 | 2 (auto-created during verification) | (this session, Stage 3) | Auto-created with defaults on first access per user |
+
+## Second discovery: the database grew substantially between Stage 2 and Stage 3
+
+Before writing any Stage 3 code, a fresh full-table listing (same discipline
+as the Stage 1 discovery) found the live database had grown from the 83
+tables inventoried in Stage 1/2 to a much larger, different set — other team
+members' concurrent work on Booking Engine/Admin/Training/B2B modules. New
+tables directly relevant to this stage: `device_tokens`,
+`notification_logs`, `notification_preferences` — all empty, all a clean
+match for exactly what Stage 3 needed (device registration, per-channel
+delivery logging with a `notification_status` enum
+`QUEUED/SENT/DELIVERED/FAILED/BOUNCED`, and per-category/per-channel
+preferences). Also newly visible: `payment_transactions`, `escrow_transactions`
+(unrelated, empty — appear to be another team member's parallel/exploratory
+payment work, not used by this module), and `bookings_legacy_stub`/
+`reviews_legacy_stub`/`notifications_legacy_stub` (empty, vestigial).
+
+**Confirmed nothing already built had drifted**: `payments` (still 16
+columns), `refunds` (14), `bookings` (34, now correctly showing the 1 row
+seeded in Stage 1), `reviews` (11), and `notifications` (12, still 4 rows)
+all matched exactly what Stage 1/prior-session work had already mapped. No
+re-reconciliation was needed — only additive new models for the three new
+tables.
 
 ## Model reconciliation carried over from the prior session (not new today, included for completeness)
 

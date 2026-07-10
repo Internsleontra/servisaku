@@ -2,11 +2,12 @@
 
 ## Summary
 
-Two backend stages were completed against the live shared AWS RDS database
-(`servisakudb`, via SSH tunnel): **Payment Gateway** (Stage 1) and **Media
-Uploads** (Stage 2). Both were preceded/interrupted by real discoveries about
-the live database that changed the implementation approach mid-stream —
-documented in detail below and in `DATABASE_CHANGES.md`.
+Three backend stages were completed against the live shared AWS RDS database
+(`servisakudb`, via SSH tunnel): **Payment Gateway** (Stage 1), **Media
+Uploads** (Stage 2), and **Notification Dispatcher** (Stage 3). All three were
+preceded by real discoveries about the live database that changed the
+implementation approach mid-stream — documented in detail below and in
+`DATABASE_CHANGES.md`.
 
 ## Timeline
 
@@ -60,13 +61,39 @@ documented in detail below and in `DATABASE_CHANGES.md`.
    that deletion was actually intentional. Merged (`fa9b57e`) and pushed to
    `origin/main`.
 
+7. **Pre-Stage-3 verification checklist** (your explicit ask before starting
+   Stage 3): confirmed zero untracked/stray implementation files anywhere,
+   local `main` exactly matched `origin/main`, discarded a trivial pre-existing
+   whitespace-only diff in `backend/schemas/feedback.py` unrelated to any of
+   this work, reinstalled from `requirements.txt` to confirm it reproduces the
+   environment, and did a full boot + Swagger/ReDoc verification against the
+   live database.
+
+8. **Stage 3 — Notification Dispatcher.** Before writing any code, re-checked
+   the live schema (per the established pattern) and found it had grown
+   substantially since Stage 1/2 with entirely new tables from other team
+   members' concurrent work (`device_tokens`, `notification_logs`,
+   `notification_preferences`, plus unrelated `payment_transactions`,
+   `escrow_transactions`, and several `*_legacy_stub` tables). Confirmed
+   nothing already built (`payments`, `refunds`, `bookings`, `reviews`,
+   `notifications`) had drifted, then built the dispatcher directly against
+   the three new, empty, purpose-built tables: Firebase push (Spark/free
+   plan), email via Resend→Brevo→MailerSend fallback, and a mock SMS
+   provider, all behind provider interfaces mirroring the Payment Gateway's
+   architecture. Wired into registration, booking creation, payment
+   confirmation, and feedback submission. Found and fixed two real bugs
+   during verification (a foreign-key race with `BackgroundTasks`, and an
+   unconfigured-provider exception that could have broken payment
+   confirmation) — see `DATABASE_CHANGES.md` and `TEST_REPORT.md`. Committed
+   as `9572c0e`.
+
 ## What's genuinely done vs. pending real credentials
 
-Both stages are **fully implemented and verified against the live database**
-end-to-end — every DB write, authorization boundary, validation rule, and
-error path was exercised with real HTTP calls. What's **not yet verified** is
-the literal outbound call to each third-party API, because no real
-credentials exist yet for either service:
+All three stages are **fully implemented and verified against the live
+database** end-to-end — every DB write, authorization boundary, validation
+rule, and error path was exercised with real HTTP calls. What's **not yet
+verified** is the literal outbound call to each third-party API, because no
+real credentials exist yet for any of them:
 
 - **Billplz**: sandbox account is free and self-serve — you said you'd
   create it separately. See `docs/BILLPLZ_SETUP.md`.
@@ -75,11 +102,19 @@ credentials exist yet for either service:
   Nobody has signed up yet.
 - **iPay88**: stubbed on purpose — no self-serve sandbox exists; requires
   emailing `support@ipay88.com.my` for a manually-approved merchant account.
+- **Firebase**: free (Spark plan) project at
+  `https://console.firebase.google.com` using `intern@leontra.com`. Nobody
+  has signed up yet.
+- **Resend / Brevo / MailerSend**: all free-tier, self-serve. Nobody has
+  signed up for any of them yet — the dispatcher tries whichever ones have
+  an API key configured, in that preference order.
 
 Once real keys land in `.env`, the only thing that could still need
 adjustment is the Billplz X-Signature verification algorithm (implemented
 per their documentation but never checked against a real callback) — the
-Cloudinary signed-upload signature has no equivalent risk since it calls
-Cloudinary's own SDK function rather than a hand-written reimplementation.
+Cloudinary signed-upload signature and the Firebase/email integrations have
+no equivalent risk since they all call each vendor's own SDK/well-documented
+REST contract rather than a hand-written reimplementation of a signing
+scheme.
 
 See `TEST_REPORT.md` for the full verification breakdown.

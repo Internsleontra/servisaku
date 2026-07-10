@@ -58,6 +58,35 @@ explicitly asked twice this session to keep it updated. **Flagged for your
 attention**: worth confirming that the July 2 deletion wasn't an intentional
 decision this merge just undid.
 
+## `ec3254a` — docs: add today-work summary for Payment Gateway + Media Uploads stages
+
+The first version of these six `docs/today-work/` files, covering Stages 1–2.
+
+## `9572c0e` — feat(notifications): Stage 3 - Notification Dispatcher (FCM push, email, mock SMS)
+
+Notification Dispatcher against three more pre-existing, previously-empty
+shared tables discovered this session (`device_tokens`, `notification_logs`,
+`notification_preferences`). Provider-agnostic architecture mirroring the
+Payment Gateway's approach: Firebase push, Resend→Brevo→MailerSend email
+fallback chain, mock SMS, all behind interfaces. Central `dispatcher.py`
+orchestrates in-app notification creation, per-channel best-effort delivery,
+preference checks, and logging. New `routes/notification_dispatch.py` (12
+endpoints) for device tokens, preferences, topics, delivery logs, and retry.
+Wired into registration, booking creation, payment confirmation, and
+feedback submission.
+
+Found and fixed two real bugs during verification: (1) a foreign-key race
+where booking-creation notifications dispatched via `BackgroundTasks` hit
+`notifications_booking_id_fkey` because the background task's independent
+session didn't reliably see the same-request booking row — fixed by
+dispatching inline for that call site; (2) an unconfigured push provider
+could raise out of the dispatcher and break the business action that
+triggered it (e.g. a payment webhook) — fixed by making channel dispatch
+failures always logged rather than raised, at both the dispatcher and
+provider level. See `DATABASE_CHANGES.md` and `TEST_REPORT.md` for full
+detail on both.
+
 ---
 
-Pushed to `origin/main`: `75aef4e..fa9b57e`.
+Pushed to `origin/main`: `75aef4e..9572c0e` (across two pushes:
+`75aef4e..fa9b57e`, then `fa9b57e..9572c0e`).
