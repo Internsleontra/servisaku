@@ -55,8 +55,9 @@ class Partner(Base):
         default="BRONZE",
     )
     service_radius_km: Mapped[int] = mapped_column(Integer, default=10)
-    # home_location (PostGIS GEOGRAPHY(POINT,4326)) intentionally left unmapped —
-    # no geo/dispatch feature uses it yet; needs geoalchemy2 when that lands.
+    # home_location (PostGIS GEOGRAPHY(POINT,4326)) intentionally left unmapped
+    # here — dispatch's proximity search (services/dispatch/matching.py) reads/
+    # writes it via raw SQL (ST_Distance/ST_MakePoint) instead of geoalchemy2.
     is_available: Mapped[bool] = mapped_column(Boolean, default=False)
     prayer_time_block_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     average_rating: Mapped[float] = mapped_column(Numeric(3, 2), default=0.00)
@@ -162,6 +163,19 @@ class PartnerAvailability(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     partner: Mapped["Partner"] = relationship(back_populates="availability")
+
+
+class PartnerLanguage(Base):
+    """Mapping of the shared `partner_languages` table — which languages a
+    partner speaks (language_code references the `languages` reference
+    table). Used by dispatch's language-matching score."""
+
+    __tablename__ = "partner_languages"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    partner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("partners.id", ondelete="CASCADE"), nullable=False)
+    language_code: Mapped[str] = mapped_column(String(10), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
 # Forward reference imports for type checking

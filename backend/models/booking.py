@@ -19,11 +19,10 @@ RECURRENCE_PATTERN_VALUES = ("WEEKLY", "FORTNIGHTLY", "MONTHLY")
 
 class Booking(Base):
     """Mapping of the shared `bookings` table (owned by the Booking Engine
-    module — full booking lifecycle/dispatch is out of scope here). This app
-    maps it because `payments`/`refunds` hard-FK to booking_id, and because a
-    minimal consumer-facing create path is needed to make payments testable
-    (see routes/consumer.py). Cancellation, recurrence, coupons, and dispatch
-    are not implemented here."""
+    module). Payments, Smart Dispatch (services/dispatch/), and the
+    post-assignment status progression (EN_ROUTE/ARRIVED/IN_PROGRESS/
+    COMPLETED, see routes/dispatch.py) all operate on this table. Cancellation,
+    recurrence, and coupons are still not implemented here."""
 
     __tablename__ = "bookings"
 
@@ -67,6 +66,22 @@ class Booking(Base):
 
     service: Mapped["Service"] = relationship()
     address: Mapped["ConsumerAddress"] = relationship()
+
+
+class BookingStatusHistory(Base):
+    """Mapping of the shared `booking_status_history` table (pre-existing,
+    empty) — an append-only log of every booking_status transition, used by
+    the post-assignment status-update endpoint (routes/dispatch.py)."""
+
+    __tablename__ = "booking_status_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    booking_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False)
+    old_status: Mapped[str | None] = mapped_column(PgEnum(*BOOKING_STATUS_VALUES, name="booking_status", create_type=False))
+    new_status: Mapped[str] = mapped_column(PgEnum(*BOOKING_STATUS_VALUES, name="booking_status", create_type=False), nullable=False)
+    changed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    remarks: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
 from models.catalog import Service  # noqa: E402, F811

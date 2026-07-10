@@ -21,6 +21,8 @@ from schemas.payment import (
 )
 from services.gateway_registry import get_gateway
 from services.notifications.dispatcher import dispatch
+from services.dispatch.engine import start_dispatch
+from services.realtime import events
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -80,9 +82,11 @@ async def _mark_payment_paid(payment: Payment, db: AsyncSession) -> None:
         return
     payment.status = "HELD_IN_ESCROW"
     payment.authorized_at = datetime.utcnow()
+    became_confirmed = False
     if payment.booking and payment.booking.booking_status == "PENDING_PAYMENT":
         payment.booking.booking_status = "CONFIRMED"
         payment.booking.confirmed_at = datetime.utcnow()
+        became_confirmed = True
     await db.flush()
 
     if payment.booking:
@@ -96,6 +100,19 @@ async def _mark_payment_paid(payment: Payment, db: AsyncSession) -> None:
                 notification_type="payment_confirmed", booking_id=payment.booking_id,
                 email_to=user.email,
             )
+
+    if became_confirmed:
+        await events.emit("booking.status_changed", {
+            "booking_id": str(payment.booking_id), "old_status": "PENDING_PAYMENT", "new_status": "CONFIRMED",
+        })
+        # Smart Dispatch: a freshly-CONFIRMED, unassigned booking automatically
+        # enters the dispatch queue — this is the one auto-assignment trigger
+        # point (see services/dispatch/engine.py). Same session/inline, not a
+        # BackgroundTask — no FK race risk since the booking already existed
+        # before this call, but dispatch's own DB writes must see this same
+        # CONFIRMED status within the same transaction.
+        if payment.booking.partner_id is None:
+            await start_dispatch(payment.booking, db)
 
 
 async def _mark_payment_failed(payment: Payment, db: AsyncSession, reason: str) -> None:

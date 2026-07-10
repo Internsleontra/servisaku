@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timedelta, date, timezone
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import async_session, engine, Base
@@ -15,8 +15,9 @@ from auth import hash_password
 from models.auth import User
 from models.partner import (
     Partner, BankAccount, PartnerCategory,
-    PartnerServiceArea, PartnerAvailability,
+    PartnerServiceArea, PartnerAvailability, PartnerLanguage,
 )
+from models.dispatch import PartnerServiceCategory
 from models.customer import Customer
 from models.job import Job, JobStatusLog
 from models.earning import Earning
@@ -390,6 +391,100 @@ async def seed_sample_service(db: AsyncSession) -> Service | None:
     return service
 
 
+async def seed_dispatch_geo_and_skills(db: AsyncSession, partner: Partner, address: ConsumerAddress, category: ServiceCategory | None):
+    """Smart Dispatch (Stage 4) needs real coordinates and a skill match to
+    find any candidates at all — partners.home_location/consumer_addresses.location
+    are PostGIS geography columns that nothing writes to yet, and
+    partner_service_categories started this session with 0 rows. All
+    additive, idempotent (checked before writing)."""
+    row = (await db.execute(text("SELECT home_location IS NOT NULL FROM partners WHERE id = :id"), {"id": str(partner.id)})).scalar_one()
+    if not row:
+        # Ahmad Rizal — placed ~1.7km from the seeded SS2, Petaling Jaya address
+        await db.execute(text(
+            "UPDATE partners SET home_location = ST_SetSRID(ST_MakePoint(101.6100, 3.1200), 4326)::geography WHERE id = :id"
+        ), {"id": str(partner.id)})
+        print("  [created] home_location for Ahmad Rizal (~1.7km from seeded consumer address)")
+    else:
+        print("  [skip] Partner home_location already set")
+
+    addr_has_location = (await db.execute(text("SELECT location IS NOT NULL FROM consumer_addresses WHERE id = :id"), {"id": str(address.id)})).scalar_one()
+    if not addr_has_location:
+        await db.execute(text(
+            "UPDATE consumer_addresses SET location = ST_SetSRID(ST_MakePoint(101.6038, 3.1073), 4326)::geography WHERE id = :id"
+        ), {"id": str(address.id)})
+        print("  [created] location for the seeded consumer address (SS2, Petaling Jaya)")
+    else:
+        print("  [skip] Consumer address location already set")
+
+    if category:
+        existing_skill = (await db.execute(
+            select(PartnerServiceCategory).where(PartnerServiceCategory.partner_id == partner.id, PartnerServiceCategory.service_category_id == category.id)
+        )).scalar_one_or_none()
+        if not existing_skill:
+            db.add(PartnerServiceCategory(partner_id=partner.id, service_category_id=category.id, years_of_experience=5, is_active=True))
+            print(f"  [created] Partner skill match: Ahmad Rizal -> {category.name}")
+        else:
+            print("  [skip] Partner service category already exists")
+
+    existing_lang = (await db.execute(select(PartnerLanguage).where(PartnerLanguage.partner_id == partner.id))).scalars().first()
+    if not existing_lang:
+        db.add(PartnerLanguage(partner_id=partner.id, language_code="bm"))
+        db.add(PartnerLanguage(partner_id=partner.id, language_code="en"))
+        print("  [created] Partner languages: bm, en")
+    else:
+        print("  [skip] Partner languages already exist")
+
+    await db.flush()
+
+
+async def seed_second_test_partner(db: AsyncSession, category: ServiceCategory | None) -> Partner | None:
+    """A second ACTIVE, geo-tagged, skill-matched partner — needed to exercise
+    dispatch ranking/retry with more than one real candidate. Farther from the
+    seeded consumer address than Ahmad Rizal (~9km vs ~1.7km), so ranking by
+    proximity is meaningfully testable."""
+    existing = (await db.execute(select(User).where(User.email == "partner2@servisaku.com"))).scalar_one_or_none()
+    if existing:
+        print("  [skip] partner2@servisaku.com already exists")
+        partner = (await db.execute(select(Partner).where(Partner.user_id == existing.id))).scalar_one_or_none()
+        return partner
+
+    user = User(
+        user_type="PARTNER", email="partner2@servisaku.com", phone_number="+60100000004",
+        password_hash=hash_password("Partner@123"), status="ACTIVE",
+        is_phone_verified=True, is_email_verified=True,
+    )
+    db.add(user)
+    await db.flush()
+
+    partner = Partner(
+        user_id=user.id, full_name="Farah Aziz", nric_or_passport_number="880615-10-4321",
+        status="ACTIVE", is_available=True,
+        average_rating=Decimal("4.50"), rating_count=8,
+        total_completed_jobs=8, completion_rate=Decimal("90.00"),
+    )
+    db.add(partner)
+    await db.flush()
+
+    await db.execute(text(
+        "UPDATE partners SET home_location = ST_SetSRID(ST_MakePoint(101.5500, 3.0500), 4326)::geography WHERE id = :id"
+    ), {"id": str(partner.id)})
+
+    from datetime import time as dt_time
+    for day in range(7):
+        db.add(PartnerAvailability(
+            partner_id=partner.id, day_of_week=day, is_active=(day < 6),
+            start_time=dt_time(8, 0), end_time=dt_time(20, 0), max_jobs_per_day=6,
+        ))
+
+    if category:
+        db.add(PartnerServiceCategory(partner_id=partner.id, service_category_id=category.id, years_of_experience=3, is_active=True))
+    db.add(PartnerLanguage(partner_id=partner.id, language_code="en"))
+
+    await db.flush()
+    print("  [created] Second test partner: Farah Aziz (partner2@servisaku.com / Partner@123, phone +60100000004, ~9km away)")
+    return partner
+
+
 async def seed_sample_booking(
     db: AsyncSession, partner: Partner, consumer: ConsumerProfile,
     address: ConsumerAddress, service: Service | None,
@@ -478,6 +573,14 @@ async def main():
                     print("\n9. Seeding sample booking...")
                     await seed_sample_booking(db, partner_record, consumer_profile, consumer_address, service)
 
+                    category = await db.get(ServiceCategory, service.category_id) if service else None
+
+                    print("\n10. Seeding Smart Dispatch test data (geo, skills, languages)...")
+                    await seed_dispatch_geo_and_skills(db, partner_record, consumer_address, category)
+
+                    print("\n11. Seeding second test partner for dispatch ranking/retry...")
+                    await seed_second_test_partner(db, category)
+
             await db.commit()
             print("\n" + "=" * 60)
             print("Seed complete!")
@@ -487,6 +590,8 @@ async def main():
             print("Admin:    admin@servisaku.com    / Admin@123")
             print("Partner:  partner@servisaku.com  / Partner@123")
             print("          Phone: +60100000002")
+            print("Partner2: partner2@servisaku.com / Partner@123")
+            print("          Phone: +60100000004")
             print("Customer: customer@servisaku.com / Customer@123")
             print("-" * 40)
             print("\nLogin via POST /api/v1/auth/login with:")

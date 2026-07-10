@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str = "notifications@servisaku.com"
     EMAIL_FROM_NAME: str = "ServisAku"
 
+    # Smart Dispatch — sequential offer queue tuning
+    DISPATCH_OFFER_TIMEOUT_SECONDS: int = 90
+    DISPATCH_MAX_CANDIDATES: int = 5
+    DISPATCH_MAX_ATTEMPTS: int = 5
+    DISPATCH_SEARCH_RADIUS_KM_CAP: int = 50
+    DISPATCH_SWEEP_INTERVAL_SECONDS: int = 20
+
     # CORS
     ALLOWED_ORIGINS: list[str] = ["*"]
 

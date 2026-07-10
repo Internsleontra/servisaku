@@ -1,5 +1,7 @@
+import asyncio
 from contextlib import asynccontextmanager
 
+import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -14,8 +16,10 @@ from routes import (
     earnings_router, wallet_router, reviews_router,
     notifications_router, feedback_router,
     consumer_router, payments_router, uploads_router,
-    notification_dispatch_router,
+    notification_dispatch_router, dispatch_router, chat_router,
 )
+from services.dispatch.background import dispatch_sweep_loop
+from services.realtime.socket_server import sio
 
 settings = get_settings()
 setup_logging(debug=settings.DEBUG)
@@ -44,7 +48,7 @@ TAGS_METADATA = [
     },
     {
         "name": "Consumer",
-        "description": "Minimal consumer-facing endpoints (service catalog browsing, saved addresses, booking creation) needed to make the Payment Gateway testable end-to-end. Full booking lifecycle/dispatch belongs to a later stage.",
+        "description": "Consumer-facing endpoints: service catalog browsing, saved addresses, and booking creation. Booking assignment is handled by Smart Dispatch once payment is confirmed.",
     },
     {
         "name": "Payments",
@@ -61,6 +65,19 @@ TAGS_METADATA = [
     {
         "name": "Notifications",
         "description": "In-app notifications (list, unread count, mark read), device token registration, notification preferences, FCM topic subscribe/broadcast, delivery logs, and the retry mechanism.",
+    },
+    {
+        "name": "Smart Dispatch",
+        "description": (
+            "Nearby-partner search, scoring (proximity/rating/completion/language/workload), the "
+            "sequential job-offer queue with expiration and retry, manual override, dispatch/assignment "
+            "history, and analytics. Auto-triggered when a booking's payment is confirmed; also drives "
+            "real-time events over Socket.IO (see docs/SMART_DISPATCH.md and docs/SOCKET_ARCHITECTURE.md)."
+        ),
+    },
+    {
+        "name": "Chat",
+        "description": "Per-booking chat between consumer and assigned partner (REST fallback — the primary path is Socket.IO, see docs/SOCKET_ARCHITECTURE.md).",
     },
     {
         "name": "Feedback & Support",
@@ -95,8 +112,16 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     logger.info("schema_synced", message="All ORM tables ensured in database")
 
+    sweep_task = asyncio.create_task(dispatch_sweep_loop())
+    logger.info("dispatch_background_worker_started", interval_seconds=settings.DISPATCH_SWEEP_INTERVAL_SECONDS)
+
     yield
 
+    sweep_task.cancel()
+    try:
+        await sweep_task
+    except asyncio.CancelledError:
+        pass
     await engine.dispose()
     logger.info("shutdown", message="Database connections closed")
 
@@ -165,6 +190,8 @@ app.include_router(uploads_router, prefix=API_PREFIX)
 app.include_router(reviews_router, prefix=API_PREFIX)
 app.include_router(notifications_router, prefix=API_PREFIX)
 app.include_router(notification_dispatch_router, prefix=API_PREFIX)
+app.include_router(dispatch_router, prefix=API_PREFIX)
+app.include_router(chat_router, prefix=API_PREFIX)
 app.include_router(feedback_router, prefix=API_PREFIX)
 
 
@@ -202,8 +229,9 @@ async def root():
     return {"app": settings.APP_NAME, "version": "1.0.0", "status": "running"}
 
 
-@app.get("/health", tags=["Health"], summary="Detailed health check", description="Returns application health status including database connectivity and table count.")
+@app.get("/health", tags=["Health"], summary="Detailed health check", description="Returns application health status including database connectivity, table count, and connected Socket.IO session count.")
 async def health():
+    from services.realtime.socket_server import get_connected_session_count
     try:
         db_info = await verify_connection()
         return {
@@ -213,9 +241,20 @@ async def health():
                 "name": db_info["database"],
                 "tables": db_info["public_tables"],
             },
+            "realtime": {"connected_sessions": get_connected_session_count()},
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "database": {"connected": False, "error": str(e)},
         }
+
+
+# --- Socket.IO ASGI mount ---
+# `app` above is the plain FastAPI instance (used directly by tests/tools that
+# expect a FastAPI app, and by `python -c "import main"` sanity checks).
+# `socket_app` is the actual ASGI entrypoint to run in production/dev:
+#   uvicorn main:socket_app --host 0.0.0.0 --port 8000
+# It wraps `app` and additionally serves the Socket.IO Engine.IO transport at
+# /socket.io — see docs/SOCKET_ARCHITECTURE.md.
+socket_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="socket.io")
