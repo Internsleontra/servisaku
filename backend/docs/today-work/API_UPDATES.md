@@ -1,6 +1,6 @@
-# API Updates — 10 July 2026
+# API Updates — 10–11 July 2026
 
-39 new endpoints across 4 route groups (3 new, 1 extending the existing
+54 new endpoints across 6 route groups (5 new, 1 extending the existing
 Notifications group). Full request/response schemas and examples are in
 Swagger UI (`/docs`) — this is a quick-reference summary. See
 `backend/API_TESTING_REPORT.md` for verification status per endpoint.
@@ -64,6 +64,40 @@ Swagger UI (`/docs`) — this is a quick-reference summary. See
 | POST | `/notifications/logs/{id}/retry` | Admin: retry one failed delivery |
 | POST | `/notifications/retry-failed` | Admin: bulk retry recent failures |
 
+## Smart Dispatch (`/api/v1/dispatch/*`) — 11 endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/dispatch/bookings/{id}/candidates` | Admin: read-only ranked candidate preview, no side effects |
+| POST | `/dispatch/bookings/{id}/start` | Admin: manually (re)start dispatch for a confirmed, unassigned booking |
+| GET | `/dispatch/offers/pending` | Partner: my current pending offers |
+| POST | `/dispatch/offers/{id}/accept` | Partner: accept an offer (assigns booking, opens chat thread) |
+| POST | `/dispatch/offers/{id}/decline` | Partner: decline (triggers immediate retry to next candidate) |
+| GET | `/dispatch/bookings/{id}/history` | Full ordered dispatch/assignment log for a booking |
+| POST | `/dispatch/bookings/{id}/override` | Admin: manually assign a specific partner, bypassing the queue |
+| POST | `/dispatch/matches/block` | Consumer/admin: block a partner from future matching |
+| GET | `/dispatch/analytics` | Admin: acceptance rate, avg attempts, avg response time, top partners |
+| POST | `/dispatch/process-expired` | Admin: manually run one expiry-sweep cycle (mirrors the background worker) |
+| PATCH | `/dispatch/bookings/{id}/status` | Partner: EN_ROUTE/ARRIVED/IN_PROGRESS/COMPLETED/CANCELLED_BY_PARTNER |
+
+## Chat (`/api/v1/chat/*`) — 4 endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/chat/threads` | List my chat threads |
+| GET | `/chat/threads/{id}/messages` | Message history, oldest first |
+| POST | `/chat/threads/{id}/messages` | Send a message (REST fallback — primary path is Socket.IO) |
+| POST | `/chat/threads/{id}/read` | Mark unread messages as read (REST fallback) |
+
+## Socket.IO events (not REST, see `docs/SOCKET_ARCHITECTURE.md`)
+
+Mounted at `/socket.io` via `main:socket_app`. Client→server:
+`booking:join`/`booking:leave`, `heartbeat`, `chat:typing`,
+`chat:send_message`, `chat:read`, `partner:location_update`. Server→client:
+`presence:online`/`presence:offline`, `heartbeat:ack`, `chat:new_message`,
+`chat:read_receipt`, `chat:typing`, `partner:location`, `dispatch:job_offer`,
+`dispatch:status_update`, `booking:status_update`.
+
 ## Breaking changes
 
 None — every existing endpoint's request/response shape is unchanged.
@@ -93,3 +127,25 @@ None — every existing endpoint's request/response shape is unchanged.
   (with provider and status); the latter is the pre-existing in-app
   notification list. A single triggering event produces one row in the
   latter and up to three in the former (one per requested channel).
+- **Dispatch is a strictly sequential single-offer queue**, not a
+  broadcast-to-all-candidates model: only one `PENDING` `job_dispatches` row
+  exists per booking at any time. Confirmed via live testing — declining an
+  offer immediately creates exactly one new row for the next-ranked
+  candidate, never more than one active offer simultaneously.
+- **`job_dispatches` is both the live queue and the permanent log** —
+  there's no separate "dispatch history" table; rows are never deleted, only
+  their `status` changes (`PENDING → ACCEPTED/DECLINED/EXPIRED`). `GET
+  /dispatch/bookings/{id}/history` is a plain read of this same table.
+- **Manual override validates booking state** (`CONFIRMED` or
+  `PARTNER_ASSIGNED` only) — added after review found the first version had
+  no such check, which would have let an admin "assign" a partner to a
+  booking that hadn't been paid for yet, or one already completed/cancelled.
+- **Chat has two paths, functionally identical**: the Socket.IO events
+  (`chat:send_message`/`chat:read`) and the REST endpoints both write to the
+  same `chat_messages` rows and emit the same real-time broadcast — verified
+  live that a message sent via REST arrives over an already-connected
+  socket exactly like one sent socket-natively.
+- **Presence and partner GPS location are intentionally not persisted** —
+  no dedicated table exists for either in the live schema; both are
+  in-memory/broadcast-only, matching their inherently ephemeral nature (see
+  `docs/SOCKET_ARCHITECTURE.md`).

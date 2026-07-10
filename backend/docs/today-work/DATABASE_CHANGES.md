@@ -1,11 +1,16 @@
-# Database Changes — 10 July 2026
+# Database Changes — 10–11 July 2026
 
 **No destructive changes. No tables created, dropped, or altered by this
 session's work** — every table this session's code writes to
 (`bookings`, `payments`, `refunds`, `services`, `service_categories`,
-`consumer_addresses`, `consumer_profiles`) **already existed live** in
-`servisakudb` before this session touched it, built by another team member.
-This session only added SQLAlchemy model mappings for them.
+`consumer_addresses`, `consumer_profiles`, `job_dispatches`,
+`blocked_matches`, `partner_service_categories`, `partner_languages`,
+`booking_status_history`, `chat_threads`, `chat_messages`) **already existed
+live** in `servisakudb` before this session touched it, built by another
+team member. This session only added SQLAlchemy model mappings for them,
+plus two ORM-level-only additive columns on existing models
+(`consumer_profiles.preferred_partner_language` was already a live column,
+just newly mapped — same for everything else here).
 
 ## The key discovery
 
@@ -63,6 +68,36 @@ all matched exactly what Stage 1/prior-session work had already mapped. No
 re-reconciliation was needed — only additive new models for the three new
 tables.
 
+## Third discovery: schema re-checked fresh after the repository migration — unchanged
+
+Before writing any Stage 4 code (and again per the explicit "other team
+members may have changed it" instruction), the live schema was re-queried
+from scratch in the new `servisaku-partner-consumer/backend/` location: still
+83 tables, identical column-for-column to the Stage 3 baseline. No drift.
+
+Tables newly mapped this stage, all pre-existing and empty beforehand:
+
+| Table | Rows before | Rows after | Notes |
+|-------|------------:|-----------:|-------|
+| `job_dispatches` | 0 | several (test offers, all real dispatch attempts from live verification) | Doubles as both the active offer queue and the permanent dispatch log |
+| `blocked_matches` | 0 | 1 (test block, from live verification) | |
+| `partner_service_categories` | 0 | 2 (seed data — both test partners linked to "Home Cleaning") | |
+| `partner_languages` | 0 | 3 (seed data) | FK to the pre-existing `languages` reference table — codes are `bm`/`en`/`ta`/`zh`, **not** `ms` (discovered via live FK violation, then fixed in `seed.py`) |
+| `booking_status_history` | 0 | several (test transitions) | Append-only log of every `booking_status` change |
+| `chat_threads` | 0 | several (test threads, auto-created on partner assignment) | |
+| `chat_messages` | 0 | several (test messages) | |
+
+`partners.home_location` and `consumer_addresses.location` (PostGIS
+`geography` columns, present since Stage 1 but never populated by any
+code) were populated for the two seed test partners and the seed test
+consumer address via `seed.py`, using `ST_MakePoint`/`ST_SetSRID` — the
+first real use of these columns.
+
+**Confirmed nothing already built had drifted**: `payments`, `refunds`,
+`bookings`, `reviews`, `notifications`, `device_tokens`,
+`notification_logs`, `notification_preferences` all still matched exactly
+what Stages 1–3 had mapped.
+
 ## Model reconciliation carried over from the prior session (not new today, included for completeness)
 
 `auth_users` → shared `users` table; `Partner`/`PartnerDocument`/
@@ -82,9 +117,26 @@ one additive nullable column, `jobs.booking_id` — see commit `609a825`.
   ledger — bridging them requires the jobs↔bookings unification above,
   which is out of scope for the Payment Gateway stage.
 
+## A timezone data-integrity issue discovered this stage (not a schema problem — a driver behavior)
+
+Not a database structure issue, but worth recording here since it's about
+how data actually lands in `timestamptz` columns: `asyncpg` silently
+interprets a **naive** Python `datetime` as being in the *local system's*
+timezone (not UTC) when binding it to a `timestamptz` column, even though
+this DB session's own `TimeZone` GUC is `UTC`. Verified directly with a
+round-trip test (`SELECT CAST(:ts AS timestamptz)`) — a naive
+`datetime.utcnow()` value came back shifted by exactly the local dev
+machine's UTC offset (+5:30, IST). Every `datetime.utcnow()` call anywhere
+in this codebase writing to a `DateTime(timezone=True)` column has been
+doing this silently since Stage 1. Fixed in all of this stage's own code
+(`datetime.now(timezone.utc)` throughout); flagged as a follow-up for the
+earlier stages' code, which was out of scope to modify here. Full detail in
+`docs/SMART_DISPATCH.md`.
+
 ## Verification
 
 Confirmed via direct `information_schema` queries against the live database
 (not assumed) before writing any model code: column names, types,
 nullability, enum values, and foreign key constraints for every table
-listed above. `seed.py` re-run twice to confirm idempotency.
+listed above. `seed.py` re-run twice to confirm idempotency (both for
+Stage 1–3's tables and again after adding the Stage 4 seed functions).

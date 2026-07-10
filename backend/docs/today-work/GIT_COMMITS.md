@@ -1,18 +1,24 @@
-# Git Commits — 10 July 2026
+# Git Commits — 10–11 July 2026
 
 All commits below are on `main`, pushed to
-`https://github.com/Dineshkuppuraj17/servisaku-mobile-Partner`.
+`https://github.com/Dineshkuppuraj17/servisaku-partner-consumer`.
 
-## `609a825` — fix: reconcile SQLAlchemy models with the live servisakudb schema
+**Note on hashes**: Stages 1–3 were originally committed in a standalone
+repo (`servisaku-mobile-Partner`) before the repository migration described
+below. `git filter-repo` rewrites commit SHAs when history is filtered, so
+the hashes below are this repository's actual hashes for those same
+commits — they differ from any hash recorded elsewhere for the same work.
 
-Carried over from the prior session, committed at the start of today's
-session before Payment Gateway work began. Moved identity from this app's
-private `auth_users` table to the shared `users` table, and fixed
+## `77e77fb` — fix: reconcile SQLAlchemy models with the live servisakudb schema
+
+Carried over from the prior session, committed at the start of that
+session's work before Payment Gateway work began. Moved identity from this
+app's private `auth_users` table to the shared `users` table, and fixed
 `Partner`/`PartnerDocument`/`PartnerAvailability`/`Review`/`Notification`
 column-level drift against the live database — without this, a `Partner` row
 could not be created at all.
 
-## `6b2b4aa` — feat(payments): Stage 1 - Billplz payment gateway against live booking schema
+## `3bf968b` — feat(payments): Stage 1 - Billplz payment gateway against live booking schema
 
 The Payment Gateway, rebuilt from scratch mid-session after discovering the
 live schema didn't match the original Stripe/job-centric plan (see
@@ -22,11 +28,7 @@ consumer booking flow; Billplz integration (real, self-serve sandbox) and an
 iPay88 stub (no self-serve sandbox exists); the escrow/refund-approval
 workflow against `payments.status`/`refunds.status`.
 
-*(An earlier, Stripe-based attempt at this stage was written, then fully
-discarded — deleted, not committed — once the live schema was discovered.
-No trace of it remains in history.)*
-
-## `4817420` — refactor(payments): provider-agnostic gateway interface + docs hardening
+## `ac40656` — refactor(payments): provider-agnostic gateway interface + docs hardening
 
 Requested by the user after approving Stage 1: refactored direct
 `billplz_service` calls into a `PaymentGateway` abstract interface +
@@ -37,7 +39,7 @@ schema and endpoint. Added `docs/BILLPLZ_SETUP.md`. Fixed stale
 payment/escrow claims in `README.md`, `SERVICE_PARTNER_MODULE_DOCUMENTATION.md`,
 `SYSTEM_DESIGN.md`, `PRODUCT_KNOWLEDGE.md`.
 
-## `de8243a` — feat(uploads): Stage 2 - Cloudinary media uploads (avatar, KYC, job photos)
+## `4d0401d` — feat(uploads): Stage 2 - Cloudinary media uploads (avatar, KYC, job photos)
 
 Avatar, KYC document, and job/booking photo uploads via Cloudinary's free
 tier, reusing existing DB fields with zero schema changes. Both a validated
@@ -46,23 +48,21 @@ list. Real magic-byte MIME sniffing, size limits, automatic image
 optimization. Also fixed a pre-existing duplicate `payments_router`
 registration in `main.py` found while wiring in the new router.
 
-## `fa9b57e` — Merge branch 'main' of github.com:Dineshkuppuraj17/servisaku-mobile-Partner
+## `9f20ae5` — Merge branch 'main' of github.com:Dineshkuppuraj17/servisaku-mobile-Partner
 
-Reconciles a diverged remote: `origin/main` had gained one commit
-(`75aef4e`, 2 July 2026, "Delete backend/.env.example", authored by
+Reconciles a diverged remote (in the original `servisaku-mobile-Partner`
+repo, before migration): `origin/main` had gained one commit
+(`2b50699`, 2 July 2026, "Delete backend/.env.example", authored by
 Animesh) that this session's local history didn't have. Resolved a
-modify/delete conflict on `backend/.env.example` by keeping it — this
-session's Stage 1 and Stage 2 work both actively depend on it as the
-template for `BILLPLZ_*`/`IPAY88_*`/`CLOUDINARY_*` config, and you'd
-explicitly asked twice this session to keep it updated. **Flagged for your
-attention**: worth confirming that the July 2 deletion wasn't an intentional
-decision this merge just undid.
+modify/delete conflict on `backend/.env.example` by keeping it — Stage 1 and
+Stage 2 work both actively depend on it as the template for
+`BILLPLZ_*`/`IPAY88_*`/`CLOUDINARY_*` config.
 
-## `ec3254a` — docs: add today-work summary for Payment Gateway + Media Uploads stages
+## `9c68b41` — docs: add today-work summary for Payment Gateway + Media Uploads stages
 
 The first version of these six `docs/today-work/` files, covering Stages 1–2.
 
-## `9572c0e` — feat(notifications): Stage 3 - Notification Dispatcher (FCM push, email, mock SMS)
+## `0444cf4` — feat(notifications): Stage 3 - Notification Dispatcher (FCM push, email, mock SMS)
 
 Notification Dispatcher against three more pre-existing, previously-empty
 shared tables discovered this session (`device_tokens`, `notification_logs`,
@@ -83,10 +83,53 @@ dispatching inline for that call site; (2) an unconfigured push provider
 could raise out of the dispatcher and break the business action that
 triggered it (e.g. a payment webhook) — fixed by making channel dispatch
 failures always logged rather than raised, at both the dispatcher and
-provider level. See `DATABASE_CHANGES.md` and `TEST_REPORT.md` for full
-detail on both.
+provider level.
+
+## `0a9d24e` — docs: update today-work summary with Stage 3 (Notification Dispatcher)
+
+Extended the six `docs/today-work/` files with Stage 3 content.
+
+## `ceaf472` — chore(backend): import FastAPI backend (Payment Gateway, Media Uploads, Notification Dispatcher — 10-11 Jul 2026 sessions)
+
+The repository migration. It was clarified mid-session that this backend's
+intended home was `servisaku-partner-consumer/backend/` (the actual product
+repo, sharing the same `servisakudb`), not the standalone
+`servisaku-mobile-Partner` repo it had been built in. Investigated both
+repos' `PROJECT_HANDOFF.md`/git history to confirm this rather than guess.
+Migrated using `git filter-repo` (scoped to `backend/`, plus
+`docs/BILLPLZ_SETUP.md`, `docs/today-work/`, and the Postman collection,
+renamed under `backend/docs/`) followed by `git subtree add` — a merge
+commit with two parents: `servisaku-partner-consumer`'s own pre-existing
+history (untouched) and the filtered backend history (20 commits,
+06-28 scaffold through Stage 3). Verified: every file this commit touched
+was a plain `A`dd, zero `M`/`D` outside `backend/`.
+
+*(One recovery was needed mid-migration: a wrong `git reset --hard` target
+was used while undoing an unrelated nesting bug in an earlier migration
+attempt, briefly pointing `main` at the wrong ancestry. Caught immediately,
+verified via `git reflog`, and fully restored to the correct base before
+this commit was made or anything was pushed — nothing was lost, and nothing
+bad ever reached `origin`.)*
+
+## `841b660` — chore: gitignore Python build artifacts for backend/
+
+One small, explicitly-approved addition to `.gitignore`
+(`__pycache__/`, `*.pyc`, `.pytest_cache/`, `.venv/`) — found missing during
+the pre-push verification checklist for the migration above.
+
+## `4e05149` — feat(dispatch,realtime): Stage 4 Smart Dispatch + Stage 5 Real-Time Communication
+
+Smart Dispatch (nearby-partner search, scoring, sequential offer queue with
+expiration/retry, manual override, analytics, background sweep worker) and
+Real-Time Communication (JWT-authenticated Socket.IO layer, live chat,
+presence, typing, read receipts, location broadcast, heartbeat), built and
+verified together per the combined instruction. Two real bugs found and
+fixed during live verification: an asyncpg naive-datetime timezone bug
+(codebase-wide, pre-existing, fixed in this stage's own code) and a
+`structlog` logging-call kwarg collision. See `docs/SMART_DISPATCH.md` and
+`docs/SOCKET_ARCHITECTURE.md` for full detail.
 
 ---
 
-Pushed to `origin/main`: `75aef4e..9572c0e` (across two pushes:
-`75aef4e..fa9b57e`, then `fa9b57e..9572c0e`).
+Pushed to `origin/main`: to be confirmed after this push (see
+`TODAY_WORK.md` for the running total).

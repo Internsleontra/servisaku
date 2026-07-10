@@ -1,11 +1,15 @@
-# Today's Work — 10 July 2026
+# Today's Work — 10–11 July 2026
 
 ## Summary
 
-Three backend stages were completed against the live shared AWS RDS database
+Five backend stages were completed against the live shared AWS RDS database
 (`servisakudb`, via SSH tunnel): **Payment Gateway** (Stage 1), **Media
-Uploads** (Stage 2), and **Notification Dispatcher** (Stage 3). All three were
-preceded by real discoveries about the live database that changed the
+Uploads** (Stage 2), **Notification Dispatcher** (Stage 3), **Smart
+Dispatch** (Stage 4), and **Real-Time Communication** (Stage 5) — plus a
+mid-session repository migration once it was clarified that the intended
+home for this backend was `servisaku-partner-consumer/backend/`, not the
+standalone `servisaku-mobile-Partner` repo it had been built in. All stages
+were preceded by real discoveries about the live database that changed the
 implementation approach mid-stream — documented in detail below and in
 `DATABASE_CHANGES.md`.
 
@@ -87,6 +91,46 @@ implementation approach mid-stream — documented in detail below and in
    confirmation) — see `DATABASE_CHANGES.md` and `TEST_REPORT.md`. Committed
    as `9572c0e`.
 
+9. **Repository migration.** Backend work had been built in a standalone
+   `servisaku-mobile-Partner` repo — it turned out the intended home was
+   `servisaku-partner-consumer/backend/` (the actual product repo, sharing
+   the same `servisakudb`). Investigated both repos' `PROJECT_HANDOFF.md`/git
+   history to confirm this rather than guess, then migrated using
+   `git filter-repo` (scoped to `backend/` plus the relevant docs, renamed
+   under `backend/docs/`) followed by `git subtree add` — preserving full
+   per-commit history for both the 06-28 scaffold and every stage since,
+   while leaving `servisaku-partner-consumer`'s existing 40 commits,
+   frontend, and Express/Prisma backend completely untouched (verified:
+   every changed file was a plain `A`dd, zero `M`/`D` outside `backend/` and
+   one approved `.gitignore` hardening edit). One recovery was needed
+   mid-migration after a wrong `git reset --hard` target was used to undo a
+   nesting bug — caught immediately, fully recovered via `git reflog` before
+   any push happened, nothing lost. Two commits landed:
+   `chore(backend): import FastAPI backend...` and
+   `chore: gitignore Python build artifacts for backend/`.
+
+10. **Stage 4 — Smart Dispatch.** Re-checked the live schema fresh in the new
+    repo location before writing code and found it unchanged (still 83
+    tables) — confirmed `job_dispatches`, `blocked_matches`, and
+    `partner_service_categories` were pre-built, empty tables purpose-made
+    for this stage. Built the nearby-partner search (raw PostGIS SQL),
+    scoring (proximity/rating/completion/language/workload), the sequential
+    offer queue with expiration/retry, manual override, dispatch analytics,
+    and a background `asyncio` sweep worker. Seeded real geo/skill/language
+    test data (including a second test partner) to make ranking and retry
+    genuinely testable. See `docs/SMART_DISPATCH.md` for full design and
+    verification detail, including two real bugs found and fixed.
+
+11. **Stage 5 — Real-Time Communication.** Added a JWT-authenticated,
+    room-based Socket.IO layer (`services/realtime/`) over the existing
+    FastAPI app via a decoupled event bus, so Smart Dispatch and Chat push
+    live updates instead of requiring polling. Implemented booking-room
+    permission checks, live chat (both a Socket.IO-native path and a REST
+    fallback), typing indicators, read receipts, partner location broadcast,
+    presence, and heartbeat. Verified live with real concurrent
+    `socketio.AsyncClient` connections. See `docs/SOCKET_ARCHITECTURE.md`
+    for full design and verification detail.
+
 ## What's genuinely done vs. pending real credentials
 
 All three stages are **fully implemented and verified against the live
@@ -116,5 +160,26 @@ Cloudinary signed-upload signature and the Firebase/email integrations have
 no equivalent risk since they all call each vendor's own SDK/well-documented
 REST contract rather than a hand-written reimplementation of a signing
 scheme.
+
+Stages 4 and 5 need **no new third-party credentials** — Smart Dispatch and
+Socket.IO are entirely self-contained (PostGIS + the existing DB, no
+external services), so both are fully live-verified end-to-end with nothing
+pending.
+
+## Follow-up worth tracking (not fixed here, out of scope for Stage 4/5)
+
+While verifying Stage 4/5, live testing surfaced a **significant, pre-
+existing, codebase-wide bug**: `asyncpg` silently interprets a naive Python
+`datetime` (from the now-deprecated `datetime.utcnow()`, used throughout
+every earlier stage) as being in the *local system's* timezone — not UTC —
+when writing it to a `timestamptz` column, even though the DB session's own
+`TimeZone` is UTC. On a server whose local timezone isn't UTC (like this dev
+machine, IST/+5:30), every such timestamp across the whole app (payments,
+auth, uploads, notifications) is silently stored offset from true UTC. Fixed
+throughout this stage's own new code (using `datetime.now(timezone.utc)`
+everywhere instead); recommend a dedicated follow-up pass across the earlier
+stages' code once a suitable low-risk window exists, since none of those
+call sites were touched here per the "don't modify what isn't in scope"
+instruction. See `docs/SMART_DISPATCH.md` for the full discovery story.
 
 See `TEST_REPORT.md` for the full verification breakdown.

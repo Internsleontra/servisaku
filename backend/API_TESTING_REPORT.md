@@ -7,6 +7,7 @@
 | Admin | admin@servisaku.com | +60100000001 | Admin@123 | Verified |
 | Partner | partner@servisaku.com | +60100000002 | Partner@123 | Verified |
 | Customer | customer@servisaku.com | +60100000003 | Customer@123 | N/A |
+| Partner 2 | partner2@servisaku.com | +60100000004 | Partner@123 | Verified (Stage 4 — second geo-tagged partner for dispatch ranking/retry tests) |
 
 ## How to Run
 
@@ -258,12 +259,54 @@ Firebase (push), Resend/Brevo/MailerSend (email). The mock SMS provider
 needs no external credentials and works as implemented — logs and returns
 success immediately.
 
+### Smart Dispatch (11 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 79 | `/dispatch/bookings/{id}/candidates` | GET | ✅ | Read-only ranked preview; correctly excluded a blocked partner |
+| 80 | `/dispatch/bookings/{id}/start` | POST | ✅ | Admin manual (re)start |
+| 81 | `/dispatch/offers/pending` | GET | ✅ | Partner's own pending offers |
+| 82 | `/dispatch/offers/{id}/accept` | POST | ✅ | Assigns booking, opens chat thread |
+| 83 | `/dispatch/offers/{id}/decline` | POST | ✅ | Triggers immediate retry to next candidate |
+| 84 | `/dispatch/bookings/{id}/history` | GET | ✅ | Full ordered dispatch/assignment log |
+| 85 | `/dispatch/bookings/{id}/override` | POST | ✅ | Admin manual assignment; rejects wrong booking states (409) |
+| 86 | `/dispatch/matches/block` | POST | ✅ | Consumer blocks a partner from future matching |
+| 87 | `/dispatch/analytics` | GET | ✅ | Aggregate stats, verified against real test activity |
+| 88 | `/dispatch/process-expired` | POST | ✅ | Manual sweep trigger (mirrors the automatic background worker) |
+| 89 | `/dispatch/bookings/{id}/status` | PATCH | ✅ | EN_ROUTE→ARRIVED→IN_PROGRESS→COMPLETED, logged to `booking_status_history` |
+
+Full live verification (real HTTP calls, real bookings, real `servisakudb`
+data): nearby-partner ranking (closer/higher-rated partner correctly
+outranked a farther one), auto-dispatch on payment confirmation, decline →
+automatic retry, a genuine (unplanned) live test of offer expiration +
+background-worker retry + graceful exhaustion, accept → booking assigned +
+chat thread created, full booking status progression with
+`total_completed_jobs` incrementing, manual override, blocked-match
+exclusion, and analytics. See `docs/SMART_DISPATCH.md` for full detail,
+including two real bugs found and fixed during this verification.
+
+### Chat (4 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 90 | `/chat/threads` | GET | ✅ | Lists threads for consumer or partner |
+| 91 | `/chat/threads/{id}/messages` | GET | ✅ | Message history, oldest first |
+| 92 | `/chat/threads/{id}/messages` | POST | ✅ | REST fallback — send; also verified via the equivalent Socket.IO event |
+| 93 | `/chat/threads/{id}/read` | POST | ✅ | REST fallback — mark read; verified `is_read`/`read_at` persist correctly |
+
+REST endpoints are a fallback — the primary path is Socket.IO (see
+`docs/SOCKET_ARCHITECTURE.md`), verified live with real
+`socketio.AsyncClient` connections: JWT auth, room permission checks,
+`chat:send_message`, `chat:typing`, `chat:read`, `partner:location_update`,
+`heartbeat`, and the dispatch/booking status broadcast events all round-
+tripped correctly between two real connected clients.
+
 ### Health (2 endpoints)
 
 | # | Endpoint | Method | Status | Notes |
 |---|----------|--------|--------|-------|
-| 79 | `/` | GET | ✅ | App info |
-| 80 | `/health` | GET | ✅ | DB connectivity |
+| 94 | `/` | GET | ✅ | App info |
+| 95 | `/health` | GET | ✅ | DB connectivity + connected Socket.IO session count |
 
 ---
 
@@ -288,7 +331,7 @@ success immediately.
 - **Try it out**: Enabled by default for all endpoints
 - **Persist authorization**: Token persists across page reloads
 - **Filter**: Search/filter endpoints by keyword
-- **Tag grouping**: 12 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Health)
+- **Tag grouping**: 14 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Smart Dispatch, Chat, Health)
 - **Request examples**: Pre-filled examples for all request bodies
 - **Response models**: Full schema documentation for all responses
 - **Validation errors**: Documented 422 responses with examples
