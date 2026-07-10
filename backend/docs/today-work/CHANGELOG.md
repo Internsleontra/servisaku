@@ -172,3 +172,58 @@
 
 - `services/billplz_service.py`, `services/ipay88_service.py` — replaced by
   the provider-agnostic `*_gateway.py` equivalents.
+
+### Admin Backend (Stage 6)
+
+#### Added
+
+- `models/rbac.py` (`Role`, `Permission`, `RolePermission`, `UserRole`) —
+  mapped to the shared, pre-seeded RBAC tables (7 roles, 20 permissions, 43
+  mappings) that no prior stage had ever queried.
+- `models/admin_log.py` (`AdminAction`, `AuditLog`) — two more pre-existing,
+  empty tables, now the admin action/audit trail.
+- `models/coupon.py` (`Coupon`, `CouponServiceCategory`), `models/support_ticket.py`
+  (`OpsTicket`, `OpsTicketEvidence`), `models/training.py` (`TrainingModule`,
+  `TrainingQuestion`, `PartnerTrainingProgress`), `models/subscription.py`
+  (`Subscription`) — all pre-existing, previously-empty shared tables.
+- `models/catalog.py`: added `ServiceAddon`, `PricingRule`,
+  `SurgePricingRule`; extended `ServiceCategory`/`Service` from their
+  Stage-1 read-mostly minimal mapping to their full live column set (now
+  that full catalog CRUD is in scope).
+- `services/rbac.py` — `get_user_permissions`/`get_user_roles`,
+  `require_permission()` dependency factory, `log_admin_action`/
+  `write_audit_log` (both best-effort, never raise).
+- `routes/admin_dashboard.py`, `routes/admin_rbac.py`, `routes/admin_users.py`,
+  `routes/admin_partners.py`, `routes/admin_bookings.py`,
+  `routes/admin_catalog.py`, `routes/admin_coupons.py`,
+  `routes/admin_settlements.py`, `routes/admin_support.py`,
+  `routes/admin_training.py` — 73 endpoints total.
+- `schemas/admin.py`, `schemas/catalog_admin.py`, `schemas/coupon.py`,
+  `schemas/support.py`, `schemas/training.py`.
+- `seed.py`: `seed_admin_rbac` — assigns `SUPER_ADMIN` to the seed admin
+  account (`user_roles` had 0 rows before this; without it, every
+  `require_permission()` check would 403 even for the intended super-admin).
+- `docs/ADMIN_BACKEND.md`.
+
+#### Changed
+
+- `routes/payments.py` (`approve_refund`/`reject_refund`/`complete_refund`),
+  `routes/dispatch.py` (`override_dispatch`), `routes/notification_dispatch.py`
+  (`send_to_topic`/`retry_notification_log`/`retry_failed_notifications`):
+  added `log_admin_action` calls — the only change to these Stage 1/3/4
+  endpoints, so the admin action log covers every admin mutation in the app,
+  not just the ones added this stage. Behavior otherwise unchanged.
+
+#### Fixed
+
+- `models/admin_log.py`: `audit_logs.retention_until` is a Postgres
+  `GENERATED ALWAYS AS (...) STORED` column; the initial mapping declared it
+  as a normal writable `Date`, and Postgres rejects any explicit value
+  (including NULL) in the INSERT column list for such a column — every
+  `write_audit_log()` call raised `GeneratedAlwaysError`, surfacing as a 500
+  on `POST /admin/partners/{id}/approve`. Fixed by dropping the column from
+  the mapping entirely.
+- `routes/admin_catalog.py` (`create_category`, `create_service`),
+  `routes/admin_coupons.py` (`create_coupon`): a duplicate `name`/`slug`/
+  `code` raised a raw `IntegrityError` that bubbled to an unhandled 500.
+  Fixed by catching it around the flush and returning a clean `409`.

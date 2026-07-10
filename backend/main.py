@@ -17,6 +17,10 @@ from routes import (
     notifications_router, feedback_router,
     consumer_router, payments_router, uploads_router,
     notification_dispatch_router, dispatch_router, chat_router,
+    admin_dashboard_router, admin_rbac_router, admin_users_router,
+    admin_partners_router, admin_bookings_router, admin_catalog_router,
+    admin_coupons_router, admin_settlements_router, admin_support_router,
+    admin_training_router,
 )
 from services.dispatch.background import dispatch_sweep_loop
 from services.realtime.socket_server import sio
@@ -82,6 +86,46 @@ TAGS_METADATA = [
     {
         "name": "Feedback & Support",
         "description": "Submit feedback/bug reports and view feedback history.",
+    },
+    {
+        "name": "Admin - Dashboard",
+        "description": "Aggregate platform metrics for the admin home screen.",
+    },
+    {
+        "name": "Admin - RBAC",
+        "description": "Role-based access control: roles, permissions, role assignment, and the admin action/audit-log viewers.",
+    },
+    {
+        "name": "Admin - Users",
+        "description": "User account and consumer management: list/detail, suspend/reactivate.",
+    },
+    {
+        "name": "Admin - Partners",
+        "description": "Partner application review: approve/reject/suspend, and KYC document verification.",
+    },
+    {
+        "name": "Admin - Bookings",
+        "description": "Booking oversight and admin-initiated cancellation. Dispatch (re)assignment is handled by the existing Smart Dispatch admin endpoints.",
+    },
+    {
+        "name": "Admin - Catalog",
+        "description": "Service category/service/add-on/pricing-rule/surge-rule CRUD, plus consumer membership package (subscription) management.",
+    },
+    {
+        "name": "Admin - Coupons",
+        "description": "Promotional coupon CRUD.",
+    },
+    {
+        "name": "Admin - Settlements",
+        "description": "Admin-initiated partner settlements/payouts.",
+    },
+    {
+        "name": "Admin - Support",
+        "description": "Support ticket dashboard: create/assign/resolve tickets and view evidence.",
+    },
+    {
+        "name": "Admin - Training",
+        "description": "Partner training module and quiz-question CRUD.",
     },
     {
         "name": "Health",
@@ -193,6 +237,16 @@ app.include_router(notification_dispatch_router, prefix=API_PREFIX)
 app.include_router(dispatch_router, prefix=API_PREFIX)
 app.include_router(chat_router, prefix=API_PREFIX)
 app.include_router(feedback_router, prefix=API_PREFIX)
+app.include_router(admin_dashboard_router, prefix=API_PREFIX)
+app.include_router(admin_rbac_router, prefix=API_PREFIX)
+app.include_router(admin_users_router, prefix=API_PREFIX)
+app.include_router(admin_partners_router, prefix=API_PREFIX)
+app.include_router(admin_bookings_router, prefix=API_PREFIX)
+app.include_router(admin_catalog_router, prefix=API_PREFIX)
+app.include_router(admin_coupons_router, prefix=API_PREFIX)
+app.include_router(admin_settlements_router, prefix=API_PREFIX)
+app.include_router(admin_support_router, prefix=API_PREFIX)
+app.include_router(admin_training_router, prefix=API_PREFIX)
 
 
 def custom_openapi():

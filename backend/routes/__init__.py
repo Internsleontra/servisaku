@@ -12,6 +12,16 @@ from routes.uploads import router as uploads_router
 from routes.notification_dispatch import router as notification_dispatch_router
 from routes.dispatch import router as dispatch_router
 from routes.chat import router as chat_router
+from routes.admin_dashboard import router as admin_dashboard_router
+from routes.admin_rbac import router as admin_rbac_router
+from routes.admin_users import router as admin_users_router
+from routes.admin_partners import router as admin_partners_router
+from routes.admin_bookings import router as admin_bookings_router
+from routes.admin_catalog import router as admin_catalog_router
+from routes.admin_coupons import router as admin_coupons_router
+from routes.admin_settlements import router as admin_settlements_router
+from routes.admin_support import router as admin_support_router
+from routes.admin_training import router as admin_training_router
 
 __all__ = [
     "auth_router", "partner_router", "jobs_router",
@@ -19,4 +29,8 @@ __all__ = [
     "notifications_router", "feedback_router",
     "consumer_router", "payments_router", "uploads_router",
     "notification_dispatch_router", "dispatch_router", "chat_router",
+    "admin_dashboard_router", "admin_rbac_router", "admin_users_router",
+    "admin_partners_router", "admin_bookings_router", "admin_catalog_router",
+    "admin_coupons_router", "admin_settlements_router", "admin_support_router",
+    "admin_training_router",
 ]

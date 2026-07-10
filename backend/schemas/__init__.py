@@ -12,3 +12,8 @@ from schemas.upload import *  # noqa: F401, F403
 from schemas.notification_dispatch import *  # noqa: F401, F403
 from schemas.dispatch import *  # noqa: F401, F403
 from schemas.chat import *  # noqa: F401, F403
+from schemas.admin import *  # noqa: F401, F403
+from schemas.catalog_admin import *  # noqa: F401, F403
+from schemas.coupon import *  # noqa: F401, F403
+from schemas.support import *  # noqa: F401, F403
+from schemas.training import *  # noqa: F401, F403

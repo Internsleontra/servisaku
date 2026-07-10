@@ -301,12 +301,142 @@ REST endpoints are a fallback — the primary path is Socket.IO (see
 `heartbeat`, and the dispatch/booking status broadcast events all round-
 tripped correctly between two real connected clients.
 
+### Admin - Dashboard (1 endpoint)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 96 | `/admin/dashboard` | GET | ✅ | Aggregate user/partner/booking/revenue/dispatch/support counts, all counted live |
+
+### Admin - RBAC (8 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 97 | `/admin/rbac/roles` | GET | ✅ | Lists all 7 pre-seeded roles with their permissions |
+| 98 | `/admin/rbac/permissions` | GET | ✅ | Lists all 20 pre-seeded permissions |
+| 99 | `/admin/rbac/me` | GET | ✅ | Verified `SUPER_ADMIN` -> `admin.full_access` + full permission set |
+| 100 | `/admin/rbac/users/{user_id}` | GET | ✅ | Verified against a purpose-created `READ_ONLY` test admin (0 effective permissions) |
+| 101 | `/admin/rbac/users/{user_id}/roles` | POST | ✅ | `admin.full_access`-gated; used by `seed.py`'s `seed_admin_rbac` equivalent logic |
+| 102 | `/admin/rbac/users/{user_id}/roles/{role_id}` | DELETE | ✅ | Code-reviewed; same pattern as assign, not separately live-fired |
+| 103 | `/admin/rbac/actions` | GET | ✅ | Accumulated 13 entries across every admin module during this verification pass |
+| 104 | `/admin/rbac/audit-logs` | GET | ✅ | Verified before/after values on the partner-approval audit entry |
+
+### Admin - Users & Consumers (5 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 105 | `/admin/users` | GET | ✅ | Filterable by `user_type`/`status`; correctly `403`s for a partner JWT and a zero-permission admin |
+| 106 | `/admin/users/{user_id}` | GET | ✅ | |
+| 107 | `/admin/users/{user_id}/status` | PUT | ✅ | Suspended the `READ_ONLY` test admin account live |
+| 108 | `/admin/consumers` | GET | ✅ | Joined with `users` for phone/email, booking count per consumer |
+| 109 | `/admin/consumers/{consumer_id}` | GET | ✅ | |
+
+### Admin - Partners & KYC (9 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 110 | `/admin/partners` | GET | ✅ | Filterable by status; found the live `SUBMITTED` test partner used below |
+| 111 | `/admin/partners/{partner_id}` | GET | ✅ | |
+| 112 | `/admin/partners/{partner_id}/approve` | POST | ✅ | `SUBMITTED -> ACTIVE`, in-app notification sent, audit-logged; re-approve correctly `409`s |
+| 113 | `/admin/partners/{partner_id}/reject` | POST | ✅ | Code-reviewed (identical pattern to approve); not separately live-fired to avoid rejecting the only available test partner |
+| 114 | `/admin/partners/{partner_id}/suspend` | POST | ✅ | Code-reviewed, same pattern |
+| 115 | `/admin/partners/{partner_id}/reactivate` | POST | ✅ | Code-reviewed, same pattern |
+| 116 | `/admin/partners/{partner_id}/documents` | GET | ✅ | Verified empty-list case (no partner has an uploaded KYC doc yet — needs Cloudinary credentials) |
+| 117 | `/admin/partners/documents/{document_id}/verify` | POST | ⚠️ | Not live-fired — no KYC document exists in the live data to verify against (see Stage 2 credential gap). Code-reviewed: same guard/audit-log pattern as partner approve. |
+| 118 | `/admin/partners/documents/{document_id}/reject` | POST | ⚠️ | Same as above |
+
+### Admin - Bookings (4 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 119 | `/admin/bookings` | GET | ✅ | Filterable by status/consumer/partner |
+| 120 | `/admin/bookings/{booking_id}` | GET | ✅ | |
+| 121 | `/admin/bookings/{booking_id}/cancel` | POST | ✅ | Cancelled a real `PENDING_PAYMENT` booking; logged to `booking_status_history` + broadcast over Socket.IO |
+| 122 | `/admin/bookings/{booking_id}/status-history` | GET | ✅ | Confirmed the cancellation transition appears correctly |
+
+### Admin - Catalog (22 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 123 | `/admin/catalog/categories` | GET | ✅ | |
+| 124 | `/admin/catalog/categories` | POST | ✅ | Duplicate `name`/`slug` correctly `409`s (fixed from a raw 500 — see `docs/ADMIN_BACKEND.md`) |
+| 125 | `/admin/catalog/categories/{id}` | PUT | ✅ | |
+| 126 | `/admin/catalog/categories/{id}` | DELETE | ✅ | Soft-delete (`is_active=false`) |
+| 127 | `/admin/catalog/services` | GET | ✅ | |
+| 128 | `/admin/catalog/services` | POST | ✅ | |
+| 129 | `/admin/catalog/services/{id}` | PUT | ✅ | |
+| 130 | `/admin/catalog/services/{id}` | DELETE | ✅ | Soft-delete |
+| 131 | `/admin/catalog/addons` | GET | ✅ | |
+| 132 | `/admin/catalog/addons` | POST | ✅ | |
+| 133 | `/admin/catalog/addons/{id}` | PUT | ✅ | Code-reviewed |
+| 134 | `/admin/catalog/addons/{id}` | DELETE | ✅ | Code-reviewed |
+| 135 | `/admin/catalog/pricing-rules` | GET | ✅ | |
+| 136 | `/admin/catalog/pricing-rules` | POST | ✅ | |
+| 137 | `/admin/catalog/pricing-rules/{id}` | PUT | ✅ | Code-reviewed |
+| 138 | `/admin/catalog/pricing-rules/{id}` | DELETE | ✅ | Code-reviewed |
+| 139 | `/admin/catalog/surge-rules` | GET | ✅ | Empty-list verified |
+| 140 | `/admin/catalog/surge-rules` | POST | ✅ | Code-reviewed |
+| 141 | `/admin/catalog/surge-rules/{id}` | PUT | ✅ | Code-reviewed |
+| 142 | `/admin/catalog/surge-rules/{id}` | DELETE | ✅ | Code-reviewed |
+| 143 | `/admin/catalog/packages` | GET | ✅ | Empty-list verified — no subscriptions exist yet in the live data |
+| 144 | `/admin/catalog/packages/{id}/status` | PUT | ✅ | Code-reviewed |
+
+### Admin - Coupons (5 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 145 | `/admin/coupons` | GET | ✅ | |
+| 146 | `/admin/coupons` | POST | ✅ | Created `WELCOME20`; duplicate `code` correctly `409`s |
+| 147 | `/admin/coupons/{id}` | GET | ✅ | |
+| 148 | `/admin/coupons/{id}` | PUT | ✅ | Code-reviewed |
+| 149 | `/admin/coupons/{id}` | DELETE | ✅ | Soft-delete, code-reviewed |
+
+### Admin - Settlements (4 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 150 | `/admin/settlements` | GET | ✅ | |
+| 151 | `/admin/settlements` | POST | ✅ | Created against 2 real `released` earnings; re-using a settled earning correctly `422`s |
+| 152 | `/admin/settlements/{id}` | GET | ✅ | |
+| 153 | `/admin/settlements/{id}/status` | PUT | ✅ | `pending -> scheduled` verified |
+
+### Admin - Support (7 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 154 | `/admin/support-tickets` | GET | ✅ | |
+| 155 | `/admin/support-tickets` | POST | ✅ | |
+| 156 | `/admin/support-tickets/{id}` | GET | ✅ | |
+| 157 | `/admin/support-tickets/{id}` | PUT | ✅ | Code-reviewed |
+| 158 | `/admin/support-tickets/{id}/assign` | POST | ✅ | `OPEN -> ASSIGNED` verified |
+| 159 | `/admin/support-tickets/{id}/resolve` | POST | ✅ | `ASSIGNED -> RESOLVED` verified |
+| 160 | `/admin/support-tickets/{id}/evidence` | GET | ✅ | Empty-list verified |
+
+### Admin - Training (8 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 161 | `/admin/training/modules` | GET | ✅ | |
+| 162 | `/admin/training/modules` | POST | ✅ | Created "Safety Basics" quiz module |
+| 163 | `/admin/training/modules/{id}` | PUT | ✅ | Code-reviewed |
+| 164 | `/admin/training/modules/{id}` | DELETE | ✅ | Code-reviewed |
+| 165 | `/admin/training/modules/{id}/questions` | GET | ✅ | |
+| 166 | `/admin/training/modules/{id}/questions` | POST | ✅ | Created a real question |
+| 167 | `/admin/training/questions/{id}` | PUT | ✅ | Code-reviewed |
+| 168 | `/admin/training/questions/{id}` | DELETE | ✅ | Code-reviewed |
+
+RBAC enforcement verified across all groups above: a partner JWT gets `403`
+on every `/admin/*` path; a purpose-created admin holding only the
+`READ_ONLY` role (whose pre-seeded `role_permissions` mapping grants zero
+permissions) gets `403` on both reads and writes; `SUPER_ADMIN` succeeds
+everywhere tested. Full detail, including the two real bugs found and fixed
+during this verification, is in `docs/ADMIN_BACKEND.md`.
+
 ### Health (2 endpoints)
 
 | # | Endpoint | Method | Status | Notes |
 |---|----------|--------|--------|-------|
-| 94 | `/` | GET | ✅ | App info |
-| 95 | `/health` | GET | ✅ | DB connectivity + connected Socket.IO session count |
+| 169 | `/` | GET | ✅ | App info |
+| 170 | `/health` | GET | ✅ | DB connectivity + connected Socket.IO session count |
 
 ---
 
@@ -331,7 +461,7 @@ tripped correctly between two real connected clients.
 - **Try it out**: Enabled by default for all endpoints
 - **Persist authorization**: Token persists across page reloads
 - **Filter**: Search/filter endpoints by keyword
-- **Tag grouping**: 14 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Smart Dispatch, Chat, Health)
+- **Tag grouping**: 24 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Smart Dispatch, Chat, Admin - Dashboard, Admin - RBAC, Admin - Users, Admin - Partners, Admin - Bookings, Admin - Catalog, Admin - Coupons, Admin - Settlements, Admin - Support, Admin - Training, Health)
 - **Request examples**: Pre-filled examples for all request bodies
 - **Response models**: Full schema documentation for all responses
 - **Validation errors**: Documented 422 responses with examples

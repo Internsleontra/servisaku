@@ -27,6 +27,7 @@ from models.consumer_profile import ConsumerProfile
 from models.consumer_address import ConsumerAddress
 from models.catalog import ServiceCategory, Service
 from models.booking import Booking
+from models.rbac import Role, UserRole
 import models  # noqa: F401 — ensure all models registered
 
 
@@ -485,6 +486,30 @@ async def seed_second_test_partner(db: AsyncSession, category: ServiceCategory |
     return partner
 
 
+async def seed_admin_rbac(db: AsyncSession, admin_user: User):
+    """Stage 6: the live `roles`/`permissions`/`role_permissions` tables were
+    pre-seeded by another team member (7 roles, 20 permissions, 43 mappings)
+    but `user_roles` had 0 rows — no user, including the seed admin account,
+    had ever been assigned a granular role. Without this, every
+    require_permission() check in routes/admin_*.py would 403 even for the
+    seed admin. Idempotent."""
+    role = (await db.execute(select(Role).where(Role.name == "SUPER_ADMIN"))).scalar_one_or_none()
+    if not role:
+        print("  [skip] No SUPER_ADMIN role found in `roles` — cannot assign")
+        return
+
+    existing = (await db.execute(
+        select(UserRole).where(UserRole.user_id == admin_user.id, UserRole.role_id == role.id)
+    )).scalar_one_or_none()
+    if existing:
+        print("  [skip] admin@servisaku.com already has SUPER_ADMIN")
+        return
+
+    db.add(UserRole(user_id=admin_user.id, role_id=role.id))
+    await db.flush()
+    print("  [created] Assigned SUPER_ADMIN role to admin@servisaku.com")
+
+
 async def seed_sample_booking(
     db: AsyncSession, partner: Partner, consumer: ConsumerProfile,
     address: ConsumerAddress, service: Service | None,
@@ -536,12 +561,15 @@ async def main():
     async with async_session() as db:
         try:
             print("\n1. Creating accounts...")
+            admin_user = None
             partner_user = None
             partner_record = None
             consumer_user = None
             for acct in SEED_ACCOUNTS:
                 user, partner = await seed_account(db, acct)
-                if acct["role"] == "partner":
+                if acct["role"] == "admin":
+                    admin_user = user
+                elif acct["role"] == "partner":
                     partner_user = user
                     partner_record = partner
                 elif acct["role"] == "customer":
@@ -580,6 +608,10 @@ async def main():
 
                     print("\n11. Seeding second test partner for dispatch ranking/retry...")
                     await seed_second_test_partner(db, category)
+
+            if admin_user:
+                print("\n12. Seeding RBAC (assign SUPER_ADMIN to seed admin)...")
+                await seed_admin_rbac(db, admin_user)
 
             await db.commit()
             print("\n" + "=" * 60)

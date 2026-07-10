@@ -183,3 +183,26 @@ call sites were touched here per the "don't modify what isn't in scope"
 instruction. See `docs/SMART_DISPATCH.md` for the full discovery story.
 
 See `TEST_REPORT.md` for the full verification breakdown.
+
+## Stage 6 — Admin Backend
+
+Preflight redone from scratch per instruction: pulled latest, verified boot,
+re-queried the live schema (still 83 tables, unchanged since Stage 4/5). That
+re-query surfaced 17 more pre-existing, previously-empty-or-unwired tables
+this stage needed — most notably a **complete, pre-seeded RBAC schema**
+(`roles`/`permissions`/`role_permissions`, 43 mappings) that no code had ever
+read from, and `user_roles` sitting at 0 rows. Wiring that up — rather than
+building a parallel RBAC system from scratch — was the core of this stage.
+73 new endpoints across 10 route groups (dashboard, RBAC, users/consumers,
+partners+KYC, bookings, catalog, coupons, settlements, support tickets,
+training). Full detail in `docs/ADMIN_BACKEND.md`.
+
+Two real bugs found and fixed during live verification: `audit_logs` has a
+Postgres `GENERATED ALWAYS` column that the initial model mapped as a normal
+writable field (Postgres rejects any explicit value for such a column,
+including NULL); and three catalog/coupon create endpoints let a duplicate-
+key `IntegrityError` bubble to a raw 500 instead of a clean 409. Both fixed;
+see `docs/ADMIN_BACKEND.md` for the full story.
+
+No new third-party credentials needed — Stage 6 is entirely self-contained
+against the existing database, same as Stage 4/5.

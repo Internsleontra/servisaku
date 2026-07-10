@@ -140,3 +140,52 @@ Confirmed via direct `information_schema` queries against the live database
 nullability, enum values, and foreign key constraints for every table
 listed above. `seed.py` re-run twice to confirm idempotency (both for
 Stage 1–3's tables and again after adding the Stage 4 seed functions).
+
+## Fourth discovery: Admin Backend (Stage 6) — 17 more pre-existing tables, still 83 total
+
+Schema re-queried fresh again per the "other team members may have made
+changes" instruction — still 83 tables, identical to the Stage 4/5 baseline.
+Newly mapped this stage, all pre-existing and empty beforehand (except RBAC,
+pre-seeded):
+
+| Table | Rows before | Rows after | Notes |
+|-------|------------:|-----------:|-------|
+| `roles` | 7 (pre-seeded) | 7 (unchanged) | Read-only |
+| `permissions` | 20 (pre-seeded) | 20 (unchanged) | Read-only |
+| `role_permissions` | 43 (pre-seeded) | 43 (unchanged) | Read-only |
+| `user_roles` | 0 | 2 (seed admin + a live-test READ_ONLY account) | The critical gap this stage closed |
+| `admin_actions` | 0 | several (every admin mutation made during live verification) | |
+| `audit_logs` | 0 | several | See "generated column" bug below |
+| `coupons` | 0 | 1 (live test) | |
+| `coupon_service_categories` | 0 | 0 | |
+| `ops_tickets` | 0 | 1 (live test, resolved) | |
+| `ops_ticket_evidence` | 0 | 0 | |
+| `service_addons` | 0 | 1 (live test) | |
+| `pricing_rules` | 0 | 1 (live test) | |
+| `surge_pricing_rules` | 0 | 0 | |
+| `training_modules` | 0 | 1 (live test) | |
+| `training_questions` | 0 | 1 (live test) | |
+| `partner_training_progress` | 0 | 0 | Read-only mapping; no write path in this app yet |
+| `subscriptions` | 0 | 0 | See "Package CRUD" design decision in `docs/ADMIN_BACKEND.md` |
+
+Also extended (not newly mapped): `service_categories`/`services` went from
+a Stage-1 read-mostly minimal column subset to their full live column sets,
+now that full catalog CRUD is in scope (additive to the ORM mapping only —
+no DB change, the columns already existed).
+
+**Confirmed nothing already built had drifted**: `bookings`, `payments`,
+`refunds`, `job_dispatches`, `chat_threads`/`chat_messages`, `notifications`,
+`partners`, `partner_documents` all still matched exactly what Stages 1-5
+had mapped.
+
+### A real Postgres quirk found this stage: `GENERATED ALWAYS` column
+
+`audit_logs.retention_until` is `date GENERATED ALWAYS AS ((created_at AT
+TIME ZONE 'UTC')::date + '7 years'::interval) STORED` — not something
+`information_schema.columns`' basic `column_default` field reveals (had to
+query `is_generated`/`generation_expression` specifically to find it after
+the first live write failed). Postgres rejects any explicit value in the
+INSERT column list for such a column, including `NULL` — SQLAlchemy's ORM
+by default includes every mapped column in the INSERT VALUES list even when
+unset. Fixed by removing the column from the ORM mapping entirely (see
+`docs/ADMIN_BACKEND.md`).

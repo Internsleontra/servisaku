@@ -15,6 +15,7 @@ from schemas.notification_dispatch import (
 )
 from services.notifications.registry import get_push_provider
 from services.notifications.dispatcher import get_or_create_preferences, retry_log, retry_all_failed
+from services.rbac import log_admin_action
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -193,11 +194,14 @@ async def unsubscribe_from_topic(
 async def send_to_topic(
     topic: str,
     body: TopicSendRequest,
-    _admin_id: UUID = Depends(get_current_admin_id),
+    admin_id: UUID = Depends(get_current_admin_id),
+    db: AsyncSession = Depends(get_db),
 ):
     result = await get_push_provider().send_to_topic(topic, body.title, body.body, body.data)
     if not result.success:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Push send failed: {result.error}")
+    await log_admin_action(db, admin_id, "notification.topic_broadcast", "topic", None, f"{topic}: {body.title}")
+    await db.flush()
     return {"sent": True, "topic": topic, "provider_message_id": result.provider_message_id}
 
 
@@ -237,12 +241,14 @@ async def get_notification_logs(
 )
 async def retry_notification_log(
     log_id: UUID,
-    _admin_id: UUID = Depends(get_current_admin_id),
+    admin_id: UUID = Depends(get_current_admin_id),
     db: AsyncSession = Depends(get_db),
 ):
-    log, _succeeded = await retry_log(log_id, db)
+    log, succeeded = await retry_log(log_id, db)
     if log is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Notification log not found")
+    await log_admin_action(db, admin_id, "notification.log_retried", "notification_log", log_id, f"succeeded={succeeded}")
+    await db.flush()
     return NotificationLogResponse.model_validate(log)
 
 
@@ -258,9 +264,11 @@ async def retry_notification_log(
     ),
 )
 async def retry_failed_notifications(
-    _admin_id: UUID = Depends(get_current_admin_id),
+    admin_id: UUID = Depends(get_current_admin_id),
     db: AsyncSession = Depends(get_db),
     limit: int = Query(default=50, le=200),
 ):
     retried, checked = await retry_all_failed(db, limit=limit)
+    await log_admin_action(db, admin_id, "notification.bulk_retry", None, None, f"retried={retried} checked={checked}")
+    await db.flush()
     return RetryAllResponse(retried=retried, checked=checked)

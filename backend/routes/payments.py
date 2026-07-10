@@ -23,6 +23,7 @@ from services.gateway_registry import get_gateway
 from services.notifications.dispatcher import dispatch
 from services.dispatch.engine import start_dispatch
 from services.realtime import events
+from services.rbac import log_admin_action
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -500,6 +501,7 @@ async def approve_refund(
         raise HTTPException(status.HTTP_409_CONFLICT, "Refund is not pending approval")
     refund.status = "APPROVED"
     refund.approved_by_user_id = admin_id
+    await log_admin_action(db, admin_id, "refund.approved", "refund", refund_id, None)
     await db.flush()
     return RefundResponse.model_validate(refund)
 
@@ -526,6 +528,7 @@ async def reject_refund(
         raise HTTPException(status.HTTP_409_CONFLICT, "Refund is not pending approval")
     refund.status = "REJECTED"
     refund.approved_by_user_id = admin_id
+    await log_admin_action(db, admin_id, "refund.rejected", "refund", refund_id, None)
     await db.flush()
     return RefundResponse.model_validate(refund)
 
@@ -549,7 +552,7 @@ async def reject_refund(
 async def complete_refund(
     refund_id: UUID,
     body: RefundCompleteRequest,
-    _admin_id: UUID = Depends(get_current_admin_id),
+    admin_id: UUID = Depends(get_current_admin_id),
     db: AsyncSession = Depends(get_db),
 ):
     refund = await db.get(Refund, refund_id)
@@ -561,6 +564,7 @@ async def complete_refund(
     refund.status = "COMPLETED"
     refund.gateway_refund_id = body.gateway_refund_id
     refund.processed_at = datetime.utcnow()
+    await log_admin_action(db, admin_id, "refund.completed", "refund", refund_id, body.gateway_refund_id)
     await db.flush()
 
     payment = await db.get(Payment, refund.payment_id)

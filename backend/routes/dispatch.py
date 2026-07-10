@@ -20,6 +20,7 @@ from services.dispatch.matching import get_ranked_candidates
 from services.dispatch.engine import start_dispatch, accept_offer, decline_offer, manual_override, run_expiry_sweep
 from services.dispatch.analytics import get_dispatch_analytics
 from services.realtime import events
+from services.rbac import log_admin_action
 
 _ALLOWED_TRANSITIONS = {
     "PARTNER_ASSIGNED": {"EN_ROUTE", "CANCELLED_BY_PARTNER"},
@@ -261,7 +262,7 @@ async def get_dispatch_history(
 async def override_dispatch(
     booking_id: UUID,
     body: ManualOverrideRequest,
-    _admin_id: UUID = Depends(get_current_admin_id),
+    admin_id: UUID = Depends(get_current_admin_id),
     db: AsyncSession = Depends(get_db),
 ):
     booking = await db.get(Booking, booking_id)
@@ -274,6 +275,8 @@ async def override_dispatch(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Partner not found")
 
     row = await manual_override(booking, body.partner_id, db)
+    await log_admin_action(db, admin_id, "dispatch.manual_override", "booking", booking_id, f"partner_id={body.partner_id}")
+    await db.flush()
     return DispatchOfferResponse.model_validate(row)
 
 

@@ -149,3 +149,38 @@ None — every existing endpoint's request/response shape is unchanged.
   no dedicated table exists for either in the live schema; both are
   in-memory/broadcast-only, matching their inherently ephemeral nature (see
   `docs/SOCKET_ARCHITECTURE.md`).
+
+## Admin Backend (`/api/v1/admin/*`) — 73 endpoints, Stage 6
+
+Full detail and the permission-per-group table are in `docs/ADMIN_BACKEND.md`.
+Quick reference:
+
+| Group | Prefix | Endpoints |
+|---|---|---|
+| Dashboard | `/admin/dashboard` | 1 |
+| RBAC | `/admin/rbac/*` | 8 |
+| Users & Consumers | `/admin/users*`, `/admin/consumers*` | 5 |
+| Partners & KYC | `/admin/partners/*` | 9 |
+| Bookings | `/admin/bookings/*` | 4 |
+| Catalog | `/admin/catalog/*` | 22 |
+| Coupons | `/admin/coupons/*` | 5 |
+| Settlements | `/admin/settlements/*` | 4 |
+| Support tickets | `/admin/support-tickets/*` | 7 |
+| Training | `/admin/training/*` | 8 |
+
+**Notable design decisions:**
+
+- **RBAC wires up a pre-existing, pre-seeded schema rather than inventing
+  one.** `roles`/`permissions`/`role_permissions` were already fully
+  populated by another team member; `user_roles` had 0 rows. This stage adds
+  `require_permission()` as a second, granular gate on top of the existing
+  coarse `role: admin` JWT check — it doesn't replace it.
+- **Refund approval, manual dispatch override, and notification management
+  are not duplicated** — they already existed (Stages 1/3/4) under admin
+  gating; this stage only added `admin_actions` logging to them.
+- **"Package CRUD" maps to `subscriptions`**, the closest live-schema analog
+  to a purchasable "package" — see `docs/ADMIN_BACKEND.md` for why there's no
+  dedicated packages table and what's exposed instead.
+- **Soft-delete throughout**: every catalog/coupon "delete" endpoint sets
+  `is_active=false` rather than issuing a `DELETE`, since these rows are
+  referenced by historical bookings/payments.

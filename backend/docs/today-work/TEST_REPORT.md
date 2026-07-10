@@ -188,3 +188,61 @@ assumed to work.
 DB) and Socket.IO (self-hosted, no external service) need no third-party
 credentials at all, so both are fully verified end-to-end with nothing
 pending.
+
+## Stage 6 — Admin Backend live verification
+
+All against `servisakudb` with a real `SUPER_ADMIN` JWT (assigned via
+`seed.py`'s new `seed_admin_rbac`), a real partner JWT, and a purpose-created
+`READ_ONLY`-role test admin (not seed data — created directly for this RBAC
+test, see below):
+
+- **RBAC enforcement**: partner JWT -> `403` on `/admin/dashboard`.
+  `READ_ONLY`-role admin (whose pre-seeded `role_permissions` mapping turns
+  out to grant zero permissions) -> `403` on both a read endpoint
+  (`GET /admin/users`) and a write endpoint (`POST .../approve`) — the gate
+  fails closed. `SUPER_ADMIN` -> `200`/success everywhere tested.
+- **Partner approval lifecycle**: found a real `SUBMITTED` partner already
+  in the live data (`Test Partner Stage AD`, seeded by another team member's
+  session) and ran it through `POST /admin/partners/{id}/approve` ->
+  `status: ACTIVE`; a second approve attempt correctly `409`s.
+- **Audit trail**: `GET /admin/rbac/audit-logs` and `GET /admin/rbac/actions`
+  both show the approval with correct before/after values; `GET
+  /admin/rbac/actions` accumulated 13 entries across every module (catalog,
+  coupons, settlements, support tickets, training, partner approval) by the
+  end of the verification pass, confirming the logging call was wired into
+  every route file, not just one.
+- **Catalog CRUD chain**: category -> service -> add-on -> pricing-rule,
+  each created and the category updated via `PUT`. Duplicate category
+  name/slug correctly `409`s (after the generated-column and
+  IntegrityError-handling fixes described in `docs/ADMIN_BACKEND.md`).
+- **Coupons**: created `WELCOME20`, duplicate `code` correctly `409`s.
+- **Settlements**: created against two real `released` earnings rows found
+  in the live data for the seed partner; status transition `pending ->
+  scheduled` works; re-using an already-`settled` earning in a second
+  settlement correctly `422`s (double-spend prevention).
+- **Support tickets**: full lifecycle create -> assign (to self) -> resolve,
+  each transition reflected correctly in the response.
+- **Training**: module + question creation both verified.
+- **Bookings**: found a real `PENDING_PAYMENT` booking, cancelled it via
+  `POST /admin/bookings/{id}/cancel`, confirmed the transition landed in
+  `GET /admin/bookings/{id}/status-history`.
+- **User management**: suspended the test `READ_ONLY` admin account via
+  `PUT /admin/users/{id}/status`.
+- **Regression**: `GET /partner/me`, `GET /dispatch/offers/pending`,
+  `GET /wallet/balance`, `GET /chat/threads`, `GET /notifications` all still
+  `200` after every Stage 6 change — including the two files (`payments.py`,
+  `dispatch.py`, `notification_dispatch.py`) modified to add audit logging
+  to already-existing admin endpoints.
+
+**Two real bugs found and fixed** during this pass (both detailed in
+`docs/ADMIN_BACKEND.md`): the `audit_logs.retention_until` generated-column
+insert failure, and raw `IntegrityError` 500s on three duplicate-key create
+endpoints.
+
+**Not live-tested**: KYC document verify/reject (`POST
+/admin/partners/documents/{id}/verify|reject`) — no partner in the live data
+currently has an uploaded KYC document to exercise against (the Stage 2
+upload flow needs real Cloudinary credentials, which don't exist yet per the
+gap noted above). The endpoint code follows the identical, already-verified
+pattern as partner approve/reject (same guard structure, same audit-log
+call), so the risk is low, but this is disclosed rather than assumed.
