@@ -129,6 +129,22 @@ fixed during live verification: an asyncpg naive-datetime timezone bug
 `structlog` logging-call kwarg collision. See `docs/SMART_DISPATCH.md` and
 `docs/SOCKET_ARCHITECTURE.md` for full detail.
 
+## `c07698f` — feat(admin): Stage 6 Admin Backend — RBAC, catalog, partner approval, ops
+
+Wires up the shared, pre-seeded `roles`/`permissions`/`role_permissions`
+schema (43 mappings) that no prior stage had ever read from — `user_roles`
+had 0 rows before this commit. Adds 73 admin endpoints across dashboard,
+RBAC management, user/consumer/partner management, partner approval + KYC
+review, booking oversight, service catalog CRUD, coupons, settlements,
+support tickets, and training content. Reuses the existing refund-approval/
+dispatch-override/notification-management endpoints (only change: added
+audit-action logging to them) rather than duplicating. Two real bugs found
+and fixed during live verification: `audit_logs.retention_until` is a
+Postgres `GENERATED ALWAYS` column the initial model wrongly mapped as
+writable (caused a 500 via `PendingRollbackError`), and three catalog/coupon
+create endpoints let a duplicate-key `IntegrityError` bubble to a raw 500
+instead of a clean 409. See `docs/ADMIN_BACKEND.md` for full detail.
+
 ---
 
 Pushed to `origin/main`: to be confirmed after this push (see
