@@ -43,3 +43,9 @@ prisma/*.db
 serviceAccountKey.json
 *serviceAccount*.json
 firebase-adminsdk*.json
+
+# Python (backend/)
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
