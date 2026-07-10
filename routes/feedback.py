@@ -1,13 +1,16 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from auth import get_current_partner_id
 from models.feedback import Feedback
+from models.partner import Partner
+from models.auth import User
 from schemas.feedback import FeedbackRequest, FeedbackResponse
+from services.notifications.dispatcher import dispatch_standalone
 
 router = APIRouter(prefix="/feedback", tags=["Feedback & Support"])
 
@@ -31,6 +34,7 @@ router = APIRouter(prefix="/feedback", tags=["Feedback & Support"])
 )
 async def submit_feedback(
     body: FeedbackRequest,
+    background_tasks: BackgroundTasks,
     partner_id: UUID = Depends(get_current_partner_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -43,6 +47,18 @@ async def submit_feedback(
     )
     db.add(fb)
     await db.flush()
+
+    partner = await db.get(Partner, partner_id)
+    user = await db.get(User, partner.user_id) if partner else None
+    if user:
+        background_tasks.add_task(
+            dispatch_standalone,
+            user_id=user.id, category="support", channels=("PUSH", "EMAIL"),
+            title="We received your feedback",
+            body=f"Thanks for reaching out about \"{fb.subject}\" — our support team will follow up soon.",
+            notification_type="support_received", email_to=user.email,
+        )
+
     return FeedbackResponse.model_validate(fb)
 
 

@@ -9,3 +9,4 @@ from schemas.feedback import *  # noqa: F401, F403
 from schemas.consumer import *  # noqa: F401, F403
 from schemas.payment import *  # noqa: F401, F403
 from schemas.upload import *  # noqa: F401, F403
+from schemas.notification_dispatch import *  # noqa: F401, F403

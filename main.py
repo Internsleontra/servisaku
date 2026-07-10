@@ -14,6 +14,7 @@ from routes import (
     earnings_router, wallet_router, reviews_router,
     notifications_router, feedback_router,
     consumer_router, payments_router, uploads_router,
+    notification_dispatch_router,
 )
 
 settings = get_settings()
@@ -59,7 +60,7 @@ TAGS_METADATA = [
     },
     {
         "name": "Notifications",
-        "description": "Retrieve notifications, unread count, and mark notifications as read.",
+        "description": "In-app notifications (list, unread count, mark read), device token registration, notification preferences, FCM topic subscribe/broadcast, delivery logs, and the retry mechanism.",
     },
     {
         "name": "Feedback & Support",
@@ -163,6 +164,7 @@ app.include_router(payments_router, prefix=API_PREFIX)
 app.include_router(uploads_router, prefix=API_PREFIX)
 app.include_router(reviews_router, prefix=API_PREFIX)
 app.include_router(notifications_router, prefix=API_PREFIX)
+app.include_router(notification_dispatch_router, prefix=API_PREFIX)
 app.include_router(feedback_router, prefix=API_PREFIX)
 
 

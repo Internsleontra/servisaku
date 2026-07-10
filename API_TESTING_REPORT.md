@@ -205,12 +205,65 @@ matches the SDK's own `cloudinary.utils.api_sign_request` output) — this
 calls Cloudinary's own SDK function rather than a hand-rolled reimplementation,
 unlike the Billplz X-Signature verification, so there's no algorithm-drift risk.
 
+### Notification Dispatch (12 endpoints, under the existing `/notifications` prefix)
+
+Stage 3. Built against three more pre-existing, previously-empty shared
+tables discovered this session (`device_tokens`, `notification_logs`,
+`notification_preferences`) — another team member had already designed the
+exact schema needed for this stage. Push (Firebase), email
+(Resend/Brevo/MailerSend), and SMS (mock) all sit behind provider
+interfaces (`services/notifications/*_base.py`), mirroring the Payment
+Gateway's provider-agnostic pattern.
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 67 | `/api/v1/notifications/device-tokens` | POST | ✅ | Register/reactivate (upsert by user+token) |
+| 68 | `/api/v1/notifications/device-tokens` | GET | ✅ | List mine |
+| 69 | `/api/v1/notifications/device-tokens/{id}` | PUT | ✅ | Update type / active flag |
+| 70 | `/api/v1/notifications/device-tokens/{id}` | DELETE | ✅ | |
+| 71 | `/api/v1/notifications/preferences` | GET | ✅ | Auto-creates defaults on first use |
+| 72 | `/api/v1/notifications/preferences` | PUT | ✅ | Partial update, 12 booleans (4 categories × 3 channels) |
+| 73 | `/api/v1/notifications/topics/subscribe` | POST | ✅ | Subscribes all my active device tokens |
+| 74 | `/api/v1/notifications/topics/unsubscribe` | POST | ✅ | |
+| 75 | `/api/v1/notifications/topics/{topic}/send` | POST | ✅ | Admin-only broadcast |
+| 76 | `/api/v1/notifications/logs` | GET | ✅ | Delivery history across all channels — distinct from `GET /notifications` (in-app list only) |
+| 77 | `/api/v1/notifications/logs/{id}/retry` | POST | ✅ | Admin-only, retries one FAILED delivery |
+| 78 | `/api/v1/notifications/retry-failed` | POST | ✅ | Admin-only, bulk retry (the retry mechanism) — manual for now, no scheduler exists |
+
+**Wired into existing flows** (verified live): `POST /auth/verify-otp` →
+security email; `POST /consumer/bookings` → booking push+email;
+`POST /payments/.../bill` succeeding → payment push+email (code path
+verified structurally identical to the tested booking-notification path,
+not independently live-fired since it requires real Billplz credentials);
+refund completion → payment push+email; `POST /feedback` → support
+push+email.
+
+**A real bug was found and fixed during verification**: dispatching a
+booking-creation notification via a `BackgroundTasks`-scheduled call hit a
+live `notifications_booking_id_fkey` constraint violation — the background
+task opens its own DB session/transaction, which raced against the
+triggering request's own not-yet-committed booking row. Fixed by
+dispatching inline (same session, already-flushed) instead of via
+`BackgroundTasks` specifically for this one call site; `verify_otp` and
+`submit_feedback`'s background dispatches don't reference a freshly-created
+foreign-keyed row, so they remain background tasks safely. Also hardened
+`dispatch()` so an unconfigured/failing channel (push or email) can never
+raise out and break the business action that triggered it — confirmed by
+submitting feedback with a real device token registered and no providers
+configured: the request still succeeded (201), with both channel attempts
+correctly logged as FAILED.
+
+**Not yet live-tested against real providers** (credentials pending):
+Firebase (push), Resend/Brevo/MailerSend (email). The mock SMS provider
+needs no external credentials and works as implemented — logs and returns
+success immediately.
+
 ### Health (2 endpoints)
 
 | # | Endpoint | Method | Status | Notes |
 |---|----------|--------|--------|-------|
-| 65 | `/` | GET | ✅ | App info |
-| 66 | `/health` | GET | ✅ | DB connectivity |
+| 79 | `/` | GET | ✅ | App info |
+| 80 | `/health` | GET | ✅ | DB connectivity |
 
 ---
 

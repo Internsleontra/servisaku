@@ -9,10 +9,12 @@ from routes.feedback import router as feedback_router
 from routes.consumer import router as consumer_router
 from routes.payments import router as payments_router
 from routes.uploads import router as uploads_router
+from routes.notification_dispatch import router as notification_dispatch_router
 
 __all__ = [
     "auth_router", "partner_router", "jobs_router",
     "earnings_router", "wallet_router", "reviews_router",
     "notifications_router", "feedback_router",
     "consumer_router", "payments_router", "uploads_router",
+    "notification_dispatch_router",
 ]

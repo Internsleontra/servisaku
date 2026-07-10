@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +13,7 @@ from auth import (
     hash_password, verify_password,
     create_access_token, create_refresh_token, decode_token,
 )
+from services.notifications.dispatcher import dispatch_standalone
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -95,7 +96,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         },
     },
 )
-async def verify_otp(body: VerifyOtpRequest, db: AsyncSession = Depends(get_db)):
+async def verify_otp(body: VerifyOtpRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     if body.otp != "123456":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid OTP")
 
@@ -113,6 +114,15 @@ async def verify_otp(body: VerifyOtpRequest, db: AsyncSession = Depends(get_db))
         kyc_status=partner.kyc_status if partner else "not_started",
     )
     refresh_token = create_refresh_token(sub=str(user.id))
+
+    if user.email:
+        background_tasks.add_task(
+            dispatch_standalone,
+            user_id=user.id, category="security", channels=("EMAIL",),
+            title="Phone number verified",
+            body="Your ServisAku account phone number has been verified successfully.",
+            notification_type="email_verification", email_to=user.email,
+        )
 
     return TokenResponse(
         access_token=access_token,

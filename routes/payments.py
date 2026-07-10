@@ -20,6 +20,7 @@ from schemas.payment import (
     RefundRequest, RefundResponse, RefundCompleteRequest, TransactionResponse,
 )
 from services.gateway_registry import get_gateway
+from services.notifications.dispatcher import dispatch
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -83,6 +84,18 @@ async def _mark_payment_paid(payment: Payment, db: AsyncSession) -> None:
         payment.booking.booking_status = "CONFIRMED"
         payment.booking.confirmed_at = datetime.utcnow()
     await db.flush()
+
+    if payment.booking:
+        profile = await db.get(ConsumerProfile, payment.booking.consumer_id)
+        user = await db.get(User, profile.user_id) if profile else None
+        if user:
+            await dispatch(
+                user_id=user.id, category="payment", channels=("PUSH", "EMAIL"), db=db,
+                title="Payment received",
+                body=f"Your payment of RM{payment.amount_rm} for booking {payment.booking.booking_reference} has been received.",
+                notification_type="payment_confirmed", booking_id=payment.booking_id,
+                email_to=user.email,
+            )
 
 
 async def _mark_payment_failed(payment: Payment, db: AsyncSession, reason: str) -> None:
@@ -542,5 +555,18 @@ async def complete_refund(
     )
     payment.status = "REFUNDED" if total_refunded >= payment.amount_rm else "PARTIALLY_REFUNDED"
     await db.flush()
+
+    booking = await db.get(Booking, payment.booking_id)
+    if booking:
+        profile = await db.get(ConsumerProfile, booking.consumer_id)
+        user = await db.get(User, profile.user_id) if profile else None
+        if user:
+            await dispatch(
+                user_id=user.id, category="payment", channels=("PUSH", "EMAIL"), db=db,
+                title="Refund processed",
+                body=f"Your refund of RM{refund.amount_rm} for booking {booking.booking_reference} has been processed.",
+                notification_type="refund_completed", booking_id=booking.id,
+                email_to=user.email,
+            )
 
     return RefundResponse.model_validate(refund)

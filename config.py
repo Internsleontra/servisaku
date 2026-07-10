@@ -45,6 +45,22 @@ class Settings(BaseSettings):
     CLOUDINARY_API_SECRET: str = ""
     MAX_UPLOAD_SIZE_MB: int = 10
 
+    # Push — Firebase Cloud Messaging (Spark/free plan). Create a project at
+    # https://console.firebase.google.com, then Project Settings > Service
+    # Accounts > Generate new private key. Pull project_id/client_email/
+    # private_key out of that JSON — never commit the JSON file itself.
+    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_CLIENT_EMAIL: str = ""
+    FIREBASE_PRIVATE_KEY: str = ""
+
+    # Email — tried in this order: Resend, then Brevo, then MailerSend.
+    # All three have a free tier. Only the ones with an API key set are used.
+    RESEND_API_KEY: str = ""
+    BREVO_API_KEY: str = ""
+    MAILERSEND_API_KEY: str = ""
+    EMAIL_FROM_ADDRESS: str = "notifications@servisaku.com"
+    EMAIL_FROM_NAME: str = "ServisAku"
+
     # CORS
     ALLOWED_ORIGINS: list[str] = ["*"]
 

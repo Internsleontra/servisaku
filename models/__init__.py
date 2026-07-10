@@ -12,6 +12,7 @@ from models.consumer_address import ConsumerAddress
 from models.catalog import ServiceCategory, Service
 from models.booking import Booking
 from models.payment import Payment, Refund
+from models.notification_delivery import DeviceToken, NotificationLog, NotificationPreference
 
 __all__ = [
     "Partner", "PartnerDocument", "BankAccount", "PartnerCategory",
@@ -29,4 +30,5 @@ __all__ = [
     "ServiceCategory", "Service",
     "Booking",
     "Payment", "Refund",
+    "DeviceToken", "NotificationLog", "NotificationPreference",
 ]

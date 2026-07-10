@@ -12,11 +12,14 @@ from database import get_db
 from auth import get_current_consumer_id
 from models.catalog import Service, ServiceCategory
 from models.consumer_address import ConsumerAddress
+from models.consumer_profile import ConsumerProfile
+from models.auth import User
 from models.booking import Booking
 from schemas.consumer import (
     ServiceCategoryResponse, ServiceResponse, AddressCreate, AddressResponse,
     BookingCreate, BookingResponse,
 )
+from services.notifications.dispatcher import dispatch
 
 router = APIRouter(prefix="/consumer", tags=["Consumer"])
 
@@ -157,6 +160,20 @@ async def create_booking(
     )
     db.add(booking)
     await db.flush()
+
+    profile = await db.get(ConsumerProfile, consumer_id)
+    user = await db.get(User, profile.user_id) if profile else None
+    if user:
+        # Dispatched inline (same session), not via BackgroundTasks — this
+        # notification references booking_id, which has a live FK to
+        # bookings.id. A background task opens its own session/transaction,
+        # which isn't guaranteed to see this same-request row yet.
+        await dispatch(
+            user_id=user.id, category="booking", channels=("PUSH", "EMAIL"), db=db,
+            title="Booking created", body=f"Your booking {booking.booking_reference} for {service.name} is awaiting payment.",
+            notification_type="booking_created", booking_id=booking.id,
+            email_to=user.email,
+        )
     booking.service = service
     return _booking_to_response(booking)
 
