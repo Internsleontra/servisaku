@@ -20,6 +20,9 @@ pydantic-settings>=2.5.2
 # Supabase Storage (optional, for file uploads)
 supabase>=2.7.2
 
+# Payments (Billplz via httpx; iPay88 stub — no HTTP client needed until credentials exist)
+httpx>=0.28.0
+
 # Logging
 structlog>=24.4.0
 

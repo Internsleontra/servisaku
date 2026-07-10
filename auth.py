@@ -91,6 +91,48 @@ async def get_current_partner_id(
     return partner_id
 
 
+async def get_current_admin_id(
+    user_id: UUID = Depends(get_current_user_id),
+    token: str = Depends(oauth2_scheme),
+) -> UUID:
+    payload = decode_token(token)
+    if payload.get("role") != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin access required")
+    return user_id
+
+
+async def get_current_consumer_id(
+    user_id: UUID = Depends(get_current_user_id),
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> UUID:
+    """Returns consumer_profiles.id, auto-provisioning a profile on first use.
+    This app has no dedicated consumer registration flow — consumer accounts
+    come from the shared `users` table via the same /auth/login partners use
+    (see seed.py's "customer" role). Use for booking/payment endpoints."""
+    payload = decode_token(token)
+    if payload.get("role") != "consumer":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient permissions")
+
+    from models.consumer_profile import ConsumerProfile
+    from models.auth import User
+    stmt = select(ConsumerProfile.id).where(ConsumerProfile.user_id == user_id)
+    profile_id = (await db.execute(stmt)).scalar_one_or_none()
+    if profile_id:
+        return profile_id
+
+    user = await db.get(User, user_id)
+    fallback_name = (
+        (user.email.split("@")[0] if user and user.email else None)
+        or (user.phone_number if user else None)
+        or "Consumer"
+    )
+    profile = ConsumerProfile(user_id=user_id, full_name=fallback_name)
+    db.add(profile)
+    await db.flush()
+    return profile.id
+
+
 async def require_verified_kyc(
     partner_id: UUID = Depends(get_current_partner_id),
     db: AsyncSession = Depends(get_db),

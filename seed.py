@@ -22,6 +22,10 @@ from models.job import Job, JobStatusLog
 from models.earning import Earning
 from models.review import Review
 from models.notification import Notification
+from models.consumer_profile import ConsumerProfile
+from models.consumer_address import ConsumerAddress
+from models.catalog import ServiceCategory, Service
+from models.booking import Booking
 import models  # noqa: F401 — ensure all models registered
 
 
@@ -327,6 +331,105 @@ async def seed_sample_notifications(db: AsyncSession, partner: Partner):
     print(f"  [created] {len(notifs)} sample notifications")
 
 
+async def seed_consumer_profile(db: AsyncSession, consumer_user: User) -> tuple[ConsumerProfile, ConsumerAddress]:
+    profile = (await db.execute(
+        select(ConsumerProfile).where(ConsumerProfile.user_id == consumer_user.id)
+    )).scalar_one_or_none()
+    if not profile:
+        profile = ConsumerProfile(user_id=consumer_user.id, full_name="Siti Nurhaliza")
+        db.add(profile)
+        await db.flush()
+        print("  [created] Consumer profile for customer@servisaku.com")
+    else:
+        print("  [skip] Consumer profile already exists")
+
+    address = (await db.execute(
+        select(ConsumerAddress).where(ConsumerAddress.consumer_id == profile.id)
+    )).scalar_one_or_none()
+    if not address:
+        address = ConsumerAddress(
+            consumer_id=profile.id,
+            label="Home",
+            street_address="12-3, Jalan SS 2/24, Petaling Jaya",
+            area="SS2", city="Petaling Jaya", state="Selangor", postcode="47300",
+            country="Malaysia", is_default=True,
+        )
+        db.add(address)
+        await db.flush()
+        print("  [created] Consumer address")
+    else:
+        print("  [skip] Consumer address already exists")
+
+    return profile, address
+
+
+async def seed_sample_service(db: AsyncSession) -> Service | None:
+    existing = (await db.execute(select(Service).limit(1))).scalar_one_or_none()
+    if existing:
+        print("  [skip] Sample service already exists")
+        return existing
+
+    category = (await db.execute(
+        select(ServiceCategory).where(ServiceCategory.slug == "home-cleaning")
+    )).scalar_one_or_none()
+    if not category:
+        print("  [skip] No 'home-cleaning' service_categories row found — cannot seed a sample service")
+        return None
+
+    service = Service(
+        category_id=category.id,
+        name="Standard Home Cleaning",
+        slug="standard-home-cleaning",
+        description="A standard 2-hour home cleaning session.",
+        estimated_duration_minutes=120,
+        starting_price_rm=Decimal("150.00"),
+    )
+    db.add(service)
+    await db.flush()
+    print("  [created] Sample service: Standard Home Cleaning (under 'Home Cleaning' category)")
+    return service
+
+
+async def seed_sample_booking(
+    db: AsyncSession, partner: Partner, consumer: ConsumerProfile,
+    address: ConsumerAddress, service: Service | None,
+):
+    if service is None:
+        print("  [skip] Sample booking not seeded — no service available")
+        return
+
+    existing = (await db.execute(
+        select(Booking).where(Booking.consumer_id == consumer.id).limit(1)
+    )).scalar_one_or_none()
+    if existing:
+        print("  [skip] Sample booking already exists")
+        return
+
+    from datetime import time as dt_time
+    booking = Booking(
+        booking_reference=f"BK-{uuid.uuid4().hex[:10].upper()}",
+        consumer_id=consumer.id,
+        address_id=address.id,
+        service_id=service.id,
+        partner_id=partner.id,
+        booking_status="PENDING_PAYMENT",
+        time_slot="MORNING",
+        scheduled_date=date.today() + timedelta(days=1),
+        slot_start_time=dt_time(9, 0),
+        slot_end_time=dt_time(11, 0),
+        estimated_duration_minutes=service.estimated_duration_minutes,
+        subtotal_rm=service.starting_price_rm,
+        surge_multiplier=Decimal("1.00"),
+        discount_rm=Decimal("0.00"),
+        tax_rm=Decimal("0.00"),
+        total_amount_rm=service.starting_price_rm,
+    )
+    db.add(booking)
+    await db.flush()
+    print(f"  [created] Sample booking {booking.booking_reference} (PENDING_PAYMENT) — "
+          f"ready for POST /payments/bookings/{{id}}/bill once Billplz credentials are set")
+
+
 async def main():
     print("=" * 60)
     print("ServisAku Seed Script")
@@ -340,11 +443,14 @@ async def main():
             print("\n1. Creating accounts...")
             partner_user = None
             partner_record = None
+            consumer_user = None
             for acct in SEED_ACCOUNTS:
                 user, partner = await seed_account(db, acct)
                 if acct["role"] == "partner":
                     partner_user = user
                     partner_record = partner
+                elif acct["role"] == "customer":
+                    consumer_user = user
 
             if partner_record:
                 print("\n2. Seeding partner details...")
@@ -361,6 +467,16 @@ async def main():
 
                 print("\n6. Creating sample notifications...")
                 await seed_sample_notifications(db, partner_record)
+
+                if consumer_user:
+                    print("\n7. Seeding consumer profile & address...")
+                    consumer_profile, consumer_address = await seed_consumer_profile(db, consumer_user)
+
+                    print("\n8. Seeding sample service...")
+                    service = await seed_sample_service(db)
+
+                    print("\n9. Seeding sample booking...")
+                    await seed_sample_booking(db, partner_record, consumer_profile, consumer_address, service)
 
             await db.commit()
             print("\n" + "=" * 60)

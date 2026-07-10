@@ -13,6 +13,7 @@ from routes import (
     auth_router, partner_router, jobs_router,
     earnings_router, wallet_router, reviews_router,
     notifications_router, feedback_router,
+    consumer_router, payments_router,
 )
 
 settings = get_settings()
@@ -39,6 +40,14 @@ TAGS_METADATA = [
     {
         "name": "Wallet",
         "description": "Check wallet balance, view settlement history, and request withdrawals.",
+    },
+    {
+        "name": "Consumer",
+        "description": "Minimal consumer-facing endpoints (service catalog browsing, saved addresses, booking creation) needed to make the Payment Gateway testable end-to-end. Full booking lifecycle/dispatch belongs to a later stage.",
+    },
+    {
+        "name": "Payments",
+        "description": "Create Billplz bills for bookings, verify payment status, manage escrow, and handle the refund approval workflow.",
     },
     {
         "name": "Reviews",
@@ -145,6 +154,9 @@ app.include_router(partner_router, prefix=API_PREFIX)
 app.include_router(jobs_router, prefix=API_PREFIX)
 app.include_router(earnings_router, prefix=API_PREFIX)
 app.include_router(wallet_router, prefix=API_PREFIX)
+app.include_router(consumer_router, prefix=API_PREFIX)
+app.include_router(payments_router, prefix=API_PREFIX)
+app.include_router(payments_router, prefix=API_PREFIX)
 app.include_router(reviews_router, prefix=API_PREFIX)
 app.include_router(notifications_router, prefix=API_PREFIX)
 app.include_router(feedback_router, prefix=API_PREFIX)

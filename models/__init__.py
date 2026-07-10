@@ -8,6 +8,10 @@ from models.feedback import Feedback
 from models.customer import Customer
 from models.auth import User
 from models.consumer_profile import ConsumerProfile
+from models.consumer_address import ConsumerAddress
+from models.catalog import ServiceCategory, Service
+from models.booking import Booking
+from models.payment import Payment, Refund
 
 __all__ = [
     "Partner", "PartnerDocument", "BankAccount", "PartnerCategory",
@@ -21,4 +25,8 @@ __all__ = [
     "Customer",
     "User",
     "ConsumerProfile",
+    "ConsumerAddress",
+    "ServiceCategory", "Service",
+    "Booking",
+    "Payment", "Refund",
 ]
