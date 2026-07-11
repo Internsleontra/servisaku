@@ -156,6 +156,17 @@ permission. No database changes — confirmed no analytics view exists in the
 live schema before writing any code; every endpoint is a live aggregate
 query. See `docs/ANALYTICS.md` for full detail.
 
+## `7085a82` — test(qa): Stage 8 Testing & Quality Assurance — pytest suite, 208 tests
+
+A real automated pytest suite (none existed before): unit, API, integration,
+and Socket.IO tests spanning every stage's endpoints. Runs in-process
+against the real dev database via httpx's `ASGITransport` — no separate
+test DB is provisioned, a deliberate documented tradeoff (see
+`docs/TESTING_GUIDE.md`). Final run: 208 passed, 0 failed, 74% coverage.
+Zero real application bugs found; several test bugs (wrong endpoint paths,
+wrong request shapes) found and fixed during development — see
+`docs/today-work/TEST_REPORT.md` for the full breakdown.
+
 ---
 
 Pushed to `origin/main`: to be confirmed after this push (see
