@@ -227,3 +227,16 @@
   `routes/admin_coupons.py` (`create_coupon`): a duplicate `name`/`slug`/
   `code` raised a raw `IntegrityError` that bubbled to an unhandled 500.
   Fixed by catching it around the flush and returning a clean `409`.
+
+### Analytics (Stage 7)
+
+#### Added
+
+- `routes/analytics.py` (11 endpoints, prefix `/admin/analytics`) — revenue,
+  bookings, partner performance, consumers, trend metrics, conversion,
+  cancellations, dispatch (alias), payments, notifications, support.
+- `schemas/analytics.py`.
+- `docs/ANALYTICS.md`.
+
+No model or database changes — every analytics endpoint is a read-only
+aggregate query against tables already mapped in Stages 1-6.

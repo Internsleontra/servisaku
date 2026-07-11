@@ -206,3 +206,26 @@ see `docs/ADMIN_BACKEND.md` for the full story.
 
 No new third-party credentials needed — Stage 6 is entirely self-contained
 against the existing database, same as Stage 4/5.
+
+## Stage 7 — Analytics
+
+11 read-only endpoints under `/admin/analytics/*` (revenue, bookings,
+partner performance, consumers, trend metrics, conversion funnel,
+cancellations, dispatch — aliased to the existing Stage 4 endpoint, not
+duplicated — payments, notifications, support), all gated by `reports.read`
+(the Stage 6 RBAC layer). Checked `information_schema.views`/`pg_matviews`
+first per the "reuse existing database views where possible" instruction —
+none exist beyond PostGIS's own, so everything is computed live from
+existing tables. Full detail in `docs/ANALYTICS.md`.
+
+Live-verified against real data: revenue analytics correctly totals the
+RM1,350 across 9 captured payments from prior stages' live testing;
+conversion analytics correctly reflects the 15 test bookings' funnel
+(11 confirmed, 5 partner-assigned, 1 completed). No new bugs found — this
+stage's endpoints are all read-only aggregate queries, a smaller surface
+area than Stage 6's mutations.
+
+An SSH tunnel drop (to the AWS RDS bastion) was hit and fixed mid-stage —
+noted here since it's an infrastructure hiccup, not an app bug: the tunnel
+had been idle since the previous session and dropped; reconnected with the
+same `ssh -L 15433:...` command from the original setup before continuing.

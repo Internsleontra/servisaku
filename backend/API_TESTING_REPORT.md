@@ -431,12 +431,31 @@ permissions) gets `403` on both reads and writes; `SUPER_ADMIN` succeeds
 everywhere tested. Full detail, including the two real bugs found and fixed
 during this verification, is in `docs/ADMIN_BACKEND.md`.
 
+### Admin - Analytics (11 endpoints)
+
+| # | Endpoint | Method | Status | Notes |
+|---|----------|--------|--------|-------|
+| 169 | `/admin/analytics/revenue` | GET | ✅ | RM1,350.00 total captured, correct day/category breakdown |
+| 170 | `/admin/analytics/bookings` | GET | ✅ | 15 bookings, correct status breakdown, RM150.00 average value |
+| 171 | `/admin/analytics/partners` | GET | ✅ | Correct top-N ranking by jobs/rating/completion rate |
+| 172 | `/admin/analytics/consumers` | GET | ✅ | Correct repeat-booking rate and top-spender ranking |
+| 173 | `/admin/analytics/trends` | GET | ✅ | Per-day time series, distinct from the Stage 6 dashboard snapshot |
+| 174 | `/admin/analytics/conversion` | GET | ✅ | Funnel numbers cross-checked against `bookings` endpoint — match exactly |
+| 175 | `/admin/analytics/cancellations` | GET | ✅ | |
+| 176 | `/admin/analytics/dispatch` | GET | ✅ | Verified byte-for-byte identical to `GET /dispatch/analytics` (confirms alias, not reimplementation) |
+| 177 | `/admin/analytics/payments` | GET | ✅ | |
+| 178 | `/admin/analytics/notifications` | GET | ✅ | 0% success rate correctly reflects the known unconfigured-provider gap, not a bug |
+| 179 | `/admin/analytics/support` | GET | ✅ | Average resolution time matches real elapsed time from Stage 6 testing |
+
+RBAC verified: partner JWT → `403`, no token → `401`, `SUPER_ADMIN` → `200`
+on every endpoint. Full detail in `docs/ANALYTICS.md`.
+
 ### Health (2 endpoints)
 
 | # | Endpoint | Method | Status | Notes |
 |---|----------|--------|--------|-------|
-| 169 | `/` | GET | ✅ | App info |
-| 170 | `/health` | GET | ✅ | DB connectivity + connected Socket.IO session count |
+| 180 | `/` | GET | ✅ | App info |
+| 181 | `/health` | GET | ✅ | DB connectivity + connected Socket.IO session count |
 
 ---
 
@@ -461,7 +480,7 @@ during this verification, is in `docs/ADMIN_BACKEND.md`.
 - **Try it out**: Enabled by default for all endpoints
 - **Persist authorization**: Token persists across page reloads
 - **Filter**: Search/filter endpoints by keyword
-- **Tag grouping**: 24 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Smart Dispatch, Chat, Admin - Dashboard, Admin - RBAC, Admin - Users, Admin - Partners, Admin - Bookings, Admin - Catalog, Admin - Coupons, Admin - Settlements, Admin - Support, Admin - Training, Health)
+- **Tag grouping**: 25 groups (Authentication, Profile, Jobs, Earnings, Wallet, Reviews, Notifications, Feedback, Consumer, Payments, Uploads, Smart Dispatch, Chat, Admin - Dashboard, Admin - RBAC, Admin - Users, Admin - Partners, Admin - Bookings, Admin - Catalog, Admin - Coupons, Admin - Settlements, Admin - Support, Admin - Training, Admin - Analytics, Health)
 - **Request examples**: Pre-filled examples for all request bodies
 - **Response models**: Full schema documentation for all responses
 - **Validation errors**: Documented 422 responses with examples

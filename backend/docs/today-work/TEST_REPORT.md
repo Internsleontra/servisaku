@@ -246,3 +246,44 @@ upload flow needs real Cloudinary credentials, which don't exist yet per the
 gap noted above). The endpoint code follows the identical, already-verified
 pattern as partner approve/reject (same guard structure, same audit-log
 call), so the risk is low, but this is disclosed rather than assumed.
+
+## Stage 7 — Analytics live verification
+
+All 11 endpoints under `/admin/analytics/*` fired against `servisakudb` with
+a `SUPER_ADMIN` token and returned `200` with real, non-trivial data:
+
+- `revenue` — RM1,350.00 total captured across 9 payments, correctly
+  broken down by day and by the "Home Cleaning" service category.
+- `bookings` — 15 total, correct status breakdown, RM150.00 average value.
+- `partners` — correctly ranked 3 partners by completed jobs/rating/
+  completion rate; platform-wide averages computed correctly.
+- `consumers` — 1 seed consumer, 100% repeat-booking rate (has multiple
+  bookings), correct top-spender ranking.
+- `trends` — per-day time series for bookings/revenue/new-users, distinct
+  output shape from `GET /admin/dashboard`'s point-in-time snapshot.
+- `conversion` — 15 created → 11 confirmed (73.33%) → 5 assigned → 1
+  completed (9.09% of confirmed, 6.67% overall) — matches the booking-status
+  breakdown from the `bookings` endpoint exactly, cross-checked.
+- `cancellations` — 1 cancelled (6.67% rate), 0 no-shows.
+- `dispatch` — confirmed byte-for-byte identical output to the existing
+  `GET /dispatch/analytics` (Stage 4), proving the alias delegates correctly
+  rather than reimplementing.
+- `payments` — 9 `HELD_IN_ESCROW` via `BILLPLZ`/`FPX`, 100% success rate
+  (matches "no failed payment attempts" from Stage 1 testing).
+- `notifications` — 0% delivery success rate, all `FAILED` — this correctly
+  reflects the known, previously-documented gap (no real push/email provider
+  configured yet), not a bug in this stage's analytics query.
+- `support` — 1 ticket, `RESOLVED`, 5.5-hour average resolution time
+  (matches the real elapsed time between this session's ticket-creation and
+  resolve calls in the Stage 6 verification pass).
+
+**RBAC verified**: partner JWT → `403`, no token → `401`, `SUPER_ADMIN` →
+`200` on every endpoint. **Regression**: `GET /admin/dashboard`, `GET
+/dispatch/analytics`, `GET /openapi.json` (144 total paths) all still `200`
+after wiring Stage 7 in.
+
+**Infrastructure note, not a bug**: the SSH tunnel to the AWS RDS bastion
+had dropped (idle since the previous session) partway through this stage's
+work, causing a `RuntimeError: Cannot connect to PostgreSQL` on server
+startup. Reconnected with the same tunnel command used to establish it
+originally; no application code was at fault.

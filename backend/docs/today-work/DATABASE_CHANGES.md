@@ -189,3 +189,13 @@ INSERT column list for such a column, including `NULL` — SQLAlchemy's ORM
 by default includes every mapped column in the INSERT VALUES list even when
 unset. Fixed by removing the column from the ORM mapping entirely (see
 `docs/ADMIN_BACKEND.md`).
+
+## Fifth discovery: Analytics (Stage 7) — zero new tables, confirmed no analytics views exist
+
+Before writing any Stage 7 code, queried `information_schema.views` and
+`pg_matviews` directly (per "reuse existing database views or tables where
+possible") — only PostGIS's own system views (`geography_columns`,
+`geometry_columns`) exist; no analytics view or materialized view of any
+kind. Every Stage 7 endpoint is therefore a live aggregate query against
+tables already mapped in Stages 1-6. No new models, no new tables, no
+schema changes.

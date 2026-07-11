@@ -20,7 +20,7 @@ from routes import (
     admin_dashboard_router, admin_rbac_router, admin_users_router,
     admin_partners_router, admin_bookings_router, admin_catalog_router,
     admin_coupons_router, admin_settlements_router, admin_support_router,
-    admin_training_router,
+    admin_training_router, analytics_router,
 )
 from services.dispatch.background import dispatch_sweep_loop
 from services.realtime.socket_server import sio
@@ -126,6 +126,10 @@ TAGS_METADATA = [
     {
         "name": "Admin - Training",
         "description": "Partner training module and quiz-question CRUD.",
+    },
+    {
+        "name": "Admin - Analytics",
+        "description": "Revenue, booking, partner performance, consumer, trend, conversion, cancellation, payment, notification, and support analytics for dashboards.",
     },
     {
         "name": "Health",
@@ -247,6 +251,7 @@ app.include_router(admin_coupons_router, prefix=API_PREFIX)
 app.include_router(admin_settlements_router, prefix=API_PREFIX)
 app.include_router(admin_support_router, prefix=API_PREFIX)
 app.include_router(admin_training_router, prefix=API_PREFIX)
+app.include_router(analytics_router, prefix=API_PREFIX)
 
 
 def custom_openapi():

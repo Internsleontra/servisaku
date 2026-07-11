@@ -184,3 +184,10 @@ Quick reference:
 - **Soft-delete throughout**: every catalog/coupon "delete" endpoint sets
   `is_active=false` rather than issuing a `DELETE`, since these rows are
   referenced by historical bookings/payments.
+
+## Analytics (`/api/v1/admin/analytics/*`) — 11 endpoints, Stage 7
+
+`revenue`, `bookings`, `partners`, `consumers`, `trends`, `conversion`,
+`cancellations`, `dispatch` (alias for the existing `/dispatch/analytics`),
+`payments`, `notifications`, `support`. All gated by `reports.read`. Full
+detail in `docs/ANALYTICS.md`.

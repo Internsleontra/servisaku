@@ -22,6 +22,7 @@ from routes.admin_coupons import router as admin_coupons_router
 from routes.admin_settlements import router as admin_settlements_router
 from routes.admin_support import router as admin_support_router
 from routes.admin_training import router as admin_training_router
+from routes.analytics import router as analytics_router
 
 __all__ = [
     "auth_router", "partner_router", "jobs_router",
@@ -32,5 +33,5 @@ __all__ = [
     "admin_dashboard_router", "admin_rbac_router", "admin_users_router",
     "admin_partners_router", "admin_bookings_router", "admin_catalog_router",
     "admin_coupons_router", "admin_settlements_router", "admin_support_router",
-    "admin_training_router",
+    "admin_training_router", "analytics_router",
 ]
