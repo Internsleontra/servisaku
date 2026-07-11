@@ -42,3 +42,7 @@ python-dotenv>=1.0.1
 pytest>=8.3.0
 pytest-asyncio>=0.24.0
 pytest-cov>=5.0.0
+
+# Reporting (scripts/generate_final_report.py — not needed at app runtime)
+python-docx>=1.1.0
+reportlab>=4.2.0
