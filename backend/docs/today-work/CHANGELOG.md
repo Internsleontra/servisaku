@@ -240,3 +240,28 @@
 
 No model or database changes — every analytics endpoint is a read-only
 aggregate query against tables already mapped in Stages 1-6.
+
+### Testing & Quality Assurance (Stage 8)
+
+#### Added
+
+- `tests/` — a real pytest suite (not a stub): unit tests (auth hashing/JWT,
+  upload MIME sniffing, KYC status mapping — no DB/network), API tests
+  covering every route file across every stage, and integration tests
+  (support-ticket lifecycle, catalog CRUD lifecycle, RBAC role assignment,
+  and a genuine end-to-end Smart Dispatch flow exercising real candidate
+  ranking + start/decline/retry/accept against the live database).
+- `tests/test_socketio.py` — connects to a real running server (needs real
+  HTTP, not in-process ASGI); skips cleanly if none is reachable.
+- `tests/conftest.py` — session-scoped fixtures (client, admin/partner/
+  partner2/consumer tokens) running in-process against `main.app` via
+  httpx's `ASGITransport`, against the real dev database (no separate test
+  DB exists — see `docs/TESTING_GUIDE.md` for why this is a deliberate
+  choice, not an oversight).
+- `pytest.ini`, `.coveragerc`.
+- `docs/TESTING_GUIDE.md`.
+- `requirements.txt`: `pytest`, `pytest-asyncio`, `pytest-cov`.
+
+No application code changes — Stage 8 is purely additive test coverage; see
+`docs/today-work/TEST_REPORT.md` for the full run results and coverage
+numbers.

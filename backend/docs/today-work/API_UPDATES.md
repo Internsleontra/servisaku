@@ -191,3 +191,9 @@ Quick reference:
 `cancellations`, `dispatch` (alias for the existing `/dispatch/analytics`),
 `payments`, `notifications`, `support`. All gated by `reports.read`. Full
 detail in `docs/ANALYTICS.md`.
+
+## Stage 8 — Testing & Quality Assurance
+
+No new or changed endpoints — Stage 8 added `tests/` (a pytest suite) and
+`docs/TESTING_GUIDE.md`. See `docs/today-work/TEST_REPORT.md` for the full
+run results (208 passed, 74% coverage).

@@ -199,3 +199,12 @@ possible") — only PostGIS's own system views (`geography_columns`,
 kind. Every Stage 7 endpoint is therefore a live aggregate query against
 tables already mapped in Stages 1-6. No new models, no new tables, no
 schema changes.
+
+## Stage 8 — Testing & Quality Assurance: zero schema changes
+
+No new tables, models, or columns. The pytest suite (`tests/`) writes real
+rows through the existing API (coupons, categories, support tickets, a
+throwaway RBAC test admin user, etc.) using the same tables every prior
+stage already mapped — see `docs/TESTING_GUIDE.md` for why the suite runs
+against the live dev database rather than a separate test database (none is
+provisioned), and how each data-creating test is kept safe to re-run.

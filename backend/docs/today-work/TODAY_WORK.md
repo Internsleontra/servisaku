@@ -229,3 +229,25 @@ An SSH tunnel drop (to the AWS RDS bastion) was hit and fixed mid-stage —
 noted here since it's an infrastructure hiccup, not an app bug: the tunnel
 had been idle since the previous session and dropped; reconnected with the
 same `ssh -L 15433:...` command from the original setup before continuing.
+
+## Stage 8 — Testing & Quality Assurance
+
+Built a real pytest suite from scratch (none existed before this stage) —
+unit, API, integration, and Socket.IO tests spanning every module across
+Stages 1-7. Runs in-process against `main.app` via httpx's `ASGITransport`
+and the real dev database (no separate test/staging DB is provisioned for
+this project — a deliberate, documented tradeoff, see
+`docs/TESTING_GUIDE.md`). 200+ tests, 0 failures on the final run.
+
+Several genuine test bugs were found and fixed during development (wrong
+endpoint paths, wrong request-body shapes, a Decimal-serializes-as-JSON-
+string gotcha) — none were application bugs; each is called out in
+`docs/today-work/TEST_REPORT.md` to distinguish "the test was wrong" from
+"the app was wrong." Zero real application bugs were found this stage —
+expected, since Stage 8 tests the already-thoroughly-live-verified surface
+from Stages 1-7 rather than new business logic.
+
+Full regression pass repeated the same manual endpoint sweep used at the
+end of every prior stage: all Stage 1-7 endpoints still return correct
+status codes. See `docs/today-work/TEST_REPORT.md` for exact numbers and
+coverage.

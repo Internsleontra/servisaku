@@ -1,0 +1,13 @@
+[run]
+source = .
+omit =
+    tests/*
+    migrations/*
+    seed.py
+    main.py
+    */site-packages/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
