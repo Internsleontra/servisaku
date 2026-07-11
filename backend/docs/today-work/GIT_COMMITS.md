@@ -145,6 +145,17 @@ writable (caused a 500 via `PendingRollbackError`), and three catalog/coupon
 create endpoints let a duplicate-key `IntegrityError` bubble to a raw 500
 instead of a clean 409. See `docs/ADMIN_BACKEND.md` for full detail.
 
+## `326d9a2` — docs: record Stage 6 commit hash in GIT_COMMITS.md
+
+## `8e53f32` — feat(analytics): Stage 7 Analytics — 11 read-only reporting endpoints
+
+Revenue, booking, partner performance, consumer, trend, conversion,
+cancellation, dispatch (aliased to the existing Stage 4 endpoint), payment,
+notification, and support analytics, gated by the Stage 6 `reports.read`
+permission. No database changes — confirmed no analytics view exists in the
+live schema before writing any code; every endpoint is a live aggregate
+query. See `docs/ANALYTICS.md` for full detail.
+
 ---
 
 Pushed to `origin/main`: to be confirmed after this push (see
