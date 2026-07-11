@@ -167,6 +167,19 @@ Zero real application bugs found; several test bugs (wrong endpoint paths,
 wrong request shapes) found and fixed during development — see
 `docs/today-work/TEST_REPORT.md` for the full breakdown.
 
+## `3e36b15` — docs: Stage 9 Documentation & Final Delivery
+
+`README.md`, `docs/ARCHITECTURE.md`, `docs/SECURITY.md`,
+`docs/DEPLOYMENT.md`, `docs/ENVIRONMENT_SETUP.md` — none of which existed
+for this backend before this commit (the migration was deliberately scoped
+to `backend/` only, so the original repo's root-level docs never came
+along). `scripts/generate_final_report.py` and its two outputs,
+`docs/reports/ServisAku_Backend_Final_Report.{docx,pdf}`, covering all 16
+requested report sections from one shared content source. Added
+`.gitattributes` after discovering `core.autocrlf` was about to silently
+corrupt the committed PDF's line endings — verified both binary files
+staged byte-identical to disk before committing.
+
 ---
 
 Pushed to `origin/main`: to be confirmed after this push (see
