@@ -1,7 +1,8 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
 from database import get_db
 from models.auth import User
 from models.partner import Partner
@@ -14,8 +15,10 @@ from auth import (
     create_access_token, create_refresh_token, decode_token,
 )
 from services.notifications.dispatcher import dispatch_standalone
+from services.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+settings = get_settings()
 
 
 @router.post(
@@ -45,7 +48,8 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
         },
     },
 )
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_OTP_REQUEST)
+async def register(request: Request, body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(
         select(User).where(
             (User.phone_number == body.phone) | (User.email == body.email)
@@ -96,7 +100,8 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         },
     },
 )
-async def verify_otp(body: VerifyOtpRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_OTP_VERIFY)
+async def verify_otp(request: Request, body: VerifyOtpRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     if body.otp != "123456":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid OTP")
 
@@ -170,7 +175,8 @@ async def verify_otp(body: VerifyOtpRequest, background_tasks: BackgroundTasks, 
         },
     },
 )
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
+async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     stmt = select(User).where(User.phone_number == body.phone)
     user = (await db.execute(stmt)).scalar_one_or_none()
 

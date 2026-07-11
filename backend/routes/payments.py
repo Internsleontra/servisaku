@@ -1,5 +1,4 @@
 import uuid as uuid_mod
-from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -8,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from config import get_settings
 from database import get_db
 from auth import oauth2_scheme, decode_token, get_current_user_id, get_current_admin_id, get_current_consumer_id
 from models.auth import User
@@ -23,9 +23,12 @@ from services.gateway_registry import get_gateway
 from services.notifications.dispatcher import dispatch
 from services.dispatch.engine import start_dispatch
 from services.realtime import events
+from services.rate_limit import limiter
 from services.rbac import log_admin_action
+from utils.time import utc_now
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
+settings = get_settings()
 
 
 async def _current_role_and_scope_id(
@@ -82,11 +85,11 @@ async def _mark_payment_paid(payment: Payment, db: AsyncSession) -> None:
     if payment.status != "INITIATED":
         return
     payment.status = "HELD_IN_ESCROW"
-    payment.authorized_at = datetime.utcnow()
+    payment.authorized_at = utc_now()
     became_confirmed = False
     if payment.booking and payment.booking.booking_status == "PENDING_PAYMENT":
         payment.booking.booking_status = "CONFIRMED"
-        payment.booking.confirmed_at = datetime.utcnow()
+        payment.booking.confirmed_at = utc_now()
         became_confirmed = True
     await db.flush()
 
@@ -120,7 +123,7 @@ async def _mark_payment_failed(payment: Payment, db: AsyncSession, reason: str) 
     if payment.status != "INITIATED":
         return
     payment.status = "FAILED"
-    payment.failed_at = datetime.utcnow()
+    payment.failed_at = utc_now()
     payment.failure_reason = reason
     await db.flush()
 
@@ -152,7 +155,9 @@ async def _mark_payment_failed(payment: Payment, db: AsyncSession, reason: str) 
         503: {"description": "Gateway is not configured", "content": {"application/json": {"example": {"error": {"code": "payment_gateway_not_configured", "message": "Billplz is not configured...", "status": 503}}}}},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_PAYMENT)
 async def create_bill(
+    request: Request,
     booking_id: UUID,
     body: BillCreateRequest,
     consumer_id: UUID = Depends(get_current_consumer_id),
@@ -437,7 +442,9 @@ async def release_payment(
         409: {"description": "Payment is not refundable, or amount exceeds remaining balance"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_REFUND)
 async def request_refund(
+    request: Request,
     payment_id: UUID,
     body: RefundRequest,
     scope: tuple = Depends(_current_role_and_scope_id),
@@ -465,7 +472,7 @@ async def request_refund(
         booking_id=payment.booking_id, payment_id=payment.id,
         refund_reference=f"RFD-{uuid_mod.uuid4().hex[:10].upper()}",
         amount_rm=refund_amount, is_partial=refund_amount < remaining,
-        reason=body.reason, status="PENDING_APPROVAL", requires_approval=True,
+        reason=body.reason, status="PENDING_APPROVAL",
     )
     db.add(refund)
     await db.flush()
@@ -489,7 +496,9 @@ async def request_refund(
         409: {"description": "Refund is not pending approval"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_REFUND)
 async def approve_refund(
+    request: Request,
     refund_id: UUID,
     admin_id: UUID = Depends(get_current_admin_id),
     db: AsyncSession = Depends(get_db),
@@ -516,7 +525,9 @@ async def approve_refund(
         409: {"description": "Refund is not pending approval"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_REFUND)
 async def reject_refund(
+    request: Request,
     refund_id: UUID,
     admin_id: UUID = Depends(get_current_admin_id),
     db: AsyncSession = Depends(get_db),
@@ -549,7 +560,9 @@ async def reject_refund(
         409: {"description": "Refund is not approved"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_REFUND)
 async def complete_refund(
+    request: Request,
     refund_id: UUID,
     body: RefundCompleteRequest,
     admin_id: UUID = Depends(get_current_admin_id),
@@ -563,7 +576,7 @@ async def complete_refund(
 
     refund.status = "COMPLETED"
     refund.gateway_refund_id = body.gateway_refund_id
-    refund.processed_at = datetime.utcnow()
+    refund.processed_at = utc_now()
     await log_admin_action(db, admin_id, "refund.completed", "refund", refund_id, body.gateway_refund_id)
     await db.flush()
 

@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
 from database import get_db
 from models.partner import Partner, PartnerDocument
 from models.auth import User
@@ -12,10 +13,12 @@ from schemas.admin import (
     PartnerAdminResponse, PartnerApprovalRequest, PartnerRejectionRequest,
     PartnerSuspendRequest, KYCDocumentReviewRequest, KYCDocumentAdminResponse,
 )
+from services.rate_limit import limiter
 from services.rbac import require_permission, log_admin_action, write_audit_log
 from services.notifications.dispatcher import dispatch
 
 router = APIRouter(prefix="/admin/partners", tags=["Admin - Partners"])
+settings = get_settings()
 
 
 def _to_response(partner: Partner, user: User) -> PartnerAdminResponse:
@@ -87,7 +90,9 @@ async def get_partner(
     ),
     responses={404: {"description": "Partner not found"}, 409: {"description": "Partner is not awaiting review"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def approve_partner(
+    request: Request,
     partner_id: UUID,
     body: PartnerApprovalRequest,
     admin_id: UUID = Depends(require_permission("partners.approve")),
@@ -130,7 +135,9 @@ async def approve_partner(
     ),
     responses={404: {"description": "Partner not found"}, 409: {"description": "Partner is not awaiting review"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def reject_partner(
+    request: Request,
     partner_id: UUID,
     body: PartnerRejectionRequest,
     admin_id: UUID = Depends(require_permission("partners.reject")),
@@ -173,7 +180,9 @@ async def reject_partner(
     ),
     responses={404: {"description": "Partner not found"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def suspend_partner(
+    request: Request,
     partner_id: UUID,
     body: PartnerSuspendRequest,
     admin_id: UUID = Depends(require_permission("partners.suspend")),
@@ -207,7 +216,9 @@ async def suspend_partner(
     description="**Database tables:** `partners`, `audit_logs`, `admin_actions`\n\n**Permissions:** Requires JWT token (role: admin, permission: `partners.suspend`)",
     responses={404: {"description": "Partner not found"}, 409: {"description": "Partner is not suspended"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def reactivate_partner(
+    request: Request,
     partner_id: UUID,
     admin_id: UUID = Depends(require_permission("partners.suspend")),
     db: AsyncSession = Depends(get_db),
@@ -262,7 +273,9 @@ async def list_partner_documents(
     ),
     responses={404: {"description": "Document not found"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def verify_kyc_document(
+    request: Request,
     document_id: UUID,
     admin_id: UUID = Depends(require_permission("partners.approve")),
     db: AsyncSession = Depends(get_db),
@@ -294,7 +307,9 @@ async def verify_kyc_document(
     description="**Database tables:** `partner_documents`, `audit_logs`, `admin_actions`\n\n**Permissions:** Requires JWT token (role: admin, permission: `partners.reject`)",
     responses={404: {"description": "Document not found"}, 422: {"description": "rejection_reason is required"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def reject_kyc_document(
+    request: Request,
     document_id: UUID,
     body: KYCDocumentReviewRequest,
     admin_id: UUID = Depends(require_permission("partners.reject")),

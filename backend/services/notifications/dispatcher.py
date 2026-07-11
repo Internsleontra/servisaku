@@ -5,7 +5,6 @@ what makes the provider layer swappable without touching business logic
 scattered across routes.
 """
 
-from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -16,6 +15,7 @@ from models.notification_delivery import DeviceToken, NotificationLog, Notificat
 from models.auth import User
 from services.notifications.registry import get_push_provider, get_email_providers, get_sms_provider
 from utils.logging import get_logger
+from utils.time import utc_now
 
 logger = get_logger("notification_dispatcher")
 
@@ -50,7 +50,7 @@ async def _log_delivery(
     log = NotificationLog(
         notification_id=notification_id, user_id=user_id, channel=channel, provider=provider,
         provider_message_id=provider_message_id, status=status, failure_reason=failure_reason,
-        sent_at=datetime.utcnow() if status in ("SENT", "DELIVERED") else None,
+        sent_at=utc_now() if status in ("SENT", "DELIVERED") else None,
     )
     db.add(log)
     await db.flush()
@@ -168,7 +168,7 @@ async def _redispatch_log(log: NotificationLog, db: AsyncSession) -> bool:
         if succeeded:
             log.status = "SENT"
             log.failure_reason = None
-            log.sent_at = datetime.utcnow()
+            log.sent_at = utc_now()
         return succeeded
 
     if log.channel == "EMAIL":
@@ -184,7 +184,7 @@ async def _redispatch_log(log: NotificationLog, db: AsyncSession) -> bool:
                 log.provider = provider.name
                 log.provider_message_id = result.provider_message_id
                 log.failure_reason = None
-                log.sent_at = datetime.utcnow()
+                log.sent_at = utc_now()
                 return True
         return False
 
@@ -198,7 +198,7 @@ async def _redispatch_log(log: NotificationLog, db: AsyncSession) -> bool:
             log.status = "SENT"
             log.provider_message_id = result.provider_message_id
             log.failure_reason = None
-            log.sent_at = datetime.utcnow()
+            log.sent_at = utc_now()
         return result.success
 
     return False

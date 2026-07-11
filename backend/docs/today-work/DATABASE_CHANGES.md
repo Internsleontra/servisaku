@@ -208,3 +208,29 @@ throwaway RBAC test admin user, etc.) using the same tables every prior
 stage already mapped — see `docs/TESTING_GUIDE.md` for why the suite runs
 against the live dev database rather than a separate test database (none is
 provisioned), and how each data-creating test is kept safe to re-run.
+
+## Final Hardening Stage: zero schema changes, one mapping fix
+
+No tables, columns, or indexes were created, dropped, or altered in the
+live database this stage. All model-file edits (32 files) were
+Python-level-only: changing a `default=`/`onupdate=` callable from
+`datetime.utcnow` to `utils.time.utc_now` — same column, same type, same
+constraints, just a different Python function generating the value before
+INSERT.
+
+**One ORM mapping was corrected to match schema drift that had already
+happened** (not introduced by this stage): `models/payment.py::Refund` was
+mapping `requires_approval` as a normal writable column, but the live
+`refunds` table has it as
+`GENERATED ALWAYS AS (amount_rm > 100 AND is_partial = true) STORED` —
+verified via `information_schema.columns.is_generated`/
+`generation_expression`, the same diagnostic query used for the Stage 6
+`audit_logs.retention_until` discovery. This mapping was simply removed
+(the column isn't exposed in any response schema, so nothing needs to read
+it back) — no database change, a pure ORM-mapping correction to stop
+sending Postgres a value it now computes itself.
+
+Verified before and after this stage: `SELECT count(*) FROM
+information_schema.tables WHERE table_schema='public'` — 83 tables, both
+times. No tables were dropped, recreated, or added. No production data was
+deleted.

@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
 from database import get_db
 from auth import get_current_user_id, get_current_admin_id
 from models.notification_delivery import DeviceToken, NotificationLog
@@ -15,9 +16,11 @@ from schemas.notification_dispatch import (
 )
 from services.notifications.registry import get_push_provider
 from services.notifications.dispatcher import get_or_create_preferences, retry_log, retry_all_failed
+from services.rate_limit import limiter
 from services.rbac import log_admin_action
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
+settings = get_settings()
 
 
 @router.post(
@@ -191,7 +194,9 @@ async def unsubscribe_from_topic(
     description="Sends one push notification to every device subscribed to a topic.\n\n**Permissions:** Requires JWT token (role: admin)",
     responses={503: {"description": "Firebase is not configured"}},
 )
+@limiter.limit(settings.RATE_LIMIT_NOTIFICATION_BROADCAST)
 async def send_to_topic(
+    request: Request,
     topic: str,
     body: TopicSendRequest,
     admin_id: UUID = Depends(get_current_admin_id),

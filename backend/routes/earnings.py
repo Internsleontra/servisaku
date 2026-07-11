@@ -14,12 +14,13 @@ from schemas.earning import (
     EarningsResponse, EarningsSummarySchema,
     EarningsPointSchema, EarningsBreakdownItem,
 )
+from utils.time import utc_now
 
 router = APIRouter(prefix="/earnings", tags=["Earnings"])
 
 
 def _get_date_range(period: str) -> tuple[datetime, datetime]:
-    now = datetime.utcnow()
+    now = utc_now()
     if period == "daily":
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     elif period == "weekly":

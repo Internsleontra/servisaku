@@ -6,6 +6,7 @@ from sqlalchemy import String, Integer, Text, DateTime, Date, Numeric, SmallInte
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from utils.time import utc_now
 
 
 class Job(Base):
@@ -50,8 +51,8 @@ class Job(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rating_given: Mapped[int | None] = mapped_column(SmallInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
     __table_args__ = (
         CheckConstraint("rating_given BETWEEN 1 AND 5", name="ck_jobs_rating_range"),
@@ -72,7 +73,7 @@ class JobStatusLog(Base):
     old_status: Mapped[str | None] = mapped_column(String(20))
     new_status: Mapped[str] = mapped_column(String(20), nullable=False)
     changed_by: Mapped[uuid.UUID | None] = mapped_column()
-    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     job: Mapped["Job"] = relationship(back_populates="status_log")
 
@@ -84,7 +85,7 @@ class JobPhoto(Base):
     job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False)
     photo_url: Mapped[str] = mapped_column(Text, nullable=False)
     caption: Mapped[str | None] = mapped_column(String(200))
-    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     job: Mapped["Job"] = relationship(back_populates="photos")
 

@@ -6,6 +6,7 @@ from sqlalchemy import String, Integer, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from utils.time import utc_now
 
 
 class Settlement(Base):
@@ -18,7 +19,7 @@ class Settlement(Base):
     method: Mapped[str] = mapped_column(String(30), default="DuitNow", nullable=False)
     reference: Mapped[str | None] = mapped_column(String(60))
     jobs_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     items: Mapped[list["SettlementItem"]] = relationship(back_populates="settlement", cascade="all, delete-orphan")

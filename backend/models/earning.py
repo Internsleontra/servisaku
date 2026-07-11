@@ -6,6 +6,7 @@ from sqlalchemy import Numeric, String, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from utils.time import utc_now
 
 
 class Earning(Base):
@@ -21,7 +22,7 @@ class Earning(Base):
     escrow_status: Mapped[str] = mapped_column(String(20), default="held", nullable=False)
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     settled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     partner: Mapped["Partner"] = relationship(back_populates="earnings")
     job: Mapped["Job"] = relationship()

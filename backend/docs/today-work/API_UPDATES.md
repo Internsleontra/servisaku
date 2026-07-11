@@ -197,3 +197,24 @@ detail in `docs/ANALYTICS.md`.
 No new or changed endpoints — Stage 8 added `tests/` (a pytest suite) and
 `docs/TESTING_GUIDE.md`. See `docs/today-work/TEST_REPORT.md` for the full
 run results (208 passed, 74% coverage).
+
+## Final Hardening Stage (post-Stage 9)
+
+No new endpoints and no request/response shape changes — this stage
+hardened the existing 179 routes. Behavioral changes to be aware of:
+
+- **New**: `login`, `register` (OTP request), `verify-otp`, payment bill
+  creation, all 4 refund endpoints, all 3 upload endpoints, the
+  notification-topic-broadcast endpoint, and 7 admin-sensitive endpoints
+  now return `429 Too Many Requests` (with `Retry-After`/`X-RateLimit-*`
+  headers) if called too frequently from the same client IP — see
+  `docs/SECURITY.md` for the exact limits per endpoint.
+- **Fixed**: `POST /payments/{id}/refunds` previously returned a raw `500`
+  for every caller (schema-drift bug, see `docs/today-work/TEST_REPORT.md`)
+  — now correctly returns `201` with the created refund.
+- Every response timestamp is now guaranteed timezone-aware (previously
+  some pre-Stage-4 code paths could theoretically write naive timestamps
+  under specific session-timezone conditions — see `docs/today-work/CHANGELOG.md`).
+
+See `docs/today-work/TEST_REPORT.md` for the full run results (307 passed,
+82% coverage).

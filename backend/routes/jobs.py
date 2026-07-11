@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -13,6 +12,7 @@ from models.job import Job, JobStatusLog, JobPhoto
 from models.earning import Earning
 from models.customer import Customer
 from schemas.job import JobResponse, JobCustomerSchema, JobLocationSchema, StatusUpdate
+from utils.time import utc_now
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
@@ -184,7 +184,7 @@ async def get_today_jobs(
     partner_id: UUID = Depends(require_verified_kyc),
     db: AsyncSession = Depends(get_db),
 ):
-    today = datetime.utcnow().date()
+    today = utc_now().date()
     stmt = (
         select(Job)
         .options(selectinload(Job.customer))
@@ -250,7 +250,7 @@ async def accept_job(
 
     if job.status != "requested":
         raise HTTPException(status.HTTP_409_CONFLICT, "Job is no longer in 'requested' state")
-    if job.expires_at and job.expires_at < datetime.utcnow():
+    if job.expires_at and job.expires_at < utc_now():
         raise HTTPException(status.HTTP_410_GONE, "Job request has expired")
 
     old_status = job.status
@@ -374,7 +374,7 @@ async def complete_job(
 
     old_status = job.status
     job.status = "completed"
-    job.completed_at = datetime.utcnow()
+    job.completed_at = utc_now()
 
     db.add(JobStatusLog(
         job_id=job.id, old_status=old_status, new_status="completed", changed_by=partner_id,

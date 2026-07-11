@@ -6,6 +6,7 @@ from sqlalchemy import String, Text, Boolean, Integer, Numeric, DateTime, Foreig
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time import utc_now
 
 # discount_type is a plain varchar in the live schema (not a Postgres enum) —
 # this app-level convention is enforced in schemas/coupon.py, not the DB.
@@ -31,8 +32,8 @@ class Coupon(Base):
     valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
 
 class CouponServiceCategory(Base):

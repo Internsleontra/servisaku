@@ -1,17 +1,20 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
 from database import get_db
 from models.auth import User, ACCOUNT_STATUS_VALUES
 from models.consumer_profile import ConsumerProfile
 from models.booking import Booking
 from schemas.admin import UserAdminResponse, UserStatusUpdateRequest, ConsumerAdminResponse
+from services.rate_limit import limiter
 from services.rbac import require_permission, log_admin_action, write_audit_log
 
 router = APIRouter(prefix="/admin", tags=["Admin - Users"])
+settings = get_settings()
 
 
 @router.get(
@@ -67,7 +70,9 @@ async def get_user(
     ),
     responses={404: {"description": "User not found"}, 422: {"description": "Invalid status value"}},
 )
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
 async def update_user_status(
+    request: Request,
     user_id: UUID,
     body: UserStatusUpdateRequest,
     admin_id: UUID = Depends(require_permission("users.suspend")),

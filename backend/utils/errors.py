@@ -1,9 +1,9 @@
-from datetime import datetime
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from utils.logging import get_logger
+from utils.time import utc_now
 
 logger = get_logger("errors")
 
@@ -30,7 +30,7 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
                 "code": exc.code,
                 "message": exc.message,
                 "status": exc.status_code,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": utc_now().isoformat(),
             }
         },
     )

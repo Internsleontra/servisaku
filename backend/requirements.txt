@@ -32,6 +32,10 @@ firebase-admin>=7.0.0,<8.0.0
 # Real-time (Socket.IO over ASGI)
 python-socketio>=5.11.0,<6.0.0
 
+# Security — rate limiting (in-memory by default; Redis-ready via
+# RATE_LIMIT_STORAGE_URI, see .env.example)
+slowapi>=0.1.9
+
 # Logging
 structlog>=24.4.0
 

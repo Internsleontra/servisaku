@@ -5,6 +5,7 @@ from sqlalchemy import String, Text, Boolean, DateTime, ForeignKey, UniqueConstr
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from utils.time import utc_now
 
 
 class ChatThread(Base):
@@ -20,7 +21,7 @@ class ChatThread(Base):
     consumer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("consumer_profiles.id"), nullable=False)
     partner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("partners.id"), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     messages: Mapped[list["ChatMessage"]] = relationship(back_populates="thread", order_by="ChatMessage.created_at")
@@ -41,6 +42,6 @@ class ChatMessage(Base):
     attachment_s3_key: Mapped[str | None] = mapped_column(String)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     thread: Mapped["ChatThread"] = relationship(back_populates="messages")

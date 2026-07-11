@@ -1,5 +1,5 @@
 import uuid as uuid_mod
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -20,6 +20,7 @@ from schemas.consumer import (
     BookingCreate, BookingResponse,
 )
 from services.notifications.dispatcher import dispatch
+from utils.time import utc_now
 
 router = APIRouter(prefix="/consumer", tags=["Consumer"])
 
@@ -156,7 +157,7 @@ async def create_booking(
         discount_rm=Decimal("0.00"),
         tax_rm=Decimal("0.00"),
         total_amount_rm=subtotal,
-        payment_due_at=datetime.utcnow() + timedelta(hours=1),
+        payment_due_at=utc_now() + timedelta(hours=1),
     )
     db.add(booking)
     await db.flush()

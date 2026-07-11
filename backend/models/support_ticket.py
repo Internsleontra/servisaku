@@ -7,6 +7,7 @@ from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time import utc_now
 
 TICKET_TYPE_VALUES = (
     "DISPUTE", "LOW_RATING_FLAG", "PARTNER_NO_SHOW", "CONSUMER_NO_SHOW",
@@ -39,8 +40,8 @@ class OpsTicket(Base):
     resolution_notes: Mapped[str | None] = mapped_column(Text)
     sla_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
 
 class OpsTicketEvidence(Base):
@@ -53,4 +54,4 @@ class OpsTicketEvidence(Base):
     uploaded_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     s3_key: Mapped[str] = mapped_column(String, nullable=False)
     file_type: Mapped[str | None] = mapped_column(String(50))
-    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

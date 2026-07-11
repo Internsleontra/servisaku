@@ -5,9 +5,13 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from config import get_settings
 from database import engine, Base, verify_connection
+from services.rate_limit import limiter
 from utils import setup_logging, AppException, app_exception_handler
 from utils.logging import get_logger
 from utils.middleware import LoggingMiddleware
@@ -211,6 +215,11 @@ app = FastAPI(
         "tryItOutEnabled": True,
     },
 )
+
+# --- Rate limiting (see services/rate_limit.py) ---
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # --- Middleware ---
 app.add_middleware(

@@ -7,6 +7,7 @@ from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from utils.time import utc_now
 
 DISPATCH_STATUS_VALUES = ("PENDING", "ACCEPTED", "DECLINED", "EXPIRED")
 
@@ -38,7 +39,7 @@ class JobDispatch(Base):
     )
     acceptance_deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     booking: Mapped["Booking"] = relationship()
     partner: Mapped["Partner"] = relationship()
@@ -58,7 +59,7 @@ class BlockedMatch(Base):
     partner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("partners.id"), nullable=False)
     blocked_by: Mapped[str] = mapped_column(String(20), nullable=False)
     reason: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
 class PartnerServiceCategory(Base):
@@ -75,7 +76,7 @@ class PartnerServiceCategory(Base):
     service_category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("service_categories.id"), nullable=False)
     years_of_experience: Mapped[int | None] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
 from models.booking import Booking  # noqa: E402, F811

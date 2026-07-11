@@ -43,8 +43,8 @@ NAVY_HEX = colors.HexColor("#1B2A4A")
 def build_content() -> list:
     C = []
     C.append(("title", "ServisAku Partner Backend"))
-    C.append(("subtitle", "Final Delivery Report — Stages 6–9"))
-    C.append(("meta", "Admin Backend · Analytics · Testing & QA · Documentation"))
+    C.append(("subtitle", "Final Delivery Report — Stages 6–9 + Final Hardening"))
+    C.append(("meta", "Admin Backend · Analytics · Testing & QA · Documentation · Production Hardening"))
     C.append(("pagebreak",))
 
     # 1. Executive Summary
@@ -68,6 +68,15 @@ def build_content() -> list:
         "The backend remains fully additive to the shared database — zero tables were created, "
         "dropped, or redesigned across all four stages. Every new feature maps onto tables that "
         "already existed, built by other team members for modules this backend was filling in."))
+    C.append(("p",
+        "A subsequent Final Hardening stage raised statement coverage from 74% to 82% (307 "
+        "passing tests, up from 208), fixed a codebase-wide naive-datetime timezone bug (32 "
+        "files), added production rate limiting and CORS/JWT startup safety guards, added GitHub "
+        "Actions CI, and produced two analysis-only deliverables (a Jobs-vs-Bookings "
+        "reconciliation and a Socket.IO horizontal-scaling strategy). Writing the new payment "
+        "tests surfaced a genuine, previously-undiscovered production bug — refund creation had "
+        "been silently returning 500 for every caller due to a schema-drift issue — found and "
+        "fixed. Zero database schema changes; zero production data deleted."))
 
     # 2. Backend Architecture
     C.append(("h1", "2. Backend Architecture"))
@@ -199,9 +208,10 @@ def build_content() -> list:
         "heartbeat, and — via the same in-process event bus business logic already emits to — "
         "dispatch job offers and booking status updates in real time. Presence and partner GPS "
         "location are intentionally not persisted (no dedicated table exists; both are "
-        "inherently ephemeral). A significant, codebase-wide pre-existing timezone bug (asyncpg "
-        "silently misinterpreting naive datetimes) and a structlog logging kwarg collision were "
-        "both found and fixed during this stage's live verification."))
+        "inherently ephemeral). A pre-existing timezone bug (asyncpg silently misinterpreting "
+        "naive datetimes) and a structlog logging kwarg collision were both found during this "
+        "stage's live verification; the timezone fix was scoped to this stage's own new code at "
+        "the time and completed codebase-wide during Final Hardening (see Executive Summary)."))
 
     # 11. Analytics Overview
     C.append(("h1", "11. Analytics Overview (Stage 7)"))
@@ -226,28 +236,41 @@ def build_content() -> list:
         "candidate ranking and the full start/decline/retry/accept engine path against the live "
         "database), and Socket.IO connection tests."))
     C.append(("table", [
-        ["Metric", "Result"],
-        ["Tests passing", "208 / 208"],
-        ["Tests failing", "0"],
-        ["Statement coverage (application code)", "74%"],
-        ["Real application bugs found", "0 (expected — surface already thoroughly live-verified)"],
-        ["Test bugs found and fixed during development", "4 (wrong endpoint paths/shapes, a Decimal-serializes-as-string gotcha)"],
+        ["Metric", "Stage 8 result", "Final Hardening result"],
+        ["Tests passing", "208 / 208", "307 / 307"],
+        ["Tests failing", "0", "0"],
+        ["Statement coverage (application code)", "74%", "82%"],
+        ["Real application bugs found", "0", "1 (refund creation 500 — see below)"],
+        ["CI coverage gate", "none", "80% (.github/workflows/backend-ci.yml)"],
     ]))
     C.append(("p",
-        "The gap to the 80% coverage target is concentrated almost entirely in code paths gated "
-        "behind unconfigured third-party credentials (Billplz, Cloudinary, Firebase, email "
-        "providers — a gap documented since Stage 1–3, not introduced by this stage) and in "
-        "services/realtime/socket_server.py, whose coverage number is understated because it "
-        "runs in a separate uvicorn process that pytest-cov cannot instrument — that file was "
-        "independently and extensively live-verified during Stage 5. Every validation, error-"
-        "handling, and RBAC code path that doesn't require a live external call is tested."))
+        "Final Hardening raised coverage by targeting the largest remaining gaps directly: "
+        "notification-dispatcher retry/fallback orchestration (tested against a mocked provider "
+        "boundary, clearly distinguished from real-provider tests), every third-party "
+        "integration's real \"not configured\" error path (Firebase, Billplz, iPay88, Cloudinary, "
+        "Resend/Brevo/MailerSend — unmocked, exercising the actual provider code), RBAC "
+        "permission resolution, Smart Dispatch retry/exhaustion paths, the complete payment/"
+        "refund state machine, and upload success paths. No modules were excluded from the "
+        "coverage denominator to inflate the number, and the CI gate was not set below 80% to "
+        "make it easier to pass."))
+    C.append(("p",
+        "Writing the payment-lifecycle tests surfaced a genuine, previously-undiscovered "
+        "production bug: refunds.requires_approval had become a Postgres GENERATED ALWAYS column "
+        "in the live schema (the same class of issue as the Stage 6 audit_logs.retention_until "
+        "discovery), but the ORM still mapped it as writable — meaning POST /payments/{id}/"
+        "refunds had been returning a raw 500 for every caller. Found and fixed; the full refund "
+        "lifecycle (request, approve, reject, complete, partial refunds) is now verified "
+        "end-to-end. A Socket.IO test flakiness issue was also root-caused (a client-side "
+        "connection-timeout default too aggressive for a handler doing real DB round trips, not "
+        "an application bug) and fixed properly rather than papered over with longer waits — "
+        "verified stable across multiple consecutive full-suite runs."))
     C.append(("p",
         "The suite runs against the real shared development database — no separate test "
         "database is provisioned for this project. This is a deliberate, documented tradeoff "
-        "(docs/TESTING_GUIDE.md): it caught two real schema-shape bugs a mocked database would "
-        "have missed, at the cost of tests not being isolated from concurrent manual/team "
-        "activity. Every data-creating test uses unique, timestamp-suffixed identifiers and is "
-        "written to be safe to re-run indefinitely."))
+        "(docs/TESTING_GUIDE.md): it caught three real schema-shape/mapping bugs across the "
+        "project's lifetime that a mocked database would have missed, at the cost of tests not "
+        "being isolated from concurrent manual/team activity. Every data-creating test uses "
+        "unique, timestamp-suffixed identifiers and is written to be safe to re-run indefinitely."))
 
     # 13. Security Review
     C.append(("h1", "13. Security Review"))
@@ -259,12 +282,25 @@ def build_content() -> list:
         "validation on every file upload, and parameterized SQL everywhere (including the raw-"
         "SQL PostGIS and analytics queries). A full audit trail (admin_actions + audit_logs) "
         "covers every admin mutation across every stage, not just Stage 6's own new endpoints."))
+    C.append(("p",
+        "Final Hardening added two structural safety mechanisms. First, production rate limiting "
+        "(slowapi, in-memory by default and Redis-ready) on login, OTP request/verify, payment "
+        "creation, all four refund endpoints, all three upload endpoints, notification broadcast, "
+        "and seven admin-sensitive endpoints, returning 429 with Retry-After headers once a "
+        "client-IP limit is exceeded. Second, startup-time production guards in config.py: the "
+        "application now refuses to boot at all if ENVIRONMENT=production and either "
+        "ALLOWED_ORIGINS is still the wildcard \"*\" or JWT_SECRET_KEY is still the placeholder "
+        "default — turning what used to be a documentation note someone had to remember into a "
+        "failure that cannot be silently missed. The Billplz webhook's HMAC signature "
+        "verification (hmac.compare_digest, constant-time) and Cloudinary's magic-byte upload "
+        "validation were both re-verified this stage and confirmed to already fail closed."))
     C.append(("p", "Known gaps, disclosed rather than hidden:"))
     C.append(("bullet", [
-        "No rate limiting on any endpoint — recommended before public launch.",
-        "CORS is wide open (ALLOWED_ORIGINS=[\"*\"]) — a development default that must be restricted before production.",
+        "No CSP/security headers middleware — acceptable for an API-only backend with no direct HTML rendering; add secure-headers-style middleware if an admin web dashboard is ever built to consume this API directly.",
         "No JWT secret rotation / per-token revocation mechanism.",
-        "The default JWT_SECRET_KEY in config.py is a placeholder — must be overridden in production.",
+        "Rate limiting is in-memory and single-process — correct for the current single-worker deployment; needs Redis-backed storage before running multiple uvicorn workers (same caveat class as Socket.IO's in-process state, see Socket.IO Scaling below).",
+        "get_remote_address (the rate limiter's client-IP key function) trusts request.client.host directly — behind a reverse proxy, X-Forwarded-For trust must be configured correctly or every request shares one bucket.",
+        "Billplz, iPay88, Cloudinary, Firebase, and every email provider remain unverified against real sandbox/live credentials — every \"not configured\" error path is tested, but no real outbound call has ever succeeded in this environment.",
     ]))
     C.append(("p", "Full detail in docs/SECURITY.md."))
 
@@ -280,13 +316,57 @@ def build_content() -> list:
         "— environment variables, TLS termination, background-worker behavior, and recommended "
         "next steps — is in docs/DEPLOYMENT.md."))
 
-    # 15. Git Commit History
-    C.append(("h1", "15. Git Commit History (Stages 6–9)"))
+    # 15. Jobs vs Bookings Analysis
+    C.append(("h1", "15. Jobs vs Bookings Analysis (Final Hardening)"))
+    C.append(("p",
+        "Analysis-only deliverable, per explicit instruction — no code, schema, or data changes. "
+        "Documented in full at docs/JOBS_BOOKINGS_RECONCILIATION.md. Finding: this backend has "
+        "two parallel, disconnected representations of a unit of paid work. The jobs table (with "
+        "its own customers/earnings/settlements satellite tables) is populated only by seed.py — "
+        "no route, service, or webhook has ever created a new Job row. The bookings table is the "
+        "live, actively-developed domain every Stage 1–9 feature (payments, Smart Dispatch, chat, "
+        "admin, analytics) operates on. Most consequentially: no code path anywhere creates an "
+        "Earning row when a booking completes, meaning a partner's wallet/settlement history "
+        "today reflects only seed data regardless of how many real bookings they complete. A "
+        "phased, additive migration strategy is documented, starting with closing exactly that "
+        "gap — but nothing was implemented this stage, per instruction."))
+
+    # 16. Socket.IO Scaling Strategy
+    C.append(("h1", "16. Socket.IO Scaling Strategy (Final Hardening)"))
+    C.append(("p",
+        "Documentation only, per explicit instruction — no Redis or other infrastructure was "
+        "deployed. Documented in full at docs/SOCKET_SCALING.md. The current single-process "
+        "architecture holds three separate pieces of state entirely in memory (session/presence "
+        "tracking, socket.io's own room manager, and the in-process business-event pub/sub bus), "
+        "none of which is visible across processes — running multiple uvicorn workers today would "
+        "silently drop real-time events delivered to a socket connected to a different worker "
+        "than the one that triggered them. The documented fix is python-socketio's built-in "
+        "AsyncRedisManager, which requires no application-logic changes beyond swapping the "
+        "client manager, plus an ordered, reversible migration plan (provision Redis, add a "
+        "feature-gated setting, load-test with two workers before scaling further)."))
+
+    # 17. Continuous Integration
+    C.append(("h1", "17. Continuous Integration (Final Hardening)"))
+    C.append(("p",
+        ".github/workflows/backend-ci.yml runs on every pull request and push to main touching "
+        "backend/**. An import-check job always runs (installs dependencies, imports the app with "
+        "a placeholder database URL — no live database needed, since SQLAlchemy's async engine "
+        "connects lazily) and needs no secrets. A second job runs the full pytest suite with an "
+        "enforced 80% statement-coverage gate, but requires a DATABASE_URL repository secret "
+        "pointing at a real, already-seeded PostgreSQL instance — this test suite has no separate "
+        "test database by deliberate project design (see Testing Summary above), and that "
+        "decision carries through to CI. The workflow fails loudly with an actionable message if "
+        "that secret isn't configured, rather than silently skipping and looking like a pass."))
+
+    # 18. Git Commit History
+    C.append(("h1", "18. Git Commit History"))
     C.append(("p",
         "Pushed to origin/main at github.com/Dineshkuppuraj17/servisaku-partner-consumer. Each "
         "stage is one feature commit plus a short docs-update commit recording its own hash in "
         "docs/today-work/GIT_COMMITS.md — see that file for the complete history including "
-        "Stages 1–5 and the repository migration."))
+        "Stages 1–5, the repository migration, and this Final Hardening stage's exact commit "
+        "hashes (recorded there immediately after push, following the same pattern used for "
+        "every prior stage)."))
     C.append(("table", [
         ["Commit", "Description"],
         ["c07698f", "feat(admin): Stage 6 Admin Backend — RBAC, catalog, partner approval, ops"],
@@ -295,23 +375,25 @@ def build_content() -> list:
         ["109da90", "docs: record Stage 7 commit hash"],
         ["7085a82", "test(qa): Stage 8 Testing & Quality Assurance — pytest suite, 208 tests"],
         ["bda3615", "docs: record Stage 8 commit hash"],
+        ["3e36b15", "docs: Stage 9 Documentation & Final Delivery"],
+        ["cd67ecc", "docs: record Stage 9 commit hash"],
+        ["(see GIT_COMMITS.md)", "Final Hardening: timezone fix, rate limiting, production guards, CI, coverage 74%->82%, Jobs/Bookings + Socket.IO scaling analysis"],
     ]))
 
-    # 16. Future Improvements
-    C.append(("h1", "16. Future Improvements"))
+    # 19. Future Improvements
+    C.append(("h1", "19. Future Improvements"))
     C.append(("bullet", [
-        "Obtain real Billplz, Cloudinary, Firebase, and email provider credentials — the single biggest remaining gap, blocking full end-to-end verification and full test coverage of those integrations.",
-        "Add rate limiting and restrict CORS before any public/production launch.",
-        "Resolve the jobs vs. bookings parallel-table structure (flagged since the original Payment Gateway stage) — payments live on bookings, not this app's own jobs table, and the two remain unconnected.",
-        "Fix the codebase-wide asyncpg naive-datetime timezone bug in the pre-Stage-4 code paths that still use datetime.utcnow() instead of datetime.now(timezone.utc).",
-        "Decide and implement a Socket.IO horizontal-scaling strategy (Redis-backed message queue) before deploying more than one worker process.",
-        "Wire CI to run the pytest suite automatically on every pull request.",
+        "Obtain real Billplz, Cloudinary, Firebase, and email provider credentials — the single biggest remaining gap, blocking full end-to-end verification of those integrations. Still true after Final Hardening.",
+        "Configure the DATABASE_URL (and, if needed, SSH tunnel) repository secrets so the new CI workflow's test-and-coverage job actually runs.",
+        "Close the jobs-vs-bookings payout gap identified in the Final Hardening analysis: add a booking-keyed Earning creation path so partners are paid out for real Smart-Dispatch-assigned bookings, not just seed data — see docs/JOBS_BOOKINGS_RECONCILIATION.md for the recommended phased approach.",
+        "Provision Redis and wire up AsyncRedisManager before deploying more than one uvicorn worker — see docs/SOCKET_SCALING.md for the ordered migration steps; also apply RATE_LIMIT_STORAGE_URI=redis://... at the same time, since rate limiting has the identical in-process-state caveat.",
+        "Add JWT secret rotation / a per-token revocation mechanism before public launch.",
         "Consider a per-role permission audit for the pre-seeded RBAC data — the READ_ONLY role currently has zero granted permissions, which may or may not be the intended design.",
         "Build out the deferred Stage 6/7 partial features once real usage data exists: training-progress write path for partners, subscription/package creation flow, surge-pricing-rule activation logic.",
     ]))
     C.append(("p",
-        "This concludes the Stage 6–9 delivery. All work is committed and pushed to origin/main; "
-        "no further implementation was started pending review and approval of this report."))
+        "This concludes the Stage 6–9 + Final Hardening delivery. All work is committed and "
+        "pushed to origin/main; no further implementation was started pending review."))
 
     return C
 

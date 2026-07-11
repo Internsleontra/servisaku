@@ -5,6 +5,7 @@ from sqlalchemy import String, SmallInteger, Text, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time import utc_now
 
 REVIEWER_ROLE_VALUES = ("CONSUMER", "PARTNER")
 
@@ -28,7 +29,7 @@ class Review(Base):
     tags: Mapped[dict] = mapped_column(JSON, default=dict)
     is_flagged: Mapped[bool] = mapped_column(Boolean, default=False)
     ops_ticket_id: Mapped[uuid.UUID | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     __table_args__ = (
         CheckConstraint("rating BETWEEN 1 AND 5", name="ck_reviews_rating_range_app"),

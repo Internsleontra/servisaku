@@ -1,10 +1,15 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
     APP_NAME: str = "Servisaku Partner API"
     DEBUG: bool = False
+
+    # ENVIRONMENT gates production-only safety checks below (e.g. refusing to
+    # boot with wildcard CORS). Expected values: "development", "staging", "production".
+    ENVIRONMENT: str = "development"
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/servisaku"
@@ -68,10 +73,48 @@ class Settings(BaseSettings):
     DISPATCH_SEARCH_RADIUS_KM_CAP: int = 50
     DISPATCH_SWEEP_INTERVAL_SECONDS: int = 20
 
-    # CORS
+    # CORS — never wildcard ("*") when ENVIRONMENT=production; enforced below.
     ALLOWED_ORIGINS: list[str] = ["*"]
 
+    # Rate limiting (slowapi/limits syntax: "<count>/<second|minute|hour|day>").
+    # Backed by in-memory storage by default — correct for a single uvicorn
+    # worker/process (this project's current deployment shape, see
+    # docs/DEPLOYMENT.md). Running multiple worker processes needs a shared
+    # store (RATE_LIMIT_STORAGE_URI=redis://...) or each worker enforces its
+    # own independent counters — same caveat as the Socket.IO in-process bus
+    # documented in docs/SOCKET_SCALING.md.
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_STORAGE_URI: str = "memory://"
+    RATE_LIMIT_LOGIN: str = "10/minute"
+    RATE_LIMIT_OTP_REQUEST: str = "5/minute"
+    RATE_LIMIT_OTP_VERIFY: str = "10/minute"
+    RATE_LIMIT_PAYMENT: str = "20/minute"
+    RATE_LIMIT_REFUND: str = "10/minute"
+    RATE_LIMIT_UPLOAD: str = "20/minute"
+    RATE_LIMIT_NOTIFICATION_BROADCAST: str = "5/minute"
+    RATE_LIMIT_ADMIN_SENSITIVE: str = "30/minute"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
+
+    _PLACEHOLDER_JWT_SECRET = "change-me-in-production-use-a-real-secret"
+
+    @model_validator(mode="after")
+    def _forbid_unsafe_production_config(self) -> "Settings":
+        if self.ENVIRONMENT != "production":
+            return self
+        if self.ALLOWED_ORIGINS == ["*"]:
+            raise ValueError(
+                "ALLOWED_ORIGINS=[\"*\"] is not allowed when ENVIRONMENT=production. "
+                "Set ALLOWED_ORIGINS to the real client origin(s) in .env — "
+                "see .env.example."
+            )
+        if self.JWT_SECRET_KEY == self._PLACEHOLDER_JWT_SECRET:
+            raise ValueError(
+                "JWT_SECRET_KEY is still the placeholder default and ENVIRONMENT=production. "
+                "Generate a real secret (python -c \"import secrets; print(secrets.token_hex(32))\") "
+                "and set it in .env."
+            )
+        return self
 
 
 @lru_cache

@@ -6,6 +6,7 @@ from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time import utc_now
 
 TRAINING_CONTENT_TYPE_VALUES = ("VIDEO", "PDF", "QUIZ")
 TRAINING_STATUS_VALUES = ("NOT_STARTED", "IN_PROGRESS", "COMPLETED", "FAILED")
@@ -28,8 +29,8 @@ class TrainingModule(Base):
     total_questions: Mapped[int | None] = mapped_column(Integer, default=20)
     is_mandatory: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
 
 class TrainingQuestion(Base):
@@ -47,7 +48,7 @@ class TrainingQuestion(Base):
     option_c: Mapped[str | None] = mapped_column(Text)
     option_d: Mapped[str | None] = mapped_column(Text)
     correct_option: Mapped[str] = mapped_column(String(1), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
 class PartnerTrainingProgress(Base):
@@ -64,5 +65,5 @@ class PartnerTrainingProgress(Base):
     score: Mapped[int | None] = mapped_column(Integer)
     badge_awarded: Mapped[bool] = mapped_column(Boolean, default=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)

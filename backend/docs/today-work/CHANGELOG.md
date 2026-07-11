@@ -265,3 +265,38 @@ aggregate query against tables already mapped in Stages 1-6.
 No application code changes — Stage 8 is purely additive test coverage; see
 `docs/today-work/TEST_REPORT.md` for the full run results and coverage
 numbers.
+
+## Final Hardening Stage (post-Stage 9)
+
+- **`utils/time.py`** (new): `utc_now()` — timezone-aware UTC datetime,
+  replacing `datetime.utcnow()` everywhere. Applied across 32 files
+  (`auth.py`, every `models/*.py`, `routes/{auth,payments,uploads,jobs,
+  wallet,consumer,earnings}.py`, `services/notifications/dispatcher.py`,
+  `utils/errors.py`).
+- **`services/rate_limit.py`** (new): shared `slowapi` `Limiter`, in-memory
+  by default (`RATE_LIMIT_STORAGE_URI`, Redis-ready). Wired into `main.py`;
+  per-route `@limiter.limit(...)` decorators added to `routes/{auth,
+  payments,uploads,notification_dispatch,admin_partners,admin_settlements,
+  admin_users}.py`.
+- **`config.py`**: added `ENVIRONMENT` setting and a `model_validator` that
+  refuses to boot with wildcard `ALLOWED_ORIGINS` or the placeholder
+  `JWT_SECRET_KEY` when `ENVIRONMENT=production`. Added `RATE_LIMIT_*`
+  settings.
+- **Bug fix — `models/payment.py`/`routes/payments.py`**: removed
+  `Refund.requires_approval` from the ORM mapping (it became a
+  `GENERATED ALWAYS` column in the live schema; Postgres was rejecting
+  every insert) and the corresponding `requires_approval=True` kwarg in
+  `request_refund`. `POST /payments/{id}/refunds` was 500ing for every
+  caller before this fix.
+- **`.github/workflows/backend-ci.yml`** (new, repo root): import
+  validation + pytest/coverage gate, scoped to `backend/**`.
+- **`docs/JOBS_BOOKINGS_RECONCILIATION.md`**, **`docs/SOCKET_SCALING.md`**
+  (new): analysis/documentation only, no code changes.
+- **`tests/`**: 8 new test files (timezone regression, rate limiting,
+  config security, notification dispatcher, notification providers, RBAC,
+  dispatch retry/exhaustion, payments full lifecycle, uploads mocked
+  provider), plus `test_socketio.py` extended with 4 new event-coverage
+  tests and its connection-timeout flakiness fixed at the root cause.
+- **`.env.example`**/`.env`: added `ENVIRONMENT` and `RATE_LIMIT_*`
+  variables with documentation.
+- **`requirements.txt`**: added `slowapi`.

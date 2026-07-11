@@ -1,12 +1,12 @@
 import uuid
-from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
 from database import get_db
 from auth import oauth2_scheme, decode_token, get_current_user_id, get_current_consumer_id
 from models.partner import Partner, PartnerDocument, DOCUMENT_TYPE_VALUES
@@ -17,8 +17,11 @@ from schemas.upload import (
     SignedUploadRequest, SignedUploadResponse, ConfirmUploadRequest,
 )
 from services import cloudinary_service
+from services.rate_limit import limiter
+from utils.time import utc_now
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
+settings = get_settings()
 
 _KYC_DOCUMENT_TYPES = tuple(t for t in DOCUMENT_TYPE_VALUES if t != "PROFILE_PHOTO")
 
@@ -76,7 +79,7 @@ async def _save_kyc_document(
         existing.file_name = file_name
         existing.verification_status = "PENDING"
         existing.rejection_reason = None
-        existing.uploaded_at = datetime.utcnow()
+        existing.uploaded_at = utc_now()
         existing.verified_at = None
         doc = existing
     else:
@@ -111,7 +114,9 @@ async def _save_job_photo(job_id: UUID, photo_id: UUID, url: str, caption: str |
         503: {"description": "Cloudinary is not configured"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_UPLOAD)
 async def upload_avatar(
+    request: Request,
     file: UploadFile = File(...),
     scope: tuple = Depends(_current_avatar_scope),
     db: AsyncSession = Depends(get_db),
@@ -161,7 +166,9 @@ async def delete_avatar(
         503: {"description": "Cloudinary is not configured"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_UPLOAD)
 async def upload_kyc_document(
+    request: Request,
     document_type: Literal["MYKAD_FRONT", "MYKAD_BACK", "PASSPORT", "TRADE_CERTIFICATE", "BANK_STATEMENT"] = Form(...),
     file: UploadFile = File(...),
     user_id: UUID = Depends(get_current_user_id),
@@ -258,7 +265,9 @@ async def delete_kyc_document(
         503: {"description": "Cloudinary is not configured"},
     },
 )
+@limiter.limit(settings.RATE_LIMIT_UPLOAD)
 async def upload_job_photo(
+    request: Request,
     job_id: UUID,
     photo_type: Literal["before", "after", "general"] = Form("general"),
     caption: str | None = Form(None),

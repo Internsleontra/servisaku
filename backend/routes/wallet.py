@@ -1,5 +1,4 @@
 import uuid as uuid_mod
-from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -12,6 +11,7 @@ from auth import require_verified_kyc
 from models.earning import Earning
 from models.settlement import Settlement, SettlementItem
 from schemas.wallet import WalletBalanceResponse, SettlementResponse
+from utils.time import utc_now
 
 router = APIRouter(prefix="/wallet", tags=["Wallet"])
 
@@ -178,7 +178,7 @@ async def withdraw(
     for earning in released_earnings:
         db.add(SettlementItem(settlement_id=settlement.id, earning_id=earning.id))
         earning.escrow_status = "settled"
-        earning.settled_at = datetime.utcnow()
+        earning.settled_at = utc_now()
 
     await db.flush()
 

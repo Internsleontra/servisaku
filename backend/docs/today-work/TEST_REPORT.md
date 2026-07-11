@@ -382,3 +382,108 @@ live server after the full suite: `GET /partner/me`, `/jobs/today`,
 `/admin/analytics/revenue`, `/admin/analytics/support`,
 `/dispatch/analytics` (admin token) — **all 21 endpoints returned 200**.
 `GET /openapi.json` — 144 total paths, unchanged shape from Stage 7.
+
+## Final Hardening Stage
+
+**Final numbers: 307 passed, 0 failed, 82% statement coverage** (up from
+208 passed / 74% at the end of Stage 8).
+
+### Coverage progression this stage
+
+| Checkpoint | Tests | Coverage |
+|---|---|---|
+| Start of stage (Stage 8 baseline) | 208 | 74% |
+| + timezone/rate-limit/security test files | 220 | 74% (new files, gaps not yet targeted) |
+| + Socket.IO event-handler tests | 224 | — |
+| + dispatch retry/exhaustion, RBAC | 272 | 76% |
+| + payments full lifecycle | 281 | 78% |
+| + uploads mocked-provider tests | 307 | **82%** |
+
+No modules were excluded from `.coveragerc`'s denominator to inflate this
+number (still just `tests/`, `migrations/`, `seed.py`, `main.py` — the same
+exclusions as Stage 8, all scaffolding/wiring, not business logic). No
+coverage threshold was lowered — the CI gate is `--cov-fail-under=80`,
+enforced against the real 82%.
+
+### Real bug found via testing
+
+`POST /payments/{payment_id}/refunds` was returning a raw `500` for every
+caller. Root cause: `refunds.requires_approval` had become a
+`GENERATED ALWAYS AS (amount_rm > 100 AND is_partial = true) STORED`
+column in the live schema (verified via `information_schema.columns`), but
+`models/payment.py::Refund` still mapped it as writable with
+`default=True`, and `routes/payments.py::request_refund` explicitly passed
+`requires_approval=True` — Postgres rejects any explicit INSERT value for
+a generated column. This is the same class of bug as the Stage 6
+`audit_logs.retention_until` discovery, caught the same way: by actually
+exercising the endpoint end-to-end rather than only testing its error
+paths (the pre-existing `test_payments_api.py` only covered validation/404
+paths, never a successful refund creation). Fixed by removing the column
+from the ORM mapping and the constructor kwarg — verified via the full
+refund lifecycle (request → approve → complete; request → reject; partial
+refund; over-refund 409) now passing end-to-end.
+
+### Test bugs found and fixed during development (not application bugs)
+
+- `test_mark_payment_paid_confirms_booking_and_triggers_dispatch` initially
+  constructed a `Payment(booking_id=<raw JSON string>, ...)` instead of
+  using the ORM-fetched `booking.id` — this silently broke
+  `selectinload(Payment.booking)`'s in-memory identity-map matching (a
+  `str` and a `uuid.UUID` representing the same value hash differently as
+  dict keys), leaving `payment.booking` as `None` even though the row
+  itself inserted and queried correctly at the SQL level. Fixed by using
+  `booking.id` consistently.
+- Several "no-op guard" unit tests for `_mark_payment_paid`/
+  `_mark_payment_failed` initially used `booking_id=uuid.uuid4()` (a
+  nonexistent booking) — `payments.booking_id` has a real `NOT NULL`
+  foreign key, so this failed with `ForeignKeyViolationError` before the
+  function under test ever ran. Fixed by creating a real booking via the
+  API first, matching the pattern used everywhere else in the suite.
+- `FakeSMSProvider` (the mocked-provider test double in
+  `test_unit_notification_dispatcher.py`) initially didn't track which
+  phone numbers `send()` was called with, so a preference-skip assertion
+  (`assert fake_sms.sent_to == []`) raised `AttributeError` instead of
+  correctly proving the provider was never invoked. Fixed by adding the
+  tracking list.
+- Device-token-based dispatcher tests weren't idempotent across re-runs:
+  each run added another active `DeviceToken` row for the same seeded
+  admin user, so a second run's exact-match assertion
+  (`fake_push.sent_to == [token_value]`) failed once 2+ tokens existed.
+  Fixed with a shared `_deactivate_existing_tokens` helper called before
+  each test creates its own token, matching the suite's established
+  additive/idempotent convention (see `docs/TESTING_GUIDE.md`).
+
+### Socket.IO test flakiness — investigated and fixed at the root cause
+
+Reported mid-stage as intermittent full-suite failures. Confirmed by
+reading `socketio.AsyncClient.connect()`'s source
+(`site-packages/socketio/async_client.py`): the default `wait_timeout=1`
+gives the client only one second to receive the server's namespace-CONNECT
+acknowledgment, and our `connect` handler
+(`services/realtime/socket_server.py`) does 1-2 real DB round trips before
+acking — occasionally exceeding one second under concurrent test load, at
+which point the client raised `ConnectionError: One or more namespaces
+failed to connect` even though the connection would have completed a
+moment later. This was a connection-establishment timeout, not an
+event-delivery timing issue, which is exactly why an earlier attempt to
+fix it by increasing `sio.sleep()` durations only partially helped.
+
+Fix: `wait_timeout=10` on every `connect()` call, plus replacing every
+fixed `sio.sleep(N)` used to wait for an event to arrive with a
+poll-until-condition helper (`_wait_until` — checks every 100ms, returns as
+soon as the condition is true, bounded at 8s), plus switching
+`booking:join` from `.emit()` (fire-and-forget) to `.call()` (waits for the
+server handler's ack) so tests know the join actually completed
+server-side before the next step, instead of guessing at a sleep duration.
+Verified stable across 4+ consecutive full-suite runs after the fix — not
+just re-run once and declared fixed.
+
+### Final regression pass
+
+Re-ran the same manual sweep as every prior stage's sign-off after all
+Final Hardening changes: `/health`, `/docs`, `/redoc`, `/openapi.json` all
+return `200`; `/api/v1/auth/login` for all 4 seeded accounts; representative
+partner/consumer/admin endpoints across every feature area — all correct.
+Table count unchanged at 83. See `docs/today-work/API_UPDATES.md` for the
+one behavioral change (rate-limit `429`s) and the one bug fix (refund
+creation) surfaced to API consumers this stage.

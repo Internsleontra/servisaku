@@ -54,6 +54,8 @@ mounted.
 | Architecture | `docs/ARCHITECTURE.md` |
 | Security | `docs/SECURITY.md` |
 | Deployment | `docs/DEPLOYMENT.md` |
+| Jobs vs Bookings analysis | `docs/JOBS_BOOKINGS_RECONCILIATION.md` |
+| Socket.IO scaling strategy | `docs/SOCKET_SCALING.md` |
 
 Day-by-day build history, database-drift discoveries, and full API
 verification logs are under `docs/today-work/` and `API_TESTING_REPORT.md`.
@@ -80,6 +82,25 @@ backend/
 
 Stages 1-9 complete (Payment Gateway, Media Uploads, Notification
 Dispatcher, Smart Dispatch, Real-Time Communication, Admin Backend, RBAC,
-Analytics, Testing & QA, Documentation). See `docs/today-work/TODAY_WORK.md`
-for the full narrative and `docs/today-work/GIT_COMMITS.md` for the commit
-history.
+Analytics, Testing & QA, Documentation), followed by a Final Hardening
+stage: codebase-wide timezone-aware datetime fix, production rate limiting,
+CORS/JWT production startup guards, a Jobs-vs-Bookings architectural
+analysis, a Socket.IO horizontal-scaling writeup, and test coverage raised
+from 74% to 82% (a real, previously-undiscovered refund-creation bug was
+found and fixed along the way — see `docs/today-work/TEST_REPORT.md`).
+GitHub Actions CI (`.github/workflows/backend-ci.yml`) runs on every PR/push
+touching `backend/**` and enforces the 80% coverage gate. See
+`docs/today-work/TODAY_WORK.md` for the full narrative and
+`docs/today-work/GIT_COMMITS.md` for the commit history.
+
+## CI
+
+`.github/workflows/backend-ci.yml` always runs import/startup validation
+(no database needed). The full test-suite + coverage-gate job needs a
+`DATABASE_URL` repository secret pointing at a real, already-seeded
+PostgreSQL instance (this suite has no separate test database, by
+deliberate design — see `docs/TESTING_GUIDE.md`); if the database is only
+reachable via an SSH bastion, also configure `SSH_HOST`/`SSH_USER`/
+`SSH_PRIVATE_KEY`/`DB_HOST` secrets so the workflow can open the same
+tunnel local development uses. The job fails loudly if `DATABASE_URL` isn't
+configured, rather than silently skipping.

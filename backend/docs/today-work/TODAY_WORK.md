@@ -251,3 +251,55 @@ Full regression pass repeated the same manual endpoint sweep used at the
 end of every prior stage: all Stage 1-7 endpoints still return correct
 status codes. See `docs/today-work/TEST_REPORT.md` for exact numbers and
 coverage.
+
+## Final Hardening Stage (post-Stage 9)
+
+Requested after Stages 1-9 were accepted as feature-complete: raise
+coverage to 80%+, fix the codebase-wide naive-datetime bug, add production
+rate limiting and CORS/JWT startup guards, analyze the jobs-vs-bookings
+split, document Socket.IO horizontal scaling, add CI, and resolve a
+Socket.IO test flakiness issue reported during a checkpoint mid-stage.
+
+**Timezone fix**: every `datetime.utcnow()`/naive `datetime.now()` call
+site — 32 files across models, routes, `auth.py`'s JWT token generation,
+and the notification dispatcher — replaced with a shared, timezone-aware
+`utils.time.utc_now()` helper. Regression tests include a static guard that
+fails the suite if the naive pattern is ever reintroduced.
+
+**Socket.IO flakiness**: reported mid-stage during a status checkpoint.
+Root-caused (not just padded with longer sleeps, per explicit instruction):
+`socketio.AsyncClient.connect()`'s default `wait_timeout=1` was too
+aggressive against a `connect` handler that does real DB round trips.
+Fixed with `wait_timeout=10` plus replacing fixed sleeps with a
+poll-until-condition helper and socket.io's `.call()` ack mechanism for
+room joins. Verified stable across multiple consecutive full-suite runs.
+
+**Coverage**: 74% → 82%, 208 → 307 tests. New test files targeted the
+biggest gaps: notification dispatcher retry/fallback (mocked provider
+boundary), real unconfigured-provider error paths for every third-party
+integration, RBAC permission resolution, dispatch retry/exhaustion, the
+full payment/refund state machine, and upload success paths (mocked
+Cloudinary boundary). Writing the payment lifecycle tests surfaced a real,
+previously-undiscovered production bug — `POST /payments/{id}/refunds` was
+silently 500ing for every caller due to a schema-drift issue
+(`refunds.requires_approval` became a `GENERATED ALWAYS` column, same class
+of bug as the Stage 6 `audit_logs.retention_until` fix). Found and fixed;
+full refund lifecycle now verified end-to-end.
+
+**Security**: rate limiting added to login/OTP/payment/refund/upload/
+notification-broadcast/7 admin-sensitive endpoints (`slowapi`, in-memory,
+Redis-ready). Production startup guards added: the app now refuses to boot
+with wildcard CORS or the placeholder JWT secret when
+`ENVIRONMENT=production`.
+
+**Analysis-only deliverables** (no code changes): `docs/JOBS_BOOKINGS_RECONCILIATION.md`
+documents the parallel `jobs`/`bookings` architecture and identifies that
+no code path ever creates an `Earning` from a completed booking — a real
+payout gap, documented with a recommended phased fix, not implemented
+(explicitly out of scope). `docs/SOCKET_SCALING.md` documents the
+Redis-backed horizontal-scaling strategy — no Redis deployed.
+
+**CI**: `.github/workflows/backend-ci.yml` added — import validation always
+runs; the full pytest+coverage job (gated at 80%) needs a `DATABASE_URL`
+secret pointing at a real seeded Postgres instance, since this suite has no
+separate test database by deliberate design (see `docs/TESTING_GUIDE.md`).

@@ -7,6 +7,7 @@ from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from utils.time import utc_now
 
 BOOKING_STATUS_VALUES = (
     "PENDING_PAYMENT", "CONFIRMED", "PARTNER_ASSIGNED", "EN_ROUTE", "ARRIVED",
@@ -61,8 +62,8 @@ class Booking(Base):
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
     service: Mapped["Service"] = relationship()
     address: Mapped["ConsumerAddress"] = relationship()
@@ -81,7 +82,7 @@ class BookingStatusHistory(Base):
     new_status: Mapped[str] = mapped_column(PgEnum(*BOOKING_STATUS_VALUES, name="booking_status", create_type=False), nullable=False)
     changed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     remarks: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
 from models.catalog import Service  # noqa: E402, F811

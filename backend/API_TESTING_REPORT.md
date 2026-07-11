@@ -459,6 +459,54 @@ on every endpoint. Full detail in `docs/ANALYTICS.md`.
 
 ---
 
+## Final Hardening Stage (post-Stage 9)
+
+No new API endpoints were added in this stage — it hardened the existing
+179 routes across the 25 tag groups above. Summary of what changed and was
+re-verified:
+
+- **Timezone fix**: every naive `datetime.utcnow()`/`datetime.now()` call
+  site (32 files — models, routes, auth token generation, notification
+  dispatcher) replaced with a shared `utils.time.utc_now()` helper,
+  regression-tested including a static guard against reintroducing the
+  pattern.
+- **Rate limiting**: added to login, OTP request/verify, payment creation,
+  refunds, uploads, notification broadcast, and 7 admin-sensitive
+  endpoints — see `docs/SECURITY.md` for the full table and limits.
+- **Production startup guards**: the app now refuses to boot with a
+  wildcard CORS origin or the placeholder JWT secret when
+  `ENVIRONMENT=production`.
+- **Real bug found and fixed**: `POST /payments/{id}/refunds` was silently
+  returning 500 for every caller due to a schema-drift issue
+  (`refunds.requires_approval` became a `GENERATED ALWAYS` column; see
+  `docs/TESTING_GUIDE.md` for the full story). Verified fixed — full
+  refund lifecycle (request → approve → complete, request → reject,
+  partial refunds, over-refund 409) now passes end-to-end.
+- **Test coverage**: 74% → 82% statement coverage, 307 tests passing
+  (up from 208 at Stage 8 / 220 partway through this stage). New coverage
+  targets: notification dispatcher retry/fallback logic, real
+  (unconfigured) provider error paths for every third-party integration,
+  RBAC permission resolution, dispatch retry/exhaustion, the full
+  payment/refund state machine, and upload success paths.
+- **Socket.IO test stability**: root-caused and fixed a connection-timeout
+  race (not just longer sleeps) — see `docs/TESTING_GUIDE.md`. Verified
+  stable across multiple consecutive full-suite runs.
+- **CI**: `.github/workflows/backend-ci.yml` added, running import
+  validation on every PR/push and gating merges on the pytest suite +
+  80% coverage threshold (once the `DATABASE_URL` secret is configured).
+- **Jobs vs Bookings**: analyzed and documented (`docs/JOBS_BOOKINGS_RECONCILIATION.md`)
+  — no code/schema changes, analysis only, per instruction.
+- **Socket.IO scaling**: documented the Redis-backed horizontal-scaling
+  strategy (`docs/SOCKET_SCALING.md`) — no infrastructure deployed, per
+  instruction.
+
+Still **not** claimed as production-verified: Billplz, iPay88, Cloudinary,
+Firebase, and every email provider remain untested against real
+sandbox/live credentials — see "Known gaps" in `docs/SECURITY.md` and
+`docs/TESTING_GUIDE.md`.
+
+---
+
 ## Verification Matrix
 
 | Check | Result |

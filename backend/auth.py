@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from uuid import UUID
 
 import bcrypt
@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import get_settings
 from database import get_db
+from utils.time import utc_now
 
 settings = get_settings()
 
@@ -26,12 +27,12 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(sub: str, role: str = "partner", kyc_status: str = "not_started") -> str:
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = utc_now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": sub,
         "role": role,
         "kyc_status": kyc_status,
-        "iat": datetime.utcnow(),
+        "iat": utc_now(),
         "exp": expire,
         "type": "access",
     }
@@ -39,10 +40,10 @@ def create_access_token(sub: str, role: str = "partner", kyc_status: str = "not_
 
 
 def create_refresh_token(sub: str) -> str:
-    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = utc_now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     payload = {
         "sub": sub,
-        "iat": datetime.utcnow(),
+        "iat": utc_now(),
         "exp": expire,
         "type": "refresh",
     }

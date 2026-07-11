@@ -5,6 +5,7 @@ from sqlalchemy import String, Text, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time import utc_now
 
 
 class ConsumerAddress(Base):
@@ -28,5 +29,5 @@ class ConsumerAddress(Base):
     # uses it yet, matches partners.home_location in models/partner.py.
     in_coverage_zone: Mapped[bool | None] = mapped_column(Boolean, default=True)
     is_default: Mapped[bool | None] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)

@@ -6,6 +6,7 @@ from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+from utils.time import utc_now
 
 NOTIFICATION_CHANNEL_VALUES = ("PUSH", "SMS", "EMAIL", "IN_APP")
 
@@ -26,4 +27,4 @@ class Notification(Base):
     reference_id: Mapped[uuid.UUID | None] = mapped_column()
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

@@ -66,10 +66,11 @@ def test_decode_token_rejects_a_token_signed_with_the_wrong_secret():
 
 def test_decode_token_rejects_an_expired_token():
     import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc)
     expired_payload = {
         "sub": "some-user-id", "role": "admin", "type": "access",
-        "iat": dt.datetime.utcnow() - dt.timedelta(hours=2),
-        "exp": dt.datetime.utcnow() - dt.timedelta(hours=1),
+        "iat": now - dt.timedelta(hours=2),
+        "exp": now - dt.timedelta(hours=1),
     }
     expired_token = jwt.encode(expired_payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     with pytest.raises(HTTPException) as exc_info:

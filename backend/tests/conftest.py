@@ -8,6 +8,16 @@ test/staging database provisioned). Tests are written to be additive/
 idempotent wherever they create data, mirroring the idempotent seed.py
 pattern, so re-running the suite is safe. See docs/TESTING_GUIDE.md.
 """
+import os
+
+# Must run before `from main import main` triggers config.get_settings() (which
+# is @lru_cache'd on first call) — otherwise the functional test suite's own
+# repeated requests to login/upload/admin endpoints would trip production
+# rate limits. Rate-limit *behavior* itself is covered separately by
+# tests/test_rate_limiting.py, which flips services.rate_limit.limiter.enabled
+# on for the duration of its own assertions.
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 

@@ -1,17 +1,20 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import get_settings
 from database import get_db
 from models.settlement import Settlement, SettlementItem
 from models.earning import Earning
 from schemas.admin import SettlementAdminResponse, SettlementCreateRequest, SettlementStatusUpdateRequest
+from services.rate_limit import limiter
 from services.rbac import require_permission, log_admin_action
 
 router = APIRouter(prefix="/admin/settlements", tags=["Admin - Settlements"])
+settings = get_settings()
 
 _PERM = "payouts.process"
 _VALID_STATUSES = ("pending", "scheduled", "completed")
@@ -63,7 +66,8 @@ async def get_settlement(settlement_id: UUID, _admin_id: UUID = Depends(require_
     ),
     responses={422: {"description": "One or more earnings are not eligible (not released, or belong to a different partner)"}},
 )
-async def create_settlement(body: SettlementCreateRequest, admin_id: UUID = Depends(require_permission(_PERM)), db: AsyncSession = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_ADMIN_SENSITIVE)
+async def create_settlement(request: Request, body: SettlementCreateRequest, admin_id: UUID = Depends(require_permission(_PERM)), db: AsyncSession = Depends(get_db)):
     earnings = []
     total = 0
     for earning_id in body.earning_ids:
