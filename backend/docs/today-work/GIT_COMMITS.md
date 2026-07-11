@@ -180,6 +180,29 @@ requested report sections from one shared content source. Added
 corrupt the committed PDF's line endings — verified both binary files
 staged byte-identical to disk before committing.
 
+## `7e6d663` — feat(hardening): Final Hardening Stage — timezone fix, rate limiting, production guards, CI, coverage 74%->82%
+
+Requested after Stages 1-9 were accepted as feature-complete. One combined
+commit (72 files) covering: the codebase-wide timezone fix (32 files,
+`utils/time.py`'s `utc_now()` replacing every `datetime.utcnow()`/naive
+`datetime.now()`); production rate limiting (`services/rate_limit.py`,
+`slowapi`) on login/OTP/payment/refund/upload/notification-broadcast/7
+admin-sensitive endpoints; startup-time production guards in `config.py`
+(refuses to boot with wildcard CORS or the placeholder JWT secret when
+`ENVIRONMENT=production`); a real bug fix (`models/payment.py`/
+`routes/payments.py` — `refunds.requires_approval` had drifted into a
+Postgres `GENERATED ALWAYS` column while the ORM still mapped it as
+writable, silently 500ing every refund request); 12 new test files raising
+statement coverage from 74% to 82% (208 -> 307 tests); a Socket.IO test
+flakiness root-cause fix (`wait_timeout` + poll-based waits, not just
+longer sleeps); `.github/workflows/backend-ci.yml`; and two analysis-only
+docs (`docs/JOBS_BOOKINGS_RECONCILIATION.md`, `docs/SOCKET_SCALING.md`,
+neither backed by any code/schema change). Zero database schema changes,
+zero production data deleted — verified via table count (83, unchanged)
+and row-count checks before and after. Full detail in
+`docs/today-work/TEST_REPORT.md`, `docs/today-work/CHANGELOG.md`, and
+`docs/today-work/DATABASE_CHANGES.md`.
+
 ---
 
 Pushed to `origin/main`: to be confirmed after this push (see
