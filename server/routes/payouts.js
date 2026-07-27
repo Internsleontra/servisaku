@@ -4,9 +4,20 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isAdmin, findUserByEmail, emailsByIds } from '../lib/access.js';
+import { notify } from '../lib/notifications/index.js';
 
 const router = Router();
 router.use(authenticate);
+
+// A payout reaching "completed" is the moment a partner's earnings are actually
+// released — notify them (best-effort, off the response path).
+function notifyPayoutReleased(payout) {
+  if (!payout?.partnerId) return;
+  notify({
+    userId: payout.partnerId, event: 'payment_released',
+    data: { amount: `RM ${Number(payout.netPayout || 0).toFixed(2)}` },
+  }).catch(() => {});
+}
 
 async function mapManyOut(items) {
   const emails = await emailsByIds(items.map((p) => p.partnerId));
@@ -68,6 +79,7 @@ router.post('/', requireRole('admin', 'super_admin'), validate(createSchema), as
       scheduledDate: req.body.scheduled_date ?? null,
     },
   });
+  if (item.status === 'completed') notifyPayoutReleased(item);
   res.status(201).json((await mapManyOut([item]))[0]);
 }));
 
@@ -78,10 +90,14 @@ const patchSchema = z.object({
 });
 
 router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema), asyncHandler(async (req, res) => {
+  const existing = await prisma.payoutRecord.findUnique({ where: { id: req.params.id } });
+  if (!existing) throw new ApiError(404, 'Payout not found');
   const data = { status: req.body.status };
   if (req.body.failure_reason !== undefined) data.failureReason = req.body.failure_reason;
   if (req.body.scheduled_date !== undefined) data.scheduledDate = req.body.scheduled_date;
   const item = await prisma.payoutRecord.update({ where: { id: req.params.id }, data });
+  // Fire once, only on the transition into "completed".
+  if (existing.status !== 'completed' && item.status === 'completed') notifyPayoutReleased(item);
   res.json((await mapManyOut([item]))[0]);
 }));
 

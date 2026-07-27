@@ -10,8 +10,45 @@ import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
 import { isPartnerEligible } from '../lib/matching.js';
 import { canTransition } from '../../src/lib/bookingEngine.js';
+import { notifyConsumer, notifyPartner } from '../lib/notifications/index.js';
 
 const router = Router();
+
+// Map a booking status transition to the notifications it should trigger.
+// Each returns an array of fire-and-forget dispatch promises; never awaited so a
+// notification failure can't block or fail the status update itself.
+function notifyOnStatusChange(booking, status, actorRole) {
+  switch (status) {
+    case 'accepted':
+      return [
+        notifyConsumer(booking, 'professional_assigned'),
+        notifyConsumer(booking, 'booking_accepted'),
+      ];
+    case 'en_route':
+      return [notifyConsumer(booking, 'professional_on_the_way')];
+    case 'arrived':
+      return [notifyConsumer(booking, 'professional_arrived')];
+    case 'started':
+      return [notifyConsumer(booking, 'service_started')];
+    case 'completed':
+      return [
+        notifyConsumer(booking, 'service_completed'),
+        notifyConsumer(booking, 'review_request'),
+      ];
+    case 'cancelled':
+      // Tell the counterparty who *didn't* trigger the cancel.
+      return actorRole === 'partner'
+        ? [notifyConsumer(booking, 'booking_cancelled')]
+        : [notifyPartner(booking, 'job_cancelled', { by: 'customer' })];
+    default:
+      return [];
+  }
+}
+
+// Best-effort dispatch: run notifications off the response path, swallow errors.
+function fireNotifications(promises) {
+  Promise.allSettled(promises).catch(() => {});
+}
 router.use(authenticate);
 
 const PAYMENT_METHODS = ['fpx', 'tng', 'grabpay', 'boost', 'card', 'cash'];
@@ -410,6 +447,20 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
     data,
     include: { consumer: true, partner: true },
   });
+
+  // Fire notifications after the write succeeds (off the response path).
+  if (data.status) {
+    fireNotifications(notifyOnStatusChange(updated, data.status, req.user.role));
+  }
+  // A consumer moving the date/time is a reschedule for both parties.
+  const rescheduled = (data.date !== undefined || data.timeSlot !== undefined) && !data.status;
+  if (rescheduled) {
+    fireNotifications([
+      notifyConsumer(updated, 'booking_rescheduled'),
+      notifyPartner(updated, 'customer_rescheduled'),
+    ]);
+  }
+
   res.json(mapBookingOut(updated));
 }));
 
@@ -425,6 +476,12 @@ router.post('/:id/claim', asyncHandler(async (req, res) => {
     data: { partnerId: req.user.id, status: 'accepted' },
     include: { consumer: true, partner: true },
   });
+  // Consumer: your pro is assigned. Partner: confirm the job is theirs.
+  fireNotifications([
+    notifyConsumer(updated, 'professional_assigned'),
+    notifyConsumer(updated, 'booking_accepted'),
+    notifyPartner(updated, 'job_assigned'),
+  ]);
   res.json(mapBookingOut(updated));
 }));
 

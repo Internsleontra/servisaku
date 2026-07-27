@@ -234,10 +234,23 @@ export interface AppNotification {
   id: string;
   title: string;
   body?: string;
-  type?: string;
+  type?: string;         // legacy coarse type: booking_update | payment | chat | promo | system | reminder
+  category?: string;     // canonical bucket: bookings | jobs | payments | wallet | promotions | support | security | reviews | system
+  priority?: string;     // low | normal | high | urgent
+  icon?: string;         // emoji rendered on the card
+  action_url?: string;   // canonical deep link (alias of link)
   is_read: boolean;
+  is_archived?: boolean;
   link?: string;
+  booking_id?: string;
+  cta_label?: string;
   created_date: string;
+}
+
+export interface NotificationCount {
+  unread: number;
+  total: number;
+  by_category?: Record<string, number>;
 }
 
 /* ---------------------------------------------------------------- payloads --- */
@@ -374,8 +387,13 @@ export const api = {
     post<ChatMessage>('/chat', { booking_id: bookingId, message }),
 
   // --- notifications ---
-  notifications: () => get<AppNotification[]>('/notifications'),
-  markNotificationRead: (id: string) => patch(`/notifications/${id}`, { is_read: true }),
+  notifications: (params = '') => get<AppNotification[]>(`/notifications${params}`),
+  notificationCount: () => get<NotificationCount>('/notifications/count'),
+  markNotificationRead: (id: string) => patch(`/notifications/${id}/read`, { is_read: true }),
+  markAllNotificationsRead: () => patch<{ ok: boolean; unread: number }>('/notifications/read-all', {}),
+  deleteNotification: (id: string) => del<{ ok: boolean }>(`/notifications/${id}`),
+  registerPushToken: (token: string, platform = 'ios', provider = 'expo') =>
+    post<{ ok: boolean }>('/notifications/push-token', { token, platform, provider }),
 };
 
 export type Api = typeof api;

@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -18,6 +19,7 @@ import couponsRouter from './routes/coupons.js';
 import usersRouter from './routes/users.js';
 import reviewsRouter from './routes/reviews.js';
 import escrowRouter from './routes/escrow.js';
+import paymentsRouter from './routes/payments.js';
 import refundsRouter from './routes/refunds.js';
 import payoutsRouter from './routes/payouts.js';
 import chatRouter from './routes/chat.js';
@@ -27,14 +29,19 @@ import partnersRouter from './routes/partners.js';
 import supportRouter from './routes/support.js';
 import catalogRouter from './routes/catalog.js';
 import addressesRouter from './routes/addresses.js';
+import notificationSettingsRouter from './routes/notificationSettings.js';
+import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Same allow-list is shared by the REST CORS layer and the Socket.IO handshake.
+const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:8081,http://localhost:19006').split(',');
+
 app.use(helmet());
 app.use(cors({
   // 5173 = Vite web apps; 8081/19006 = Expo web (consumer/partner mobile apps).
-  origin: (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:8081,http://localhost:19006').split(','),
+  origin: corsOrigins,
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
@@ -57,10 +64,12 @@ api.use('/coupons', couponsRouter);
 api.use('/users', usersRouter);
 api.use('/reviews', reviewsRouter);
 api.use('/escrow', escrowRouter);
+api.use('/payments', paymentsRouter);
 api.use('/refunds', refundsRouter);
 api.use('/payouts', payoutsRouter);
 api.use('/chat', chatRouter);
 api.use('/notifications', notificationsRouter);
+api.use('/notification-settings', notificationSettingsRouter);
 api.use('/partner-locations', partnerLocationsRouter);
 api.use('/partners', partnersRouter);
 api.use('/support', supportRouter);
@@ -81,6 +90,17 @@ app.use((err, req, res, next) => {
   res.status(status).json({ error: message });
 });
 
-app.listen(PORT, () => {
+// Wrap Express in a bare HTTP server so Socket.IO can share the same port.
+const server = http.createServer(app);
+
+// Real-time notifications (in-app badge + center sync across devices).
+attachRealtime(server, { cors: { origin: corsOrigins, credentials: true } })
+  .then(() => console.log('✅ Real-time notifications ready (Socket.IO)'))
+  .catch((err) => console.warn('⚠️  Real-time notifications disabled:', err?.message || err));
+
+// Background workers: release scheduled notifications when they come due.
+startNotificationWorkers();
+
+server.listen(PORT, () => {
   console.log(`✅ ServisAku API running on http://localhost:${PORT}`);
 });

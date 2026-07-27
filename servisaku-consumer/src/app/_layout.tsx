@@ -15,6 +15,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { AuthProvider } from '@/context/auth';
 import { ToastProvider } from '@/components/toast';
+import { NotificationSocket } from '@/lib/notificationSocket';
 import { colors } from '@/theme/tokens';
 
 const queryClient = new QueryClient({
@@ -43,6 +44,7 @@ export default function RootLayout() {
           <AuthProvider>
             <ToastProvider>
               <StatusBar style="dark" />
+              <NotificationSocket />
               <Stack
                 screenOptions={{
                   headerShown: false,

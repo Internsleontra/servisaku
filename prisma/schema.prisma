@@ -53,6 +53,8 @@ model User {
   bookingsAsPartner  Booking[]      @relation("PartnerBookings")
   reviews            Review[]
   notifications      Notification[]
+  notificationPref   NotificationPreference?
+  pushTokens         PushToken[]
   specializations    PartnerSpecialization[]
   documents          PartnerDocument[]
   training           TrainingProgress[]
@@ -324,16 +326,80 @@ model PartnerLocation {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
+  role      String   @default("consumer") // recipient role snapshot: consumer | partner
   title     String
   body      String
-  type      String   @default("info")
+  type      String   @default("info") // legacy coarse type; `category` is the canonical bucket
+  category  String   @default("system") // bookings | jobs | payments | wallet | promotions | support | security | reviews | system
+  priority  String   @default("normal") // low | normal | high | urgent
+  icon      String? // emoji or icon key rendered on the card
+  image     String? // optional hero image URL
+  actionUrl String? // deep link / route the CTA opens (canonical; `link` kept as alias)
+  link      String? // legacy alias of actionUrl
+  bookingId String?
+  paymentId String?
+  metadata  Json? // arbitrary structured payload (serviceName, otp, amount, ctaLabel, …)
+  channel   String   @default("in_app") // in_app | email | sms | push (primary delivery channel of this record)
   isRead    Boolean  @default(false)
-  link      String?
+  isArchived Boolean @default(false)
+  deliveryStatus String @default("sent") // queued | sent | delivered | failed
+  scheduledAt DateTime? // set for future-dated notifications not yet released
+  sentAt    DateTime?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId, isRead])
+  @@index([userId, isArchived, createdAt])
+  @@index([userId, category])
+  @@index([bookingId])
+}
+
+// Per-user notification channel + category preferences and quiet-hours.
+model NotificationPreference {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  // Delivery channels
+  pushEnabled      Boolean  @default(true)
+  emailEnabled     Boolean  @default(true)
+  smsEnabled       Boolean  @default(true)
+  // Category toggles
+  bookingEnabled   Boolean  @default(true) // consumer bookings / partner jobs
+  paymentEnabled   Boolean  @default(true)
+  promotionEnabled Boolean  @default(true)
+  walletEnabled    Boolean  @default(true)
+  supportEnabled   Boolean  @default(true)
+  securityEnabled  Boolean  @default(true) // security alerts are always delivered in-app regardless
+  reviewEnabled    Boolean  @default(true)
+  // Device behaviour
+  soundEnabled     Boolean  @default(true)
+  vibrationEnabled Boolean  @default(true)
+  doNotDisturb     Boolean  @default(false)
+  dndStart         String? // "22:00" — quiet-hours window start (user local time)
+  dndEnd           String? // "07:00"
+  language         String   @default("en")
+  timezone         String   @default("Asia/Kuala_Lumpur")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// Registered device/browser push tokens (FCM / Web Push). One user → many devices.
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("web") // web | ios | android
+  provider  String   @default("fcm") // fcm | webpush | expo
+  deviceId  String? // optional stable device identifier for dedupe
+  lastSeenAt DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 // ─── §2 Booking line items ───────────────────────────────────────────────────
