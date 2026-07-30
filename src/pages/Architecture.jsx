@@ -214,7 +214,7 @@ const API_GROUPS = [
     ],
   },
   {
-    group: 'Admin', color: 'text-gray-600', endpoints: [
+    group: 'Admin', color: 'text-ink-secondary', endpoints: [
       { method: 'GET', path: '/admin/dashboard', desc: 'KPI stats overview' },
       { method: 'GET', path: '/admin/bookings', desc: 'All bookings with filters' },
       { method: 'PATCH', path: '/admin/partners/:id/verify', desc: 'Approve/reject partner' },
@@ -332,7 +332,7 @@ export default function Architecture() {
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-0 z-10 bg-white border-b border-border">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border">
         <div className="max-w-5xl mx-auto px-4 overflow-x-auto">
           <div className="flex gap-0 min-w-max">
             {TABS.map(({ id, label, icon: Icon }) => (

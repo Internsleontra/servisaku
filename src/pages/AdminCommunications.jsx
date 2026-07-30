@@ -39,7 +39,7 @@ function CampaignForm({ onSave, onCancel }) {
   }));
 
   return (
-    <div className="bg-white rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 space-y-4">
+    <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5 space-y-4">
       <h3 className="font-bold text-sm">New Campaign</h3>
       <div className="space-y-3">
         <input value={form.name} onChange={e => set('name', e.target.value)}
@@ -197,7 +197,7 @@ export default function AdminCommunications() {
         {showForm && <CampaignForm onSave={handleSaveCampaign} onCancel={() => setShowForm(false)} />}
 
         {/* Automation Engine */}
-        <div className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+        <div className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -248,7 +248,7 @@ export default function AdminCommunications() {
         <div className="flex gap-1.5">
           {['campaigns', 'logs'].map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${tab === t ? 'bg-primary text-white' : 'bg-white border border-border text-muted-foreground'}`}>
+              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${tab === t ? 'bg-primary text-white' : 'bg-surface border border-border text-muted-foreground'}`}>
               {t === 'campaigns' ? `Campaigns (${campaigns.length})` : `Delivery Logs (${logs.length})`}
             </button>
           ))}
@@ -259,13 +259,13 @@ export default function AdminCommunications() {
         ) : tab === 'campaigns' ? (
           <div className="space-y-3">
             {campaigns.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-3xl border border-border">
+              <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                 <Megaphone className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm font-semibold mb-1">No campaigns yet</p>
                 <button onClick={() => setShowForm(true)} className="text-xs text-primary font-semibold">+ Create one</button>
               </div>
             ) : campaigns.map(c => (
-              <div key={c.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+              <div key={c.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -312,7 +312,7 @@ export default function AdminCommunications() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>

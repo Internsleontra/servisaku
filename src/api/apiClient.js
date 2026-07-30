@@ -14,9 +14,34 @@ const getToken = () => localStorage.getItem('auth_token');
 const setToken = (t) => localStorage.setItem('auth_token', t);
 const clearToken = () => localStorage.removeItem('auth_token');
 
+// --- Appwrite session mode ---
+// When the user signs in via Appwrite (OTP), the session lives in Appwrite and
+// we authenticate the API with short-lived Appwrite JWTs minted on demand
+// (cached ~14 min). A localStorage flag marks that we're in this mode.
+const APPWRITE_FLAG = 'appwrite_session';
+let awJwt = null; // { jwt, exp }
+
+async function bearerToken() {
+  if (localStorage.getItem(APPWRITE_FLAG)) {
+    try {
+      if (!awJwt || awJwt.exp < Date.now() + 60_000) {
+        const { account } = await import('@/lib/appwrite');
+        const res = await account.createJWT();
+        awJwt = { jwt: res.jwt, exp: Date.now() + 14 * 60_000 };
+      }
+      return awJwt.jwt;
+    } catch {
+      // Appwrite session is gone — drop the flag and fall back to any legacy token.
+      localStorage.removeItem(APPWRITE_FLAG);
+      awJwt = null;
+    }
+  }
+  return getToken();
+}
+
 async function request(method, path, body) {
   const headers = { 'Content-Type': 'application/json' };
-  const token = getToken();
+  const token = await bearerToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, {
@@ -26,8 +51,18 @@ async function request(method, path, body) {
   });
 
   if (!res.ok) {
+    // A 401 means the token is missing/expired/invalid — drop it so the app
+    // falls back to a clean logged-out state instead of retrying with a token
+    // the backend keeps rejecting (self-heals stale sessions across restarts /
+    // a mock↔real backend switch).
+    if (res.status === 401) { clearToken(); awJwt = null; }
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Request failed');
+    // Carry the status so callers can tell "your session is invalid" (401)
+    // apart from "the server is busy/broken" (429/5xx) — treating the latter
+    // as a bad session silently signs people out mid-login.
+    const error = new Error(err.error || 'Request failed');
+    error.status = res.status;
+    throw error;
   }
   return res.status === 204 ? null : res.json();
 }
@@ -138,11 +173,38 @@ export const apiClient = {
       return patch('/auth/consumer-profile', data);
     },
     async logout() {
+      // End the Appwrite session too, if there is one.
+      try {
+        if (localStorage.getItem(APPWRITE_FLAG)) {
+          const { account } = await import('@/lib/appwrite');
+          await account.deleteSession('current');
+        }
+      } catch { /* already gone */ }
+      localStorage.removeItem(APPWRITE_FLAG);
+      awJwt = null;
       clearToken();
       window.location.href = '/';
     },
-    async loginWithFirebase(firebaseIdToken, fullName) {
-      const data = await post('/auth/firebase', { token: firebaseIdToken, fullName });
+    // After an Appwrite login (email OTP, phone OTP), establish/link the local
+    // user (with role) and switch the client into Appwrite-session mode — the
+    // API is then authenticated with Appwrite JWTs, not our own token.
+    async loginWithAppwrite(jwt, { role, fullName } = {}) {
+      const data = await post('/auth/appwrite', { jwt, role, fullName });
+      clearToken();
+      awJwt = null;
+      localStorage.setItem(APPWRITE_FLAG, '1');
+      return data.user;
+    },
+    // Backend-native phone OTP (via the server's own Twilio / lib/sms.js) — no
+    // Appwrite involvement. In dev without Twilio, the request returns dev_code.
+    async requestPhoneOtp(phone) {
+      return post('/auth/otp/request', { phone });
+    },
+    async verifyPhoneOtp(phone, code, { fullName } = {}) {
+      const data = await post('/auth/otp/verify', { phone, code, full_name: fullName });
+      // This is an Express-JWT session (not Appwrite).
+      localStorage.removeItem(APPWRITE_FLAG);
+      awJwt = null;
       setToken(data.access_token);
       return data.user;
     },
@@ -195,6 +257,14 @@ export const apiClient = {
     getService: (slug) => get(`/services/${slug}`),
     calculate: (payload) => post('/bookings/calculate', payload),
     createBooking: (payload) => post('/bookings/dynamic', payload),
+  },
+
+  // Payments (Billplz). create → hosted checkout URL; sync → confirm after the
+  // redirect back (needed in local dev where the webhook can't reach us).
+  payments: {
+    create: (bookingId, method) => post('/payments/create', { booking_id: bookingId, method }),
+    sync: (paymentId) => post(`/payments/${paymentId}/sync`),
+    get: (paymentId) => get(`/payments/${paymentId}`),
   },
 
   // Saved service addresses (consumer).
@@ -255,6 +325,11 @@ export const apiClient = {
     get: () => get('/partners/me/onboarding'),
     saveDraft: (draft) => patch('/partners/me/onboarding/draft', draft),
     submit: (payload) => post('/partners/me/onboarding/submit', payload),
+    // Phone verification for the onboarding wizard. Unlike /auth/otp/verify
+    // these do not create a session — they attach the number to the signed-in
+    // account. Returns dev_code when no SMS provider is configured.
+    requestPhoneOtp: (phone) => post('/partners/me/phone/request', { phone }),
+    verifyPhoneOtp: (phone, code) => post('/partners/me/phone/verify', { phone, code }),
   },
 };
 

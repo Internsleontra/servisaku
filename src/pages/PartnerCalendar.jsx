@@ -14,12 +14,20 @@ export default function PartnerCalendar() {
 
   useEffect(() => {
     const load = async () => {
-      const me = await servisaku.auth.me();
-      setUser(me);
-      // Fetch all jobs for this partner (not cancelled/rejected)
-      const allJobs = await servisaku.entities.Booking.filter({ partner_email: me.email }, '-date', 200);
-      setJobs(allJobs.filter(j => j.status !== 'cancelled' && j.status !== 'rejected'));
-      setLoading(false);
+      try {
+        const me = await servisaku.auth.me();
+        // Fetch all jobs for this partner (not cancelled/rejected)
+        const allJobs = await servisaku.entities.Booking.filter({ partner_email: me.email }, '-date', 200);
+        setJobs(allJobs.filter(j => j.status !== 'cancelled' && j.status !== 'rejected'));
+      } catch (err) {
+        // Without this the spinner span forever on any failure, with nothing on
+        // screen to say why — the page just looked permanently broken.
+        console.error('[PartnerCalendar] failed to load jobs:', err);
+        toast.error(err?.message || 'Could not load your calendar');
+        setJobs([]);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -101,7 +109,7 @@ export default function PartnerCalendar() {
                   {dayJobs.length > 0 && (
                     <div className="flex gap-0.5 mt-0.5">
                       {dayJobs.slice(0, 3).map((_, i) => (
-                        <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-brand'}`} />
+                        <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-surface' : 'bg-brand'}`} />
                       ))}
                     </div>
                   )}

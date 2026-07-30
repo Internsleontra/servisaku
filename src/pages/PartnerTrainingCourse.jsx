@@ -65,7 +65,7 @@ export default function PartnerTrainingCourse() {
       <div className="px-5 lg:px-8 max-w-2xl mx-auto pt-5 space-y-4">
         {/* Content */}
         {course.type === 'video' && (
-          <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-ink/90 text-white">
+          <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-ink/90 dark:bg-raised text-white">
             <Icon className="h-12 w-12 opacity-80" />
           </div>
         )}
@@ -88,7 +88,7 @@ export default function PartnerTrainingCourse() {
                         disabled={done}
                         className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${selected ? 'border-brand bg-brand-tint text-brand-ink' : 'border-hairline/20 bg-surface text-ink hover:border-brand/30'} ${done ? 'opacity-70' : ''}`}>
                         <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${selected ? 'border-brand bg-brand' : 'border-hairline/40'}`}>
-                          {selected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                          {selected && <span className="h-1.5 w-1.5 rounded-full bg-surface" />}
                         </span>
                         {opt}
                       </button>

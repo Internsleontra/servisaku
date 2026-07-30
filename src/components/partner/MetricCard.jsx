@@ -9,7 +9,7 @@ const TONES = {
   sky: 'bg-sky-50 text-sky-600',
   violet: 'bg-violet-50 text-violet-600',
   rose: 'bg-rose-50 text-rose-600',
-  slate: 'bg-slate-100 text-slate-600',
+  slate: 'bg-raised text-ink-secondary',
 };
 
 // A single KPI tile used across the partner dashboard, wallet and analytics.

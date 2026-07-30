@@ -13,7 +13,7 @@ export function TrustStrip() {
   ];
 
   return (
-    <div className="w-full rounded-lg border border-hairline/70 bg-white p-6 shadow-e1 md:p-8">
+    <div className="w-full rounded-lg border border-hairline/70 bg-surface p-6 shadow-e1 md:p-8">
       <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-0 lg:divide-x divide-hairline/50">
         {kpis.map((kpi, i) => (
           <div key={i} className={`flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5 ${i !== 0 ? 'lg:pl-10 xl:pl-12' : ''} ${i !== 3 ? 'lg:pr-4' : ''}`}>

@@ -23,9 +23,9 @@ export function HeroSearch() {
   };
 
   return (
-    <div className="w-full max-w-5xl rounded-lg border border-white/80 bg-white p-2 shadow-float">
+    <div className="w-full max-w-5xl rounded-lg border border-white/80 bg-surface p-2 shadow-float">
       <div className="grid gap-2 lg:grid-cols-[1.15fr_0.75fr_0.9fr_auto]">
-        <div className="flex h-14 items-center gap-3 rounded-lg bg-raised px-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-brand/20">
+        <div className="flex h-14 items-center gap-3 rounded-lg bg-raised px-3 transition-colors focus-within:bg-surface focus-within:ring-2 focus-within:ring-brand/20">
           <Grid className="h-5 w-5 shrink-0 text-brand" />
           <div className="min-w-0 flex-1">
             <label className="mb-0.5 block truncate text-[10px] font-bold uppercase tracking-widest text-ink-secondary">{t('Select Service')}</label>
@@ -41,7 +41,7 @@ export function HeroSearch() {
           <ChevronDown className="hidden h-4 w-4 shrink-0 text-ink-tertiary sm:block" />
         </div>
 
-        <div className="flex h-14 items-center gap-3 rounded-lg bg-raised px-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-brand/20">
+        <div className="flex h-14 items-center gap-3 rounded-lg bg-raised px-3 transition-colors focus-within:bg-surface focus-within:ring-2 focus-within:ring-brand/20">
           <CalendarDays className="h-5 w-5 shrink-0 text-blue-600" />
           <div className="min-w-0 flex-1">
             <label className="mb-0.5 block truncate text-[10px] font-bold uppercase tracking-widest text-ink-secondary">{t('Date')}</label>
@@ -56,7 +56,7 @@ export function HeroSearch() {
           <ChevronDown className="hidden h-4 w-4 shrink-0 text-ink-tertiary sm:block" />
         </div>
 
-        <div className="flex h-14 items-center gap-3 rounded-lg bg-raised px-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-brand/20">
+        <div className="flex h-14 items-center gap-3 rounded-lg bg-raised px-3 transition-colors focus-within:bg-surface focus-within:ring-2 focus-within:ring-brand/20">
           <MapPin className="h-5 w-5 shrink-0 text-success" />
           <div className="min-w-0 flex-1">
             <label className="mb-0.5 block truncate text-[10px] font-bold uppercase tracking-widest text-ink-secondary">{t('Location')}</label>

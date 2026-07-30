@@ -43,7 +43,7 @@ export default function Wallet() {
 
       <div className="px-5 space-y-5 pb-10">
         {/* Balance card */}
-        <div className="bg-ink text-white rounded-3xl p-6 shadow-e2">
+        <div className="bg-ink dark:bg-raised text-white rounded-3xl p-6 shadow-e2">
           <p className="text-xs font-bold text-white/50">WALLET BALANCE</p>
           {data ? <p className="text-4xl font-extrabold mt-1">{formatMYR(data.summary.balance)}</p> : <div className="h-9 w-36 bg-white/10 rounded-lg mt-2 animate-pulse" />}
           <div className="flex flex-wrap gap-2 mt-4">

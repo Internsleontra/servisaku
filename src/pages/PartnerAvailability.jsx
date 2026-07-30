@@ -18,7 +18,7 @@ function Switch({ checked, onChange }) {
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
       className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-hairline/30'}`}>
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
     </button>
   );
 }
@@ -36,12 +36,18 @@ export default function PartnerAvailability() {
   const navigate = useNavigate();
   const [form, setForm] = useState(null);
   const [categories, setCategories] = useState([]);
+  // `form === null` doubles as the loading state, so a failed load has to be
+  // tracked separately or the page just spins forever with nothing on screen.
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [newDate, setNewDate] = useState('');
 
   useEffect(() => {
+    // availability.get() rejecting (403 for a non-partner account) used to leave
+    // `form` null forever, which is the spinner state — surface it instead.
     Promise.all([servisaku.availability.get(), servisaku.catalog.getCategories().catch(() => [])])
-      .then(([a, cats]) => { setForm(a); setCategories(cats || []); });
+      .then(([a, cats]) => { setForm(a); setCategories(cats || []); })
+      .catch(e => { setLoadError(e?.message || 'Could not load your availability'); });
   }, []);
 
   const set = (patch) => setForm(f => ({ ...f, ...patch }));
@@ -61,6 +67,13 @@ export default function PartnerAvailability() {
       setSaving(false);
     }
   };
+
+  if (loadError) return (
+    <div className="flex flex-col items-center justify-center pt-32 px-6 text-center">
+      <p className="text-sm font-semibold text-ink mb-1">Couldn&apos;t load your availability</p>
+      <p className="text-sm text-ink-secondary max-w-xs">{loadError}</p>
+    </div>
+  );
 
   if (!form) return (
     <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-raised border-t-brand rounded-full animate-spin" /></div>

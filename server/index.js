@@ -48,7 +48,18 @@ app.use(express.json({ limit: '1mb' }));
 
 // Global limiter + a tighter one for credential endpoints.
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: true, legacyHeaders: false }));
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
+// GET /auth/me is a read-only session check the app issues on every load, after
+// every login and on protected navigations — not a credential endpoint. Letting
+// it consume the brute-force budget locked users out of logging in at all: once
+// the 30 were spent, /auth/me returned 429, the client treated that as "session
+// invalid" and silently signed them out mid-login.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'GET' && req.path === '/me',
+});
 
 const api = express.Router();
 

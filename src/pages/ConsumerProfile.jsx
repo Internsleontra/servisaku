@@ -215,7 +215,7 @@ export default function ConsumerProfile() {
                   className="w-full flex items-center justify-between px-4 py-3 text-left">
                   <span className="text-sm">{label}</span>
                   <span className={`w-10 h-6 rounded-full flex items-center transition-colors px-0.5 ${marketing[key] ? 'bg-brand justify-end' : 'bg-raised justify-start'}`}>
-                    <span className="w-5 h-5 rounded-full bg-white shadow-sm" />
+                    <span className="w-5 h-5 rounded-full bg-surface shadow-sm" />
                   </span>
                 </button>
               ))}

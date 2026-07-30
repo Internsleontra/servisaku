@@ -17,7 +17,7 @@ export function ServiceCardSkeleton() {
 
 export function BookingCardSkeleton() {
   return (
-    <div className="bg-white rounded-3xl border border-border p-4 space-y-3">
+    <div className="bg-surface rounded-3xl border border-border p-4 space-y-3">
       <div className="flex items-center gap-3">
         <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
         <div className="flex-1 space-y-2">

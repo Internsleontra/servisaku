@@ -13,6 +13,7 @@ const BookingHistory = lazy(() => import('@/pages/BookingHistory'));
 const BookingDetail = lazy(() => import('@/pages/BookingDetail'));
 const BookingInvoice = lazy(() => import('@/pages/BookingInvoice'));
 const PaymentCheckout = lazy(() => import('@/pages/PaymentCheckout'));
+const PaymentReturn = lazy(() => import('@/pages/PaymentReturn'));
 const LiveTracking = lazy(() => import('@/pages/LiveTracking'));
 const ChatScreen = lazy(() => import('@/pages/ChatScreen'));
 const ReviewFlow = lazy(() => import('@/pages/ReviewFlow'));
@@ -52,6 +53,7 @@ export default function ConsumerRoutes() {
         <Route path="/booking/:bookingId" element={<ProtectedRoute><BookingDetail /></ProtectedRoute>} />
         <Route path="/booking/:bookingId/invoice" element={<BookingInvoice />} />
         <Route path="/payment" element={<PaymentCheckout />} />
+        <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
         <Route path="/tracking/:bookingId" element={<ProtectedRoute><LiveTracking /></ProtectedRoute>} />
         <Route path="/chat/:bookingId" element={<ProtectedRoute><ChatScreen /></ProtectedRoute>} />
         <Route path="/review/:bookingId" element={<ProtectedRoute><ReviewFlow /></ProtectedRoute>} />

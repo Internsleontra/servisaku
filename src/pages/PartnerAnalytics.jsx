@@ -37,11 +37,19 @@ export default function PartnerAnalytics() {
 
   useEffect(() => {
     const load = async () => {
-      const me = await servisaku.auth.me();
-      setUser(me);
-      const all = await servisaku.entities.Booking.filter({ partner_email: me.email }, '-created_date', 300);
-      setBookings(all);
-      setLoading(false);
+      try {
+        const me = await servisaku.auth.me();
+        setUser(me);
+        const all = await servisaku.entities.Booking.filter({ partner_email: me.email }, '-created_date', 300);
+        setBookings(all);
+      } catch (err) {
+        // Always drop the spinner — a failed load must not leave the page
+        // stuck loading forever with no explanation.
+        console.error('[PartnerAnalytics] failed to load bookings:', err);
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);

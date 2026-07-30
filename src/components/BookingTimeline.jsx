@@ -25,7 +25,7 @@ export default function BookingTimeline({ booking }) {
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-border p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+    <div className="bg-surface rounded-3xl border border-border p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-4">Booking Progress</p>
       <div className="space-y-0">
         {ORDERED_STATUSES.map((status, i) => {

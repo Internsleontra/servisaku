@@ -35,7 +35,7 @@ function MessageBubble({ msg, myEmail }) {
           <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
             isMe
               ? 'bg-primary text-white rounded-br-sm'
-              : 'bg-white border border-border text-foreground rounded-bl-sm shadow-sm'
+              : 'bg-surface border border-border text-foreground rounded-bl-sm shadow-sm'
           } ${msg._optimistic ? 'opacity-70' : ''}`}>
             {msg.message}
           </div>
@@ -94,7 +94,7 @@ export default function ChatScreen() {
   return (
     <div className="flex flex-col h-screen bg-background font-inter lg:max-w-3xl lg:mx-auto lg:border-x lg:border-border">
       {/* Header */}
-      <div className="bg-white border-b border-border px-4 pt-12 lg:pt-4 pb-3 sticky top-0 z-10">
+      <div className="bg-surface border-b border-border px-4 pt-12 lg:pt-4 pb-3 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
             <ArrowLeft className="h-4 w-4" />
@@ -157,7 +157,7 @@ export default function ChatScreen() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-border px-4 py-3 pb-safe">
+      <div className="bg-surface border-t border-border px-4 py-3 pb-safe">
         <div className="flex items-end gap-2">
           <button onClick={() => fileRef.current?.click()}
             className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 hover:bg-primary/10 transition-colors mb-0.5">

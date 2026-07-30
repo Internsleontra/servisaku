@@ -127,8 +127,22 @@ export default function ServiceBooking() {
         notes: extras.notes || null,
         payment_method: payment.method,
       });
-      toast.success('Booking confirmed!');
-      navigate(`/booking/${booking.id}`);
+
+      // Cash on service → no online payment; the partner collects at completion.
+      if (payment.method === 'cash') {
+        toast.success('Booking confirmed!');
+        navigate(`/booking/${booking.id}`);
+        return;
+      }
+
+      // Online methods → create a Billplz bill and hand off to hosted checkout.
+      try {
+        const pay = await servisaku.payments.create(booking.id, payment.method);
+        if (pay?.checkout_url) { window.location.href = pay.checkout_url; return; }
+      } catch (payErr) {
+        toast.error(payErr.message || 'Could not start payment — you can pay from your booking.');
+      }
+      navigate(`/booking/${booking.id}`); // fallback if the gateway didn't return a URL
     } catch (e) {
       if (/log in|unauth|401/i.test(e.message)) {
         toast.info('Please log in to confirm your booking');

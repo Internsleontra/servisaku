@@ -3,6 +3,9 @@
 
 @import './styles/tokens.css';
 @import './styles/typography.css';
+/* Unlayered dark-mode tint remap — wins over Tailwind's utilities layer
+   regardless of source order (unlayered beats any @layer). */
+@import './styles/dark-tints.css';
 
 @tailwind base;
 @tailwind components;

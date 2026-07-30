@@ -25,7 +25,7 @@ const QUICK_ACTIONS = [
 
 function KPICard({ label, value, sub, icon: Icon, color, trend }) {
   return (
-    <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-5">
+    <div className="bg-surface rounded-2xl border border-border/60 shadow-sm p-5">
       <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-4`}>
         <Icon className="h-4.5 w-4.5" style={{ height: '1.125rem', width: '1.125rem' }} />
       </div>
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Chart */}
-        <div className="bg-white rounded-2xl border border-border/60 shadow-sm p-5 mt-5 lg:mt-6">
+        <div className="bg-surface rounded-2xl border border-border/60 shadow-sm p-5 mt-5 lg:mt-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-sm font-bold">Bookings This Week</h3>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
             {QUICK_ACTIONS.map((item, i) => (
               <Link key={i} to={item.to}
-                className="flex flex-col items-center gap-2.5 bg-white rounded-2xl border border-border/60 py-4 px-2 shadow-xs
+                className="flex flex-col items-center gap-2.5 bg-surface rounded-2xl border border-border/60 py-4 px-2 shadow-xs
                            hover:shadow-md hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 text-center">
                 <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center`}>
                   <item.icon className="h-4.5 w-4.5" style={{ height: '1.125rem', width: '1.125rem' }} />
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
             {['bookings', 'partners'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                  tab === t ? 'bg-primary text-white shadow-sm' : 'bg-white border border-border/60 text-muted-foreground hover:text-foreground'
+                  tab === t ? 'bg-primary text-white shadow-sm' : 'bg-surface border border-border/60 text-muted-foreground hover:text-foreground'
                 }`}>
                 {t === 'bookings' ? `Bookings (${bookings.length})` : `Partners (${partners.length})`}
               </button>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
               <div className="w-6 h-6 border-[2.5px] border-muted border-t-primary rounded-full animate-spin" />
             </div>
           ) : tab === 'bookings' ? (
-            <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="bg-surface rounded-2xl border border-border/60 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="space-y-3">
               {partners.slice(0, 10).map(p => (
-                <div key={p.id} className="flex items-center gap-3.5 bg-white rounded-2xl border border-border/60 p-4 shadow-xs
+                <div key={p.id} className="flex items-center gap-3.5 bg-surface rounded-2xl border border-border/60 p-4 shadow-xs
                                            hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                   <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0"
                     style={{ background: 'hsl(var(--primary)/0.08)' }}>

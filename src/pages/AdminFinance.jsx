@@ -139,7 +139,7 @@ export default function AdminFinance() {
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {TABS.map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-all ${tab === t ? 'bg-primary text-white' : 'bg-white border border-border text-muted-foreground'}`}>
+              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-all ${tab === t ? 'bg-primary text-white' : 'bg-surface border border-border text-muted-foreground'}`}>
               {t === 'refunds' ? `Refunds (${pendingRefunds.length})` : t === 'payouts' ? `Payouts (${pendingPayouts.length})` : t}
             </button>
           ))}
@@ -152,7 +152,7 @@ export default function AdminFinance() {
             {/* OVERVIEW */}
             {tab === 'overview' && (
               <div className="space-y-4">
-                <div className="bg-white rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5">
+                <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-5">
                   <p className="text-sm font-bold mb-4">Monthly GMV vs Revenue</p>
                   <ResponsiveContainer width="100%" height={150}>
                     <BarChart data={chartData} barCategoryGap="25%">
@@ -170,7 +170,7 @@ export default function AdminFinance() {
                     { label: 'Escrow Entries', value: escrows.length },
                     { label: 'Payout Records', value: payouts.length },
                   ].map((s, i) => (
-                    <div key={i} className="bg-white rounded-2xl border border-border p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                    <div key={i} className="bg-surface rounded-2xl border border-border p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                       <p className="text-xl font-bold">{s.value}</p>
                       <p className="text-xs text-muted-foreground">{s.label}</p>
                     </div>
@@ -183,9 +183,9 @@ export default function AdminFinance() {
             {tab === 'escrow' && (
               <div className="space-y-3">
                 {escrows.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-3xl border border-border"><p className="text-sm text-muted-foreground">No escrow entries yet</p></div>
+                  <div className="text-center py-12 bg-surface rounded-3xl border border-border"><p className="text-sm text-muted-foreground">No escrow entries yet</p></div>
                 ) : escrows.map(e => (
-                  <div key={e.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+                  <div key={e.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">{formatRM(e.gross_amount)}</p>
@@ -219,9 +219,9 @@ export default function AdminFinance() {
             {tab === 'refunds' && (
               <div className="space-y-3">
                 {refunds.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-3xl border border-border"><p className="text-sm text-muted-foreground">No refund requests</p></div>
+                  <div className="text-center py-12 bg-surface rounded-3xl border border-border"><p className="text-sm text-muted-foreground">No refund requests</p></div>
                 ) : refunds.map(r => (
-                  <div key={r.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+                  <div key={r.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">{formatRM(r.refund_amount)} refund</p>
@@ -260,9 +260,9 @@ export default function AdminFinance() {
             {tab === 'payouts' && (
               <div className="space-y-3">
                 {payouts.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-3xl border border-border"><p className="text-sm text-muted-foreground">No payout records</p></div>
+                  <div className="text-center py-12 bg-surface rounded-3xl border border-border"><p className="text-sm text-muted-foreground">No payout records</p></div>
                 ) : payouts.map(p => (
-                  <div key={p.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+                  <div key={p.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">{p.partner_name || p.partner_email}</p>

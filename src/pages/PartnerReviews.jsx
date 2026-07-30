@@ -28,7 +28,13 @@ export default function PartnerReviews() {
   const [replyText, setReplyText] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { servisaku.reviews.mine().then(setReviews); }, []);
+  // `reviews === null` gates the spinner — without a catch a failed load
+  // (e.g. 403 "Partners only") leaves the page loading indefinitely.
+  useEffect(() => {
+    servisaku.reviews.mine()
+      .then(setReviews)
+      .catch(e => { toast.error(e?.message || 'Could not load your reviews'); setReviews([]); });
+  }, []);
 
   if (!reviews) return (
     <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-raised border-t-brand rounded-full animate-spin" /></div>

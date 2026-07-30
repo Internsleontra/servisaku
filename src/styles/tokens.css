@@ -33,16 +33,37 @@
   }
 
   .dark {
-    /* Dark mode inversion stubs */
-    --bg: 220 5% 10%;
-    --surface: 220 6% 12%;
-    --surface-raised: 220 6% 15%;
-    
-    --ink-primary: 0 0% 100%;
-    --ink-secondary: 216 12% 64%;
-    --ink-tertiary: 215 16% 47%;
-    --ink-inverse: 220 5% 10%;
-    
-    --hairline: 220 10% 20%;
+    /* Surfaces — layered elevation (bg < surface < raised) */
+    --bg: 222 24% 8%;             /* app background */
+    --surface: 222 20% 12%;       /* cards / panels */
+    --surface-raised: 220 18% 16%;/* raised chips / hovered rows */
+
+    --ink-primary: 210 20% 98%;   /* near-white primary text */
+    --ink-secondary: 216 15% 72%; /* muted text */
+    --ink-tertiary: 215 14% 52%;  /* faint text */
+    --ink-inverse: 222 24% 8%;    /* text on light/brand fills */
+
+    --hairline: 220 14% 22%;      /* borders / dividers */
+
+    /* Brand stays vivid; tint becomes a dark warm surface, ink a light warm */
+    --brand: 24 95% 56%;
+    --brand-tint: 24 45% 15%;
+    --brand-ink: 24 90% 72%;
+
+    --accent: 24 95% 56%;
+    --accent-tint: 24 45% 15%;
+
+    /* Status colours — brightened for contrast on dark; tints darkened */
+    --success: 150 55% 55%;
+    --success-tint: 150 40% 13%;
+
+    --warning: 40 90% 60%;
+    --warning-tint: 38 55% 14%;
+
+    --danger: 3 82% 64%;
+    --danger-tint: 3 50% 15%;
+
+    --info: 213 80% 66%;
+    --info-tint: 213 45% 16%;
   }
 }

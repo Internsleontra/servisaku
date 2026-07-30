@@ -219,20 +219,6 @@ export const mockClient = {
       localStorage.setItem('mock_active_user_id', user.id);
       window.location.href = '/';
     },
-    async loginWithFirebase(firebaseIdToken) {
-      // In mock/demo mode, simulate a Firebase-authenticated user
-      await delay(500);
-      const users = JSON.parse(localStorage.getItem('mock_User') || '[]');
-      let user = users.find(u => u.email === 'firebase@demo.com');
-      if (!user) {
-        user = { id: generateId(), email: 'firebase@demo.com', full_name: 'Firebase User', role: 'consumer', created_date: new Date().toISOString() };
-        users.push(user);
-        localStorage.setItem('mock_User', JSON.stringify(users));
-      }
-      localStorage.setItem('mock_active_user_id', user.id);
-      localStorage.setItem('auth_token', 'mock-jwt-' + user.id);
-      return user;
-    },
     async register(email, password, full_name) {
       await delay(400);
       const users = JSON.parse(localStorage.getItem('mock_User') || '[]');
@@ -277,6 +263,16 @@ export const mockClient = {
       localStorage.removeItem('auth_token');
       window.location.href = '/';
     },
+    async loginWithAppwrite() {
+      // Appwrite/OTP auth needs the live backend; demo mode has no equivalent.
+      throw new Error('OTP login requires the live backend (VITE_BACKEND=real).');
+    },
+    async requestPhoneOtp() {
+      throw new Error('Phone OTP requires the live backend (VITE_BACKEND=real).');
+    },
+    async verifyPhoneOtp() {
+      throw new Error('Phone OTP requires the live backend (VITE_BACKEND=real).');
+    },
     redirectToLogin() {
       import('sonner').then(({ toast }) => toast.info('Redirecting to demo login...'));
       setTimeout(() => window.location.href = '/otp-login', 1000);
@@ -310,6 +306,12 @@ export const mockClient = {
     async getService() { throw new Error('Live booking requires the backend (demo mode)'); },
     async calculate() { throw new Error('Live pricing requires the backend (demo mode)'); },
     async createBooking() { throw new Error('Booking requires the backend (demo mode)'); },
+  },
+
+  payments: {
+    async create() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
+    async sync() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
+    async get() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
   },
 
   wallet: {
@@ -361,6 +363,8 @@ export const mockClient = {
     async get() { return { draft: null, profile: null, submitted: false, account: {} }; },
     async saveDraft(draft) { return { ok: true, draft }; },
     async submit() { throw new Error('Requires the backend (demo mode)'); },
+    async requestPhoneOtp() { throw new Error('Phone verification requires the live backend.'); },
+    async verifyPhoneOtp() { throw new Error('Phone verification requires the live backend.'); },
   },
 
   // Saved addresses (localStorage-backed in demo mode).

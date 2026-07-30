@@ -50,7 +50,7 @@ export default function CategoryGrid() {
               key={cat.slug}
               type="button"
               onClick={() => navigate(`/catalog/${cat.slug}`)}
-              className="group overflow-hidden rounded-lg border border-hairline/70 bg-white text-left shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-e3"
+              className="group overflow-hidden rounded-lg border border-hairline/70 bg-surface text-left shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-e3"
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-raised">
                 <img src={cat.img} alt={cat.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />

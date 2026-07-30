@@ -6,10 +6,10 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { adminAuth } from '../firebaseAdmin.js';
 import { sendMail } from '../lib/mailer.js';
 import { sendSms, isSmsReady } from '../lib/sms.js';
 import { requestOtp, verifyOtp } from '../lib/otp.js';
+import { getAppwriteUserFromJWT, isAppwriteConfigured } from '../appwrite.js';
 
 const router = Router();
 
@@ -79,57 +79,6 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
     const token = signToken(user);
     res.json({ access_token: token, user: sanitize(user) });
   } catch (err) { next(err); }
-});
-
-// POST /api/auth/firebase
-router.post('/firebase', async (req, res, next) => {
-  try {
-    const { token, role = 'consumer', fullName } = req.body;
-    if (!token) return res.status(400).json({ error: 'Token is required' });
-    if (!adminAuth) return res.status(503).json({ error: 'Phone/Google sign-in is not configured on the server' });
-
-    // Verify the Firebase ID token
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const { uid, email, phone_number, name } = decodedToken;
-    // Name to use when creating a fresh account: explicit signup name → Google
-    // display name → a neutral placeholder.
-    const displayName = (typeof fullName === 'string' && fullName.trim()) || name || 'User';
-
-    // We search by firebaseUid first. If not found, try by email or phone (to link existing accounts)
-    let user = await prisma.user.findUnique({ where: { firebaseUid: uid } });
-
-    if (!user) {
-      if (email) {
-        user = await prisma.user.findUnique({ where: { email } });
-      }
-      
-      // If user still not found, we create a new one
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            firebaseUid: uid,
-            email: email || null,
-            phone: phone_number || null,
-            fullName: displayName,
-            role,
-          },
-        });
-      } else {
-        // Link existing user to this Firebase UID
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { firebaseUid: uid },
-        });
-      }
-    }
-
-    // Issue our internal JWT for the rest of the application
-    const internalToken = signToken(user);
-    res.json({ access_token: internalToken, user: sanitize(user) });
-  } catch (err) {
-    console.error('Firebase Auth Error:', err);
-    res.status(401).json({ error: 'Invalid or expired Firebase token' });
-  }
 });
 
 // POST /api/auth/login
@@ -373,6 +322,46 @@ router.post('/complete-profile', authenticate, validate(completeProfileSchema), 
       },
     });
     res.json(sanitize(user));
+  } catch (err) { next(err); }
+});
+
+// POST /api/auth/appwrite — exchange a verified Appwrite session (JWT) for our
+// app JWT. Appwrite handles the actual auth (email/password, email OTP, phone
+// OTP); we verify the token, upsert a local user, and issue our own JWT so the
+// rest of the API (RBAC, /api routes) is unchanged.
+router.post('/appwrite', async (req, res, next) => {
+  try {
+    const { jwt: appwriteJwt, role: reqRole, fullName } = req.body;
+    if (!appwriteJwt) return res.status(400).json({ error: 'Appwrite token is required' });
+    if (!isAppwriteConfigured()) return res.status(503).json({ error: 'Appwrite auth is not configured on the server' });
+
+    let awUser;
+    try {
+      awUser = await getAppwriteUserFromJWT(appwriteJwt);
+    } catch {
+      return res.status(401).json({ error: 'Invalid or expired Appwrite session' });
+    }
+
+    const email = awUser.email || null;
+    const phone = awUser.phone || null;
+    const displayName = (typeof fullName === 'string' && fullName.trim()) || awUser.name || 'User';
+    const role = ['consumer', 'partner'].includes(reqRole) ? reqRole : 'consumer';
+
+    // Link to an existing local account by Appwrite id, then email/phone;
+    // otherwise create one. Stores the Appwrite id (in firebaseUid) so the auth
+    // middleware can resolve this user on subsequent Appwrite-JWT requests.
+    let user = await prisma.user.findFirst({ where: { firebaseUid: awUser.$id } });
+    if (!user && email) user = await prisma.user.findUnique({ where: { email } });
+    if (!user && phone) user = await prisma.user.findFirst({ where: { phone } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: { firebaseUid: awUser.$id, email, phone, fullName: displayName, role },
+      });
+    } else if (!user.firebaseUid) {
+      user = await prisma.user.update({ where: { id: user.id }, data: { firebaseUid: awUser.$id } });
+    }
+
+    res.json({ access_token: signToken(user), user: sanitize(user) });
   } catch (err) { next(err); }
 });
 

@@ -28,7 +28,7 @@ export default function BookingInvoice() {
   return (
     <div className="min-h-screen bg-background font-inter pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-border px-5 pt-12 pb-4 sticky top-0 z-10">
+      <div className="bg-surface border-b border-border px-5 pt-12 pb-4 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
             <ArrowLeft className="h-4 w-4" />
@@ -52,7 +52,7 @@ export default function BookingInvoice() {
 
       <div className="px-5 pt-5 max-w-lg mx-auto">
         {/* Invoice Card */}
-        <div className="bg-white rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
 
           {/* Invoice Header */}
           <div className="bg-primary p-6">
@@ -166,7 +166,7 @@ export default function BookingInvoice() {
 
         {/* Request Refund Section */}
         {booking.status === 'completed' && (
-          <div className="mt-4 bg-white rounded-2xl border border-border p-4">
+          <div className="mt-4 bg-surface rounded-2xl border border-border p-4">
             <p className="text-sm font-bold mb-1">Need a Refund?</p>
             <p className="text-xs text-muted-foreground mb-3">If you are unsatisfied with the service, you may request a refund within 48 hours.</p>
             <button onClick={() => toast.info('Refund request form coming soon')}

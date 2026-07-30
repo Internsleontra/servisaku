@@ -42,15 +42,23 @@ export default function PartnerEarnings() {
 
   useEffect(() => {
     const load = async () => {
-      const me = await servisaku.auth.me();
-      setUser(me);
-      const [w, p, b] = await Promise.all([
-        servisaku.wallet.get(),
-        servisaku.entities.PayoutRecord.filter({ partner_email: me.email }, '-created_date', 100),
-        servisaku.entities.Booking.filter({ partner_email: me.email, status: 'completed' }, '-created_date', 100),
-      ]);
-      setWallet(w); setPayouts(p); setBookings(b);
-      setLoading(false);
+      try {
+        const me = await servisaku.auth.me();
+        setUser(me);
+        const [w, p, b] = await Promise.all([
+          servisaku.wallet.get(),
+          servisaku.entities.PayoutRecord.filter({ partner_email: me.email }, '-created_date', 100),
+          servisaku.entities.Booking.filter({ partner_email: me.email, status: 'completed' }, '-created_date', 100),
+        ]);
+        setWallet(w); setPayouts(p); setBookings(b);
+      } catch (err) {
+        // Any rejection here (403 "Partners only", network) previously skipped
+        // setLoading(false) entirely and the page span forever with no message.
+        console.error('[PartnerEarnings] failed to load wallet:', err);
+        toast.error(err?.message || 'Could not load your earnings');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -113,7 +121,7 @@ export default function PartnerEarnings() {
           <Button
             onClick={openWithdraw}
             disabled={loading || wallet.withdrawable <= 0}
-            className="mt-4 w-full h-11 rounded-xl bg-white text-brand font-bold hover:bg-white/90 disabled:opacity-60"
+            className="mt-4 w-full h-11 rounded-xl bg-surface text-brand font-bold hover:bg-white/90 disabled:opacity-60"
           >
             <ArrowDownToLine className="h-4 w-4 mr-2" /> Withdraw to bank
           </Button>

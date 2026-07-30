@@ -4,7 +4,7 @@ import { servisaku } from '@/api/servisakuClient';
 // ─── Badge Thresholds ──────────────────────────────────────────────────────
 export const BADGE_TIERS = {
   gold:   { min: 4.7, label: 'Gold',   emoji: '🥇', color: 'text-amber-500',  bg: 'bg-amber-50  border-amber-200' },
-  silver: { min: 4.3, label: 'Silver', emoji: '🥈', color: 'text-slate-500',  bg: 'bg-slate-50  border-slate-200' },
+  silver: { min: 4.3, label: 'Silver', emoji: '🥈', color: 'text-slate-500',  bg: 'bg-raised  border-hairline' },
   bronze: { min: 3.8, label: 'Bronze', emoji: '🥉', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
   none:   { min: 0,   label: null,     emoji: '',   color: '',                bg: '' },
 };

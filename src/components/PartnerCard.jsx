@@ -8,7 +8,7 @@ export default function PartnerCard({ partner, onSelect, selected }) {
   return (
     <button
       onClick={() => onSelect?.(partner)}
-      className={`w-full text-left bg-white rounded-3xl border-2 p-4 transition-all duration-200 ${
+      className={`w-full text-left bg-surface rounded-3xl border-2 p-4 transition-all duration-200 ${
         selected ? 'border-primary shadow-float scale-[1.01]' : 'border-border shadow-card hover:shadow-card-hover'
       }`}
     >

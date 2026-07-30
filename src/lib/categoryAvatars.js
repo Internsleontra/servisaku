@@ -18,9 +18,9 @@ export const CATEGORY_AVATAR = {
 
 // Soft pastel tile background per seeded accent.
 export const CATEGORY_TINT = {
-  pink: 'bg-pink-50', slate: 'bg-slate-100', emerald: 'bg-emerald-50', lime: 'bg-lime-50',
+  pink: 'bg-pink-50', slate: 'bg-raised', emerald: 'bg-emerald-50', lime: 'bg-lime-50',
   sky: 'bg-sky-50', orange: 'bg-orange-50', amber: 'bg-amber-50', blue: 'bg-blue-50',
-  stone: 'bg-stone-100', violet: 'bg-violet-50', teal: 'bg-teal-50', red: 'bg-red-50',
+  stone: 'bg-raised', violet: 'bg-violet-50', teal: 'bg-teal-50', red: 'bg-red-50',
 };
 
 export const avatarFor = (slug) => CATEGORY_AVATAR[slug] || null;

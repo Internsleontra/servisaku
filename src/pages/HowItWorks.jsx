@@ -140,7 +140,7 @@ export default function HowItWorks() {
                 </li>
               ))}
             </ul>
-            <a href="/explore" className="inline-block bg-white text-brand px-8 py-3.5 rounded-xl font-bold hover:bg-brand-tint transition-colors shadow-sm">
+            <a href="/explore" className="inline-block bg-surface text-brand px-8 py-3.5 rounded-xl font-bold hover:bg-brand-tint transition-colors shadow-sm">
               {cta.cta}
             </a>
           </div>

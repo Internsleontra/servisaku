@@ -21,7 +21,7 @@ export default function PartnerAnalytics({ bookings, users, reviews }) {
           { label: 'Avg Completion', value: `${partners.length > 0 ? Math.round(partners.reduce((s, p) => s + p.completionRate, 0) / partners.length) : 0}%` },
           { label: 'At Risk', value: atRisk.length, color: atRisk.length > 0 ? 'text-red-500' : 'text-foreground' },
         ].map((c, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-border p-3 text-center">
+          <div key={i} className="bg-surface rounded-2xl border border-border p-3 text-center">
             <p className={`text-lg font-bold ${c.color || ''}`}>{c.value}</p>
             <p className="text-[9px] text-muted-foreground">{c.label}</p>
           </div>
@@ -29,7 +29,7 @@ export default function PartnerAnalytics({ bookings, users, reviews }) {
       </div>
 
       {/* Top Partners Leaderboard */}
-      <div className="bg-white rounded-2xl border border-border p-4">
+      <div className="bg-surface rounded-2xl border border-border p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold">Partner Leaderboard</h3>
           <button onClick={() => exportToCSV(topPartners, 'partner_performance')}
@@ -69,7 +69,7 @@ export default function PartnerAnalytics({ bookings, users, reviews }) {
       </div>
 
       {/* Rating Distribution */}
-      <div className="bg-white rounded-2xl border border-border p-4">
+      <div className="bg-surface rounded-2xl border border-border p-4">
         <h3 className="text-sm font-bold mb-3">Rating Distribution</h3>
         <div className="space-y-2">
           {ratingDist.reverse().map(r => (
@@ -92,7 +92,7 @@ export default function PartnerAnalytics({ bookings, users, reviews }) {
           <h3 className="text-sm font-bold text-red-700 mb-2">⚠️ At-Risk Partners ({atRisk.length})</h3>
           <div className="space-y-1.5">
             {atRisk.slice(0, 5).map(p => (
-              <div key={p.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2">
+              <div key={p.id} className="flex items-center justify-between bg-surface rounded-xl px-3 py-2">
                 <p className="text-xs font-semibold truncate">{p.name || p.email}</p>
                 <div className="flex gap-2 text-[10px] shrink-0 ml-2">
                   {p.avgRating !== null && p.avgRating < 3.5 && <span className="text-red-500 font-semibold">{p.avgRating}★</span>}

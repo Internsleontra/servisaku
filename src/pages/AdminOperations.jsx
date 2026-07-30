@@ -120,7 +120,7 @@ export default function AdminOperations() {
         <div className="flex gap-1.5">
           {['map', 'jobs', 'partners'].map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${tab === t ? 'bg-primary text-white' : 'bg-white border border-border text-muted-foreground'}`}>
+              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all ${tab === t ? 'bg-primary text-white' : 'bg-surface border border-border text-muted-foreground'}`}>
               {t === 'jobs' ? `Jobs (${activeBookings.length})` : t === 'partners' ? `Partners (${onlinePartners.length})` : 'Live Map'}
             </button>
           ))}
@@ -153,12 +153,12 @@ export default function AdminOperations() {
         {tab === 'jobs' && (
           <div className="space-y-3">
             {activeBookings.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-3xl border border-border">
+              <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                 <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No active jobs right now</p>
               </div>
             ) : activeBookings.map(b => (
-              <div key={b.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+              <div key={b.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="font-semibold text-sm">{b.service_type}</p>
@@ -207,12 +207,12 @@ export default function AdminOperations() {
               </div>
             </div>
             {onlinePartners.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-3xl border border-border">
+              <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                 <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No partners online right now</p>
               </div>
             ) : onlinePartners.map(p => (
-              <div key={p.id} className="flex items-center gap-3 bg-white rounded-2xl border border-border p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              <div key={p.id} className="flex items-center gap-3 bg-surface rounded-2xl border border-border p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                 <div className="relative w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <span className="font-bold text-primary">{p.partner_name?.charAt(0) || '?'}</span>
                   <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${p.is_on_job ? 'bg-amber-400' : 'bg-emerald-400'}`} />

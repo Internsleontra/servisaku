@@ -5,7 +5,7 @@ import { buildConsumerAnalytics, exportToCSV } from '@/lib/analyticsEngine';
 const COLORS = ['hsl(151,58%,20%)', '#6366f1', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
 
 const TT = ({ active, payload, label }) => active && payload?.length ? (
-  <div className="bg-white border border-border rounded-xl shadow-lg px-3 py-2 text-xs">
+  <div className="bg-surface border border-border rounded-xl shadow-lg px-3 py-2 text-xs">
     <p className="font-bold mb-1">{label}</p>
     {payload.map((p, i) => <p key={i} style={{ color: p.color }}>{p.name}: {p.value}</p>)}
   </div>
@@ -26,7 +26,7 @@ export default function ConsumerAnalytics({ bookings, users }) {
       {/* Segments */}
       <div className="grid grid-cols-3 gap-3">
         {segments.map((s, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-border p-3 text-center">
+          <div key={i} className="bg-surface rounded-2xl border border-border p-3 text-center">
             <p className={`text-lg font-bold ${s.color.split(' ')[1]}`}>{s.count}</p>
             <p className="text-[10px] font-semibold">{s.label}</p>
             <p className="text-[9px] text-muted-foreground">{s.desc}</p>
@@ -36,7 +36,7 @@ export default function ConsumerAnalytics({ bookings, users }) {
 
       {/* Geographic distribution */}
       {topCities.length > 0 && (
-        <div className="bg-white rounded-2xl border border-border p-4">
+        <div className="bg-surface rounded-2xl border border-border p-4">
           <h3 className="text-sm font-bold mb-1">Bookings by City</h3>
           <p className="text-xs text-muted-foreground mb-4">Geographic demand distribution</p>
           <ResponsiveContainer width="100%" height={150}>
@@ -52,7 +52,7 @@ export default function ConsumerAnalytics({ bookings, users }) {
       )}
 
       {/* Top Consumers by LTV */}
-      <div className="bg-white rounded-2xl border border-border p-4">
+      <div className="bg-surface rounded-2xl border border-border p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="text-sm font-bold">Top Consumers by LTV</h3>

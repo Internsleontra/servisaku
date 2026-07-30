@@ -81,7 +81,7 @@ export default function PartnerVerification() {
             <span className="text-white font-bold text-sm">{data.progress}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
-            <div className="h-full rounded-full bg-white transition-all" style={{ width: `${data.progress}%` }} />
+            <div className="h-full rounded-full bg-surface transition-all" style={{ width: `${data.progress}%` }} />
           </div>
           <div className={`mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${data.activated ? 'bg-emerald-500/20 text-white' : 'bg-white/10 text-white/80'}`}>
             <ShieldCheck className="h-4 w-4" />

@@ -23,7 +23,7 @@ export default function NotificationBell({ userEmail }) {
   return (
     <div className="relative">
       <button onClick={() => { setOpen(!open); if (!open && unreadCount > 0) markAllRead(); }}
-        className="relative w-9 h-9 rounded-full bg-white border border-border shadow-sm flex items-center justify-center">
+        className="relative w-9 h-9 rounded-full bg-surface border border-border shadow-sm flex items-center justify-center">
         <Bell className="h-4 w-4 text-primary" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-background">
@@ -33,7 +33,7 @@ export default function NotificationBell({ userEmail }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-80 bg-white rounded-3xl border border-border shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-50 overflow-hidden">
+        <div className="absolute right-0 top-12 w-80 bg-surface rounded-3xl border border-border shadow-[0_8px_40px_rgba(0,0,0,0.12)] z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <p className="font-bold text-sm">Notifications</p>
             <div className="flex gap-2">

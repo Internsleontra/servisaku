@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
       setAppPublicSettings({ public_settings: { auth_type: 'email' } });
 
-      const hasToken = !!localStorage.getItem('auth_token') || !!localStorage.getItem('mock_active_user_id');
+      const hasToken = !!localStorage.getItem('auth_token') || !!localStorage.getItem('appwrite_session') || !!localStorage.getItem('mock_active_user_id');
       if (appParams.token || hasToken) {
         await checkUserAuth();
       } else {
@@ -53,12 +53,25 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
-      // Token expired / invalid — clear it and treat as logged out (not an error)
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('mock_active_user_id');
-      localStorage.removeItem('mock_auth_email');
+      // Only a genuine auth rejection means the session is bad. A 429 (rate
+      // limit) or a 5xx/network blip used to land here too and silently signed
+      // the user out mid-login with no message on screen — which is what made
+      // "the OTP arrives but login never completes" impossible to diagnose.
+      const status = error?.status;
+      const sessionRejected = status === 401 || status === 403;
+
+      if (sessionRejected) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('appwrite_session');
+        localStorage.removeItem('mock_active_user_id');
+        localStorage.removeItem('mock_auth_email');
+        setIsAuthenticated(false);
+      } else {
+        // Keep the session; surface the real reason instead of hiding it.
+        console.error('[auth] session check failed, keeping session:', status, error?.message);
+        setAuthError({ type: 'unknown', message: error?.message || 'Could not verify your session' });
+      }
       setIsLoadingAuth(false);
-      setIsAuthenticated(false);
       setAuthChecked(true);
     }
   };
@@ -67,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('appwrite_session');
     localStorage.removeItem('mock_active_user_id');
     localStorage.removeItem('mock_auth_email');
     if (shouldRedirect) window.location.href = '/';

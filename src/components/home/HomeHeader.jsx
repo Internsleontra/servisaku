@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export default function HomeHeader({ user, loading }) {
   return (
-    <header className="w-full bg-white border-b border-hairline py-4 px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
+    <header className="w-full bg-surface border-b border-hairline py-4 px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
       
       {/* Left: Logo */}
       <Link to="/" className="flex items-center gap-2">

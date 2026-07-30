@@ -145,7 +145,7 @@ export default function AdminQualityCenter() {
             { id: 'fraud', label: `Fraud (${suspiciousFlags.length})` },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${tab === t.id ? 'bg-primary text-white' : 'bg-white border border-border text-muted-foreground'}`}>
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${tab === t.id ? 'bg-primary text-white' : 'bg-surface border border-border text-muted-foreground'}`}>
               {t.label}
             </button>
           ))}
@@ -159,12 +159,12 @@ export default function AdminQualityCenter() {
             {tab === 'tickets' && (
               <div className="space-y-3">
                 {tickets.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-3xl border border-border">
+                  <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                     <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-2" />
                     <p className="text-sm font-semibold">No quality tickets</p>
                   </div>
                 ) : tickets.map(ticket => (
-                  <div key={ticket.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+                  <div key={ticket.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -215,12 +215,12 @@ export default function AdminQualityCenter() {
             {tab === 'moderation' && (
               <div className="space-y-3">
                 {pendingModeration.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-3xl border border-border">
+                  <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                     <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-2" />
                     <p className="text-sm font-semibold">Moderation queue is clear</p>
                   </div>
                 ) : pendingModeration.map(r => (
-                  <div key={r.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+                  <div key={r.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-1 mb-1">
@@ -268,7 +268,7 @@ export default function AdminQualityCenter() {
                   </div>
                 )}
                 {partnerScores.filter(p => p.totalReviews > 0).map(p => (
-                  <div key={p.id} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+                  <div key={p.id} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.avg < 3.5 ? 'bg-red-50' : 'bg-primary/10'}`}>
                         <span className={`font-bold ${p.avg < 3.5 ? 'text-red-600' : 'text-primary'}`}>{p.full_name?.charAt(0)}</span>
@@ -322,7 +322,7 @@ export default function AdminQualityCenter() {
             {tab === 'fraud' && (
               <div className="space-y-3">
                 {suspiciousFlags.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-3xl border border-border">
+                  <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                     <Shield className="h-10 w-10 text-emerald-500 mx-auto mb-2" />
                     <p className="text-sm font-semibold">No suspicious patterns detected</p>
                   </div>
@@ -338,7 +338,7 @@ export default function AdminQualityCenter() {
                     </div>
                   </div>
                 ))}
-                <div className="bg-white rounded-2xl border border-border p-4">
+                <div className="bg-surface rounded-2xl border border-border p-4">
                   <p className="text-sm font-bold mb-1">Anti-Spam Rules Active</p>
                   {['Duplicate consumer–partner review detection', 'Rating spike analysis (7-day window)', 'Anonymous review frequency limit', 'Single IP multi-review detection (requires backend)'].map(r => (
                     <div key={r} className="flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0">

@@ -85,20 +85,20 @@ export default function Home() {
 
   return (
     <motion.div
-      className="min-h-screen bg-[#fbfaf7] font-inter text-ink"
+      className="min-h-screen bg-[#fbfaf7] font-inter text-ink dark:bg-bg"
       {...safeMotion(variants.fadeUp)}
     >
-      <section className="relative overflow-hidden bg-[#f8f1e9] border-b border-hairline/50">
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbfaf7] to-transparent" />
+      <section className="relative overflow-hidden bg-[#f8f1e9] border-b border-hairline/50 dark:bg-surface">
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#fbfaf7] to-transparent dark:from-bg" />
 
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-5 pb-10 pt-8 md:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:pb-14 lg:pt-12">
           <div className="relative z-10 flex flex-col justify-center">
             <div className="mb-5 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/75 px-3 py-1.5 text-xs font-bold text-ink shadow-e1">
+              <span className="inline-flex items-center gap-2 rounded-full border border-hairline/70 bg-surface/75 px-3 py-1.5 text-xs font-bold text-ink shadow-e1">
                 <Heart className="size-3.5 fill-brand text-brand" />
                 {t('Malaysia-ready home services')}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/75 px-3 py-1.5 text-xs font-bold text-ink-secondary shadow-e1">
+              <span className="inline-flex items-center gap-2 rounded-full border border-hairline/70 bg-surface/75 px-3 py-1.5 text-xs font-bold text-ink-secondary shadow-e1">
                 <MapPin className="size-3.5 text-success" />
                 Klang Valley
               </span>
@@ -121,7 +121,7 @@ export default function Home() {
                   key={city}
                   type="button"
                   onClick={() => navigate(`/explore?loc=${encodeURIComponent(city)}`)}
-                  className="shrink-0 rounded-full border border-hairline/60 bg-white px-3.5 py-2 text-xs font-bold text-ink-secondary shadow-e1 transition-colors hover:border-brand/40 hover:text-brand"
+                  className="shrink-0 rounded-full border border-hairline/60 bg-surface px-3.5 py-2 text-xs font-bold text-ink-secondary shadow-e1 transition-colors hover:border-brand/40 hover:text-brand"
                 >
                   {city}
                 </button>
@@ -130,7 +130,7 @@ export default function Home() {
 
             <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {bookingSteps.map((step) => (
-                <div key={step.label} className="rounded-lg border border-white/80 bg-white/75 p-3 shadow-e1 backdrop-blur">
+                <div key={step.label} className="rounded-lg border border-hairline/80 bg-surface/75 p-3 shadow-e1 backdrop-blur">
                   <step.icon className="mb-3 size-5 text-brand" />
                   <p className="text-sm font-bold leading-tight text-ink">{t(step.label)}</p>
                   <p className="mt-1 text-[11px] font-semibold text-ink-tertiary">{t(step.sub)}</p>
@@ -140,7 +140,7 @@ export default function Home() {
           </div>
 
           <div className="relative z-10 min-h-[430px] lg:min-h-[560px]">
-            <div className="absolute right-0 top-0 h-full w-full overflow-hidden rounded-lg border border-white/70 bg-white shadow-e3">
+            <div className="absolute right-0 top-0 h-full w-full overflow-hidden rounded-lg border border-white/70 bg-surface shadow-e3">
               <img
                 src="/img/hero-servisaku-pro.png"
                 alt="ServisAku professional ready for home service bookings"
@@ -150,7 +150,7 @@ export default function Home() {
             </div>
 
             <div className="absolute bottom-5 left-5 right-5 grid gap-3 sm:grid-cols-[1fr_auto]">
-              <div className="rounded-lg bg-white p-4 shadow-float">
+              <div className="rounded-lg bg-surface p-4 shadow-float">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wide text-ink-tertiary">{t('Today in Kuala Lumpur')}</span>
                   <span className="rounded-full bg-success-tint px-2.5 py-1 text-xs font-bold text-success">{t('Live')}</span>
@@ -171,7 +171,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="hidden w-44 rounded-lg bg-ink p-4 text-white shadow-float sm:block">
+              <div className="hidden w-44 rounded-lg bg-ink dark:bg-raised p-4 text-white shadow-float sm:block">
                 <div className="mb-5 flex items-center justify-between">
                   <ShieldCheck className="size-6 text-brand" />
                   <span className="text-xs font-bold text-white/60">SST ready</span>
@@ -210,7 +210,7 @@ export default function Home() {
                   key={s.slug}
                   type="button"
                   onClick={() => navigate(`/book-service/${s.slug}`)}
-                  className="group grid grid-cols-[112px_1fr] overflow-hidden rounded-lg border border-hairline/70 bg-white text-left shadow-e1 transition-all hover:-translate-y-0.5 hover:shadow-e3 sm:grid-cols-[140px_1fr]"
+                  className="group grid grid-cols-[112px_1fr] overflow-hidden rounded-lg border border-hairline/70 bg-surface text-left shadow-e1 transition-all hover:-translate-y-0.5 hover:shadow-e3 sm:grid-cols-[140px_1fr]"
                 >
                   <img
                     src={serviceImageFor(s.slug) || '/img/cleaning-card.jpg'}
@@ -233,7 +233,7 @@ export default function Home() {
                   key={bundle.title}
                   type="button"
                   onClick={() => navigate('/explore')}
-                  className="group grid grid-cols-[112px_1fr] overflow-hidden rounded-lg border border-hairline/70 bg-white text-left shadow-e1 transition-all hover:-translate-y-0.5 hover:shadow-e3 sm:grid-cols-[140px_1fr]"
+                  className="group grid grid-cols-[112px_1fr] overflow-hidden rounded-lg border border-hairline/70 bg-surface text-left shadow-e1 transition-all hover:-translate-y-0.5 hover:shadow-e3 sm:grid-cols-[140px_1fr]"
                 >
                   <img src={bundle.image} alt={bundle.title} className="h-full min-h-36 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="flex min-w-0 flex-col p-4">
@@ -268,7 +268,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-5 rounded-lg bg-ink p-5 text-white md:grid-cols-[1fr_auto] md:p-7">
+        <section className="grid gap-5 rounded-lg bg-ink dark:bg-raised p-5 text-white md:grid-cols-[1fr_auto] md:p-7">
           <div>
             <div className="mb-3 flex items-center gap-2 text-sm font-bold text-white/70">
               <Bell className="size-4 text-brand" />
@@ -281,7 +281,7 @@ export default function Home() {
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-ink transition-colors hover:bg-brand hover:text-white"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-surface dark:bg-ink px-5 text-sm font-bold text-ink dark:text-ink-inverse transition-colors hover:bg-brand hover:text-white dark:hover:bg-brand dark:hover:text-white"
           >
             {t('Start booking')} <ArrowRight className="size-4" />
           </button>

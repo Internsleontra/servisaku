@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield, Lock, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
-import { PAYMENT_METHODS, calcPriceBreakdown, createEscrowEntry, formatRM } from '@/lib/paymentEngine';
+import { PAYMENT_METHODS, calcPriceBreakdown, formatRM } from '@/lib/paymentEngine';
 import { generateIdempotencyKey, markPaymentSubmitted, clearPaymentRecord, auditLog } from '@/lib/security';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -48,44 +48,21 @@ export default function PaymentCheckout() {
     setPayState('processing');
     setProcessing(true);
 
-    // Simulate payment gateway (2s)
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Simulate 95% success rate
-    const success = Math.random() > 0.05;
-
-    if (success) {
-      const payment = await servisaku.entities.Payment.create({
-        booking_id: booking?.id || 'demo',
-        consumer_email: booking?.consumer_email || 'demo@test.com',
-        amount: breakdown.total,
-        currency: 'MYR',
-        method,
-        status: 'paid',
-        gateway: method === 'visa' ? 'stripe' : 'billplz',
-        gateway_transaction_id: `TXN${Date.now()}`,
-        platform_fee: breakdown.total * 0.2,
-        partner_payout: breakdown.total * 0.8,
-        payout_status: 'pending',
-      });
-
-      if (booking) {
-        await servisaku.entities.Booking.update(booking.id, {
-          payment_status: 'escrowed',
-          payment_method: method,
-        });
-        await createEscrowEntry(booking, payment.id);
-      }
-
-      auditLog('PAYMENT_SUCCESS', { method, amount: breakdown.total, bookingId: booking?.id });
-      setPayState('success');
-    } else {
-      // Clear idempotency so user can retry a genuinely failed payment
+    try {
+      if (!booking?.id) throw new Error('No booking selected to pay for');
+      // Create a Billplz bill on the backend and hand off to its hosted checkout.
+      // Payment/escrow are confirmed server-side when Billplz redirects back to
+      // /payment/return (and via webhook in production).
+      const payment = await servisaku.payments.create(booking.id, method);
+      if (!payment?.checkout_url) throw new Error('Could not start payment');
+      window.location.href = payment.checkout_url;
+    } catch (e) {
       clearPaymentRecord(booking?.id || 'demo', breakdown.total);
-      auditLog('PAYMENT_FAILED', { method, amount: breakdown.total });
+      auditLog('PAYMENT_FAILED', { method, amount: breakdown.total, error: e.message });
+      toast.error(e.message || 'Payment could not be started');
       setPayState('failed');
+      setProcessing(false);
     }
-    setProcessing(false);
   };
 
   if (payState === 'success') return (
@@ -96,7 +73,7 @@ export default function PaymentCheckout() {
       <h2 className="text-2xl font-bold mb-1">Payment Successful</h2>
       <p className="text-sm text-muted-foreground mb-1">{formatRM(breakdown.total)} paid via {PAYMENT_METHODS.find(m => m.id === method)?.label}</p>
       <p className="text-xs text-muted-foreground mb-6">Funds held in escrow until service completion</p>
-      <div className="bg-white rounded-2xl border border-border p-4 w-full max-w-xs mb-6 text-left space-y-2 text-xs">
+      <div className="bg-surface rounded-2xl border border-border p-4 w-full max-w-xs mb-6 text-left space-y-2 text-xs">
         <div className="flex justify-between"><span className="text-muted-foreground">Amount paid</span><span className="font-bold">{formatRM(breakdown.total)}</span></div>
         <div className="flex justify-between"><span className="text-muted-foreground">Transaction ID</span><span className="font-mono text-[10px]">TXN{Date.now().toString().slice(-8)}</span></div>
         <div className="flex justify-between"><span className="text-muted-foreground">Escrow release</span><span className="font-medium">48h after completion</span></div>
@@ -125,7 +102,7 @@ export default function PaymentCheckout() {
 
   return (
     <div className="min-h-screen bg-background font-inter pb-36">
-      <div className="sticky top-0 z-20 bg-white border-b border-border px-5 pt-12 pb-4">
+      <div className="sticky top-0 z-20 bg-surface border-b border-border px-5 pt-12 pb-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
             <ArrowLeft className="h-4 w-4" />
@@ -143,7 +120,7 @@ export default function PaymentCheckout() {
       <div className="px-5 pt-5 space-y-5">
 
         {/* Order Summary */}
-        <div className="bg-white rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
+        <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3">Order Summary</p>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">{booking?.service_type || 'Service'} ({booking?.package_name || 'Basic'})</span><span>{formatRM(raw)}</span></div>
@@ -167,14 +144,14 @@ export default function PaymentCheckout() {
           <div className="space-y-2">
             {PAYMENT_METHODS.map(pm => (
               <button key={pm.id} onClick={() => setMethod(pm.id)}
-                className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${method === pm.id ? 'border-primary bg-accent' : 'border-border bg-white'}`}>
+                className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${method === pm.id ? 'border-primary bg-accent' : 'border-border bg-surface'}`}>
                 <span className="text-xl w-7 text-center">{pm.icon}</span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold">{pm.label}</p>
                   <p className="text-xs text-muted-foreground">{pm.sub}</p>
                 </div>
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${method === pm.id ? 'border-primary bg-primary' : 'border-border'}`}>
-                  {method === pm.id && <div className="w-2 h-2 bg-white rounded-full" />}
+                  {method === pm.id && <div className="w-2 h-2 bg-surface rounded-full" />}
                 </div>
               </button>
             ))}
@@ -188,7 +165,7 @@ export default function PaymentCheckout() {
             <div className="grid grid-cols-2 gap-2">
               {BANKS.map(b => (
                 <button key={b} onClick={() => setSelectedBank(b)}
-                  className={`text-xs py-3 px-3 rounded-xl border-2 font-medium transition-all text-left ${selectedBank === b ? 'border-primary bg-accent text-primary' : 'border-border bg-white text-muted-foreground'}`}>
+                  className={`text-xs py-3 px-3 rounded-xl border-2 font-medium transition-all text-left ${selectedBank === b ? 'border-primary bg-accent text-primary' : 'border-border bg-surface text-muted-foreground'}`}>
                   {b}
                 </button>
               ))}
@@ -201,14 +178,14 @@ export default function PaymentCheckout() {
           <div className="space-y-3">
             <p className="text-sm font-bold">Card Details</p>
             <input value={cardNo} onChange={e => setCardNo(e.target.value.replace(/\D/g,'').slice(0,16))}
-              placeholder="Card Number" className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
+              placeholder="Card Number" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
             <input value={cardName} onChange={e => setCardName(e.target.value)}
-              placeholder="Cardholder Name" className="w-full bg-white border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-primary/20" />
+              placeholder="Cardholder Name" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-primary/20" />
             <div className="grid grid-cols-2 gap-3">
               <input value={expiry} onChange={e => setExpiry(e.target.value)} placeholder="MM/YY"
-                className="bg-white border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
+                className="bg-surface border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
               <input value={cvv} onChange={e => setCvv(e.target.value.slice(0,3))} placeholder="CVV"
-                type="password" className="bg-white border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
+                type="password" className="bg-surface border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3" /> PCI DSS compliant — card data never stored
@@ -218,7 +195,7 @@ export default function PaymentCheckout() {
 
         {/* DuitNow QR */}
         {method === 'duitnow' && (
-          <div className="flex flex-col items-center bg-white rounded-3xl border border-border p-6">
+          <div className="flex flex-col items-center bg-surface rounded-3xl border border-border p-6">
             <div className="w-40 h-40 bg-muted rounded-2xl flex flex-col items-center justify-center mb-3">
               <span className="text-5xl mb-1">🇲🇾</span>
               <p className="text-xs font-bold text-muted-foreground">DuitNow QR</p>

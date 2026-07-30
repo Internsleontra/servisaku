@@ -19,7 +19,7 @@ export default function KPIStrip({ kpis, loading }) {
   if (loading) return (
     <div className="grid grid-cols-2 gap-3">
       {[...Array(8)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-border p-4 animate-pulse">
+        <div key={i} className="bg-surface rounded-2xl border border-border p-4 animate-pulse">
           <div className="h-3 bg-muted rounded w-2/3 mb-2" />
           <div className="h-6 bg-muted rounded w-1/2 mb-1" />
           <div className="h-3 bg-muted rounded w-1/3" />
@@ -37,14 +37,14 @@ export default function KPIStrip({ kpis, loading }) {
     { label: 'Active Partners', value: kpis.activePartners || 0, sub: `of ${kpis.totalPartners || 0} total`, color: 'bg-indigo-50 text-indigo-700' },
     { label: 'Completion Rate', value: `${kpis.completionRate || 0}%`, color: kpis.completionRate >= 80 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600' },
     { label: 'Repeat Rate', value: `${kpis.repeatRate || 0}%`, color: 'bg-teal-50 text-teal-700' },
-    { label: 'Cancellation Rate', value: `${kpis.cancellationRate || 0}%`, color: kpis.cancellationRate > 15 ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-700' },
+    { label: 'Cancellation Rate', value: `${kpis.cancellationRate || 0}%`, color: kpis.cancellationRate > 15 ? 'bg-red-50 text-red-600' : 'bg-raised text-ink-secondary' },
     { label: 'Avg Rating', value: kpis.avgRating ? `${kpis.avgRating}★` : 'N/A', color: 'bg-amber-50 text-amber-700' },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-3">
       {cards.map((c, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.05)] p-3.5">
+        <div key={i} className="bg-surface rounded-2xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.05)] p-3.5">
           <div className={`inline-flex items-center justify-center w-8 h-8 rounded-xl ${c.color} mb-2`}>
             <span className="text-base">{['💰','🏦','📋','🎯','👥','🔧','✅','🔁','❌','⭐'][i]}</span>
           </div>

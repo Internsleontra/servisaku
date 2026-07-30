@@ -84,7 +84,7 @@ export default function ForBusiness() {
         </div>
 
         {/* CTA */}
-        <div className="bg-ink text-white rounded-3xl p-12 text-center shadow-float">
+        <div className="bg-ink dark:bg-raised text-white rounded-3xl p-12 text-center shadow-float">
           <h2 className="text-3xl font-extrabold mb-4">Ready to boost your earnings?</h2>
           <p className="text-ink-tertiary mb-8 max-w-xl mx-auto font-medium">Signing up is free and only takes a few minutes. We'll review your application and get you on board.</p>
           <a href="/partner/onboarding" className="inline-block bg-brand text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-brand/90 transition-colors shadow-lg">

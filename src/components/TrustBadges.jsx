@@ -74,7 +74,7 @@ export function PartnerTrustCard({ partner }) {
   const years = partner.years_experience || 0;
 
   return (
-    <div className="bg-white border border-border rounded-3xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+    <div className="bg-surface border border-border rounded-3xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
           {partner.full_name?.charAt(0) || '?'}

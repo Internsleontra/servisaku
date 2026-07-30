@@ -18,9 +18,9 @@ import { useTranslation } from '@/lib/useTranslation';
 // icon_key / accent (seeded) → presentation, + curated images where slugs match.
 const ICONS = { Sparkles, Wind, Droplet, Droplets, Zap, Paintbrush, PaintRoller, Bug, Scissors, Wrench, Hammer, Drill, Clock, Home };
 const TONES = {
-  pink: 'bg-pink-50 text-pink-600', slate: 'bg-slate-100 text-slate-600', emerald: 'bg-emerald-50 text-success',
+  pink: 'bg-pink-50 text-pink-600', slate: 'bg-raised text-ink-secondary', emerald: 'bg-emerald-50 text-success',
   lime: 'bg-lime-50 text-lime-600', sky: 'bg-sky-50 text-sky-600', orange: 'bg-orange-50 text-brand',
-  amber: 'bg-amber-50 text-warning', blue: 'bg-blue-50 text-blue-600', stone: 'bg-stone-100 text-stone-600',
+  amber: 'bg-amber-50 text-warning', blue: 'bg-blue-50 text-blue-600', stone: 'bg-raised text-ink-secondary',
   violet: 'bg-violet-50 text-violet-600', teal: 'bg-teal-50 text-teal-600', red: 'bg-red-50 text-danger',
 };
 const IMAGES = {
@@ -123,9 +123,9 @@ export default function Explore() {
   const staggerItem = safeMotion(variants.staggerItem);
 
   return (
-    <div className="font-inter pb-6 bg-[#fbfaf7] min-h-screen">
+    <div className="font-inter pb-6 bg-[#fbfaf7] min-h-screen dark:bg-bg">
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 border-b border-hairline/60 bg-[#fbfaf7]/90 px-5 pb-4 pt-7 backdrop-blur-xl lg:px-8 lg:pt-5">
+      <div className="sticky top-0 z-20 border-b border-hairline/60 bg-[#fbfaf7]/90 px-5 pb-4 pt-7 backdrop-blur-xl lg:px-8 lg:pt-5 dark:bg-bg/90">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t('Explore')}</p>
@@ -134,7 +134,7 @@ export default function Explore() {
           <button
             type="button"
             onClick={() => setViewMode(v => (v === 'list' ? 'grid' : 'list'))}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline/60 bg-white text-ink-secondary shadow-e1 transition-colors hover:bg-raised"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline/60 bg-surface text-ink-secondary shadow-e1 transition-colors hover:bg-raised"
             aria-label={viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'}
           >
             {viewMode === 'list' ? (
@@ -153,7 +153,7 @@ export default function Explore() {
               placeholder={lang === 'ms' ? 'Cari pembersihan, AC, paip...' : 'Search cleaning, AC, plumber...'}
               value={query}
               onChange={handleQueryChange}
-              className="w-full rounded-lg border border-hairline/60 bg-white py-3.5 pl-10 pr-4 text-sm font-semibold text-ink shadow-e1 outline-none ring-brand/20 placeholder:text-ink-tertiary focus:ring-2"
+              className="w-full rounded-lg border border-hairline/60 bg-surface py-3.5 pl-10 pr-4 text-sm font-semibold text-ink shadow-e1 outline-none ring-brand/20 placeholder:text-ink-tertiary focus:ring-2"
             />
           </div>
           <div className="relative">
@@ -162,11 +162,11 @@ export default function Explore() {
               type="text"
               value={location}
               onChange={handleLocationChange}
-              className="w-full rounded-lg border border-hairline/60 bg-white py-3.5 pl-10 pr-4 text-sm font-semibold text-ink shadow-e1 outline-none ring-brand/20 placeholder:text-ink-tertiary focus:ring-2"
+              className="w-full rounded-lg border border-hairline/60 bg-surface py-3.5 pl-10 pr-4 text-sm font-semibold text-ink shadow-e1 outline-none ring-brand/20 placeholder:text-ink-tertiary focus:ring-2"
               placeholder="Kuala Lumpur"
             />
           </div>
-          <button className="hidden h-full items-center justify-center gap-2 rounded-lg border border-hairline/60 bg-white px-4 text-sm font-bold text-ink-secondary shadow-e1 lg:flex">
+          <button className="hidden h-full items-center justify-center gap-2 rounded-lg border border-hairline/60 bg-surface px-4 text-sm font-bold text-ink-secondary shadow-e1 lg:flex">
             <SlidersHorizontal className="h-4 w-4" />
             {t('Filters')}
           </button>
@@ -208,7 +208,7 @@ export default function Explore() {
                 <motion.div key={s.id} variants={staggerItem} whileHover={variants.pressable.whileHover} whileTap={variants.pressable.whileTap}>
                   <Link
                     to={s.href}
-                    className="group flex items-center gap-4 rounded-lg border border-hairline/70 bg-white p-4 shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-e3"
+                    className="group flex items-center gap-4 rounded-lg border border-hairline/70 bg-surface p-4 shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-e3"
                   >
                     <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg sm:h-28 sm:w-28">
                       {s.image ? (
@@ -265,7 +265,7 @@ export default function Explore() {
                 <motion.div key={s.id} variants={staggerItem} whileHover={variants.pressable.whileHover} whileTap={variants.pressable.whileTap} className="h-full">
                   <Link
                     to={s.href}
-                    className="group flex h-full flex-col overflow-hidden rounded-lg border border-hairline/70 bg-white shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-e3"
+                    className="group flex h-full flex-col overflow-hidden rounded-lg border border-hairline/70 bg-surface shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-e3"
                   >
                     {s.image ? (
                       <div className="w-full aspect-[4/3] bg-raised overflow-hidden relative">

@@ -34,7 +34,7 @@ export default function ReviewCard({ review, _showPartner = false, currentUserEm
   if (!review.is_visible) return null;
 
   return (
-    <div className="bg-white border border-border rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="bg-surface border border-border rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2.5">

@@ -9,7 +9,7 @@ function Bone({ className }) {
 
 export function CardSkeleton({ lines = 2 }) {
   return (
-    <div className="bg-white rounded-2xl border border-border p-4 space-y-2.5">
+    <div className="bg-surface rounded-2xl border border-border p-4 space-y-2.5">
       <div className="flex items-center gap-3">
         <Bone className="w-11 h-11 rounded-xl shrink-0" />
         <div className="flex-1 space-y-1.5">
@@ -28,7 +28,7 @@ export function KPISkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-border p-4 space-y-2">
+        <div key={i} className="bg-surface rounded-2xl border border-border p-4 space-y-2">
           <Bone className="w-9 h-9 rounded-xl" />
           <Bone className="h-5 w-1/2" />
           <Bone className="h-3 w-2/3" />
@@ -48,7 +48,7 @@ export function ListSkeleton({ count = 4 }) {
 
 export function TableSkeleton({ rows = 5 }) {
   return (
-    <div className="bg-white rounded-2xl border border-border overflow-hidden">
+    <div className="bg-surface rounded-2xl border border-border overflow-hidden">
       <div className="bg-muted/40 px-4 py-2.5 flex gap-4">
         {[40, 30, 20, 10].map((w, i) => <Bone key={i} className={`h-3 w-${w} max-w-[${w}%]`} style={{ width: `${w}%` }} />)}
       </div>
@@ -63,7 +63,7 @@ export function TableSkeleton({ rows = 5 }) {
 
 export function ChartSkeleton({ height = 160 }) {
   return (
-    <div className="bg-white rounded-2xl border border-border p-4">
+    <div className="bg-surface rounded-2xl border border-border p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="space-y-1.5">
           <Bone className="h-3.5 w-32" />

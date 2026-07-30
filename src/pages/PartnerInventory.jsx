@@ -23,7 +23,13 @@ export default function PartnerInventory() {
   const [form, setForm] = useState({ name: '', type: 'consumable', qty: '0', unit: '', low_stock_threshold: '2' });
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { servisaku.inventory.list().then(setItems); }, []);
+  // `items === null` is the loading sentinel, so an unhandled rejection left
+  // this page spinning forever (a non-partner account gets 403 "Partners only").
+  useEffect(() => {
+    servisaku.inventory.list()
+      .then(setItems)
+      .catch(e => { toast.error(e?.message || 'Could not load your items'); setItems([]); });
+  }, []);
 
   const adjust = async (item, delta) => {
     const next = Math.max(0, item.qty + delta);
@@ -69,7 +75,7 @@ export default function PartnerInventory() {
             </button>
             <div><p className="text-white/60 text-xs">Inventory</p><h1 className="text-xl font-bold text-white">Your stock</h1></div>
           </div>
-          <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-sm font-bold text-brand">
+          <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-sm font-bold text-brand">
             <Plus className="h-4 w-4" /> Add
           </button>
         </div>

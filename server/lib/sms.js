@@ -2,11 +2,25 @@
 // the code is logged to the console (and returned in dev responses) so the OTP
 // flow is testable without a paid gateway.
 //   TWILIO_SID, TWILIO_TOKEN, TWILIO_FROM
-export const isSmsReady = Boolean(process.env.TWILIO_SID && process.env.TWILIO_TOKEN && process.env.TWILIO_FROM);
+//
+// SMS_DEV_MODE=true forces the console/dev path even when Twilio *is* configured.
+// That matters because a Twilio trial can only text pre-verified numbers, and
+// Malaysian carriers reject international long codes outright — so a real send
+// to a +60 number fails and takes the whole OTP request down with it. Demo mode
+// keeps the full OTP machinery (hashed codes, TTL, cooldown, lockout) and simply
+// skips the carrier.
+//
+// Deliberately inert when NODE_ENV=production: a live deployment must never be
+// able to hand out verification codes in an API response.
+const demoMode = process.env.SMS_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production';
+
+export const isSmsReady = !demoMode
+  && Boolean(process.env.TWILIO_SID && process.env.TWILIO_TOKEN && process.env.TWILIO_FROM);
 
 export async function sendSms({ to, body }) {
   if (!isSmsReady) {
-    console.log(`\n📱 [DEV SMS — no provider configured]\n  to: ${to}\n  ${body}\n`);
+    const why = demoMode ? 'SMS_DEV_MODE=true' : 'no provider configured';
+    console.log(`\n📱 [DEV SMS — ${why}]\n  to: ${to}\n  ${body}\n`);
     return { delivered: false };
   }
   const sid = process.env.TWILIO_SID;

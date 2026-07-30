@@ -5,6 +5,8 @@ import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError } from '../lib/access.js';
 import { COURSE_CATALOG, publicCourse, gradeQuiz } from '../lib/trainingCatalog.js';
+import { requestOtp, verifyOtp } from '../lib/otp.js';
+import { sendSms, isSmsReady } from '../lib/sms.js';
 
 const router = Router();
 router.use(authenticate);
@@ -49,6 +51,15 @@ function assertPartner(req) {
   if (req.user.role !== 'partner') throw new ApiError(403, 'Partners only');
 }
 
+// Onboarding is the one partner surface a non-partner must be able to reach —
+// otherwise applying to become a partner requires already being one. These
+// endpoints only ever write application data; the role itself is granted by an
+// admin via the approval endpoints below, never here.
+function assertApplicant(req) {
+  const allowed = ['consumer', 'partner', 'admin', 'super_admin'];
+  if (!allowed.includes(req.user.role)) throw new ApiError(403, 'Not allowed');
+}
+
 // GET /api/partners/me/availability
 router.get('/me/availability', asyncHandler(async (req, res) => {
   assertPartner(req);
@@ -74,6 +85,7 @@ router.patch('/me/availability', validate(availabilitySchema), asyncHandler(asyn
 const DOC_CATALOG = [
   { type: 'mykad', label: 'MyKad (NRIC)', group: 'Identity', required: true, hasNumber: true, numberLabel: 'IC number', hasExpiry: false, help: 'Upload front & back of your MyKad.' },
   { type: 'selfie', label: 'Selfie verification', group: 'Identity', required: true, hasNumber: false, hasExpiry: false, help: 'A clear selfie to match against your MyKad.' },
+  { type: 'work_permit', label: 'Work permit (foreign workers)', group: 'Identity', required: false, hasNumber: true, numberLabel: 'Permit no.', hasExpiry: true, help: 'PLKS / Employment Pass for non-Malaysian partners.' },
   { type: 'skill_cert', label: 'Skills certificate', group: 'Professional', required: true, hasNumber: true, numberLabel: 'Certificate / licence no.', hasExpiry: true, help: 'CIDB Green Card, Suruhanjaya Tenaga competency (Chargeman/Wireman), SPAN plumber licence, etc.' },
   { type: 'insurance', label: 'Public liability insurance', group: 'Professional', required: true, hasNumber: true, numberLabel: 'Policy number', hasExpiry: true, help: 'Covers accidental damage during jobs.' },
   { type: 'bank', label: 'Bank account', group: 'Financial', required: true, hasNumber: true, numberLabel: 'Account number', hasExpiry: false, help: 'Malaysian bank account for payouts.' },
@@ -130,7 +142,7 @@ async function buildDocSummary(partnerId) {
 
 // GET /api/partners/me/documents — catalogue merged with the partner's submissions + summary.
 router.get('/me/documents', asyncHandler(async (req, res) => {
-  assertPartner(req);
+  assertApplicant(req);
   res.json(await buildDocSummary(req.user.id));
 }));
 
@@ -142,7 +154,7 @@ const docSchema = z.object({
   expiry_date: z.string().regex(DATE).optional(),
 });
 router.post('/me/documents', validate(docSchema), asyncHandler(async (req, res) => {
-  assertPartner(req);
+  assertApplicant(req);
   const cat = DOC_CATALOG.find((d) => d.type === req.body.type);
   const number = cat.hasNumber ? validateDocNumber(req.body.type, req.body.number) : null;
   if (!req.body.file_url && !number) throw new ApiError(400, 'Attach a file or enter the required number');
@@ -272,7 +284,7 @@ router.delete('/me/inventory/:id', asyncHandler(async (req, res) => {
 
 // ─── Onboarding (registration profile + drafts) ─────────────────────────────
 router.get('/me/onboarding', asyncHandler(async (req, res) => {
-  assertPartner(req);
+  assertApplicant(req);
   const u = await prisma.user.findUnique({
     where: { id: req.user.id },
     select: { onboardingDraft: true, partnerProfile: true, onboardedAt: true, fullName: true, phone: true, email: true },
@@ -282,13 +294,18 @@ router.get('/me/onboarding', asyncHandler(async (req, res) => {
     profile: u?.partnerProfile || null,
     submitted: !!u?.onboardedAt,
     onboarded_at: u?.onboardedAt || null,
+    // Lets the UI show "application pending" instead of dropping an approved-
+    // looking user into a partner console they have no access to yet.
+    is_partner: req.user.role === 'partner',
+    application_status: u?.partnerProfile?.application_status
+      ?? (req.user.role === 'partner' ? 'approved' : null),
     account: { full_name: u?.fullName, phone: u?.phone, email: u?.email },
   });
 }));
 
 // PATCH /me/onboarding/draft — body is the partial draft; merged onto current.
 router.patch('/me/onboarding/draft', validate(z.record(z.any())), asyncHandler(async (req, res) => {
-  assertPartner(req);
+  assertApplicant(req);
   const u = await prisma.user.findUnique({ where: { id: req.user.id }, select: { onboardingDraft: true } });
   const next = { ...(u?.onboardingDraft || {}), ...req.body };
   await prisma.user.update({ where: { id: req.user.id }, data: { onboardingDraft: next } });
@@ -317,7 +334,7 @@ const submitSchema = z.object({
   portfolio: z.array(z.object({ url: z.string().max(2000), caption: z.string().max(140).optional() })).max(30).optional(),
 });
 router.post('/me/onboarding/submit', validate(submitSchema), asyncHandler(async (req, res) => {
-  assertPartner(req);
+  assertApplicant(req);
   const b = req.body;
   const profile = {
     gender: b.gender ?? null, dob: b.dob ?? null, experience_years: b.experience_years ?? null,
@@ -329,6 +346,13 @@ router.post('/me/onboarding/submit', validate(submitSchema), asyncHandler(async 
   };
   const current = await prisma.user.findUnique({ where: { id: req.user.id }, select: { availability: true } });
   const avail = (current?.availability && typeof current.availability === 'object') ? current.availability : {};
+  // An applicant stays a consumer until an admin approves them — submitting the
+  // form must never grant the partner role, or anyone could self-promote.
+  const isApplicant = req.user.role !== 'partner';
+  if (isApplicant) {
+    profile.application_status = 'pending';
+    profile.applied_at = new Date().toISOString();
+  }
   const data = {
     partnerProfile: profile,
     onboardingDraft: null,
@@ -347,6 +371,140 @@ router.post('/me/onboarding/submit', validate(submitSchema), asyncHandler(async 
   if (b.bio !== undefined) data.bio = b.bio;
   if (b.bank_account !== undefined) data.bankAccount = b.bank_account;
   await prisma.user.update({ where: { id: req.user.id }, data });
+  res.json({ ok: true });
+}));
+
+// ─── Onboarding phone verification ──────────────────────────────────────────
+// The onboarding wizard previously faked this step entirely: it sent no SMS and
+// accepted any 6 digits. These endpoints run the same OTP machinery as the login
+// flow (hashed codes, 5-min TTL, resend cooldown, attempt lockout) but do NOT
+// create a session — the applicant is already signed in, so verifying a phone
+// must only attach the number to their account.
+function toE164(raw) {
+  let d = String(raw || '').replace(/[^0-9+]/g, '');
+  if (!d.startsWith('+')) d = `+${d}`;
+  return d;
+}
+
+const phoneRequestSchema = z.object({ phone: z.string().min(6).max(20) });
+
+router.post('/me/phone/request', validate(phoneRequestSchema), asyncHandler(async (req, res) => {
+  assertApplicant(req);
+  const phone = toE164(req.body.phone);
+  const r = requestOtp(phone);
+  if (!r.ok) {
+    const msg = r.error === 'cooldown' ? `Please wait ${r.retryAfter}s before requesting another code`
+      : r.error === 'too_many_sends' ? 'Too many codes requested. Try again later.'
+      : r.error === 'locked' ? 'Temporarily locked. Try again later.'
+      : 'Could not send a code to that number';
+    throw new ApiError(r.error === 'invalid' ? 400 : 429, msg);
+  }
+  await sendSms({ to: phone, body: `Your ServisAku verification code is ${r.code}. It expires in 5 minutes.` });
+  res.json({
+    expires_in: r.expiresInSec,
+    resend_in: r.cooldownSec,
+    sends_left: r.sendsLeft,
+    // Dev only (no SMS provider configured) so the step is testable without Twilio.
+    ...(!isSmsReady && process.env.NODE_ENV !== 'production' ? { dev_code: r.code } : {}),
+  });
+}));
+
+const phoneVerifySchema = z.object({
+  phone: z.string().min(6).max(20),
+  code: z.string().min(4).max(8),
+});
+
+router.post('/me/phone/verify', validate(phoneVerifySchema), asyncHandler(async (req, res) => {
+  assertApplicant(req);
+  const phone = toE164(req.body.phone);
+  const r = verifyOtp(phone, req.body.code);
+  if (!r.ok) {
+    const msg = r.error === 'expired' ? 'That code has expired — request a new one'
+      : r.error === 'no_code' ? 'Request a code first'
+      : r.error === 'locked' ? 'Too many attempts. Try again later.'
+      : 'Incorrect code';
+    throw new ApiError(r.error === 'locked' ? 429 : 400, msg);
+  }
+  await prisma.user.update({ where: { id: req.user.id }, data: { phone } });
+  res.json({ ok: true, phone });
+}));
+
+// ─── Partner applications (admin review) ────────────────────────────────────
+// The partner role is granted here and nowhere else. Onboarding only records an
+// application; promotion is an explicit admin decision.
+function assertAdmin(req) {
+  if (!['admin', 'super_admin'].includes(req.user.role)) throw new ApiError(403, 'Admins only');
+}
+
+// GET /api/partners/applications?status=pending
+router.get('/applications', asyncHandler(async (req, res) => {
+  assertAdmin(req);
+  const status = req.query.status || 'pending';
+  const rows = await prisma.user.findMany({
+    where: { role: 'consumer', onboardedAt: { not: null } },
+    select: { id: true, email: true, fullName: true, phone: true, city: true, partnerProfile: true, onboardedAt: true },
+    orderBy: { onboardedAt: 'desc' },
+    take: 200,
+  });
+  const applications = rows
+    .filter((u) => (u.partnerProfile?.application_status ?? 'pending') === status)
+    .map((u) => ({
+      id: u.id,
+      email: u.email,
+      full_name: u.fullName,
+      phone_number: u.phone,
+      city: u.city,
+      application_status: u.partnerProfile?.application_status ?? 'pending',
+      applied_at: u.partnerProfile?.applied_at ?? u.onboardedAt,
+      categories: u.partnerProfile?.categories ?? [],
+    }));
+  res.json(applications);
+}));
+
+const decisionSchema = z.object({ reason: z.string().max(500).optional() });
+
+// POST /api/partners/applications/:id/approve — grants the partner role.
+router.post('/applications/:id/approve', validate(decisionSchema), asyncHandler(async (req, res) => {
+  assertAdmin(req);
+  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!user) throw new ApiError(404, 'User not found');
+  if (!user.onboardedAt) throw new ApiError(400, 'This user has not submitted an application');
+  if (user.role === 'partner') throw new ApiError(409, 'Already a partner');
+
+  const profile = (user.partnerProfile && typeof user.partnerProfile === 'object') ? user.partnerProfile : {};
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      role: 'partner',
+      partnerProfile: {
+        ...profile,
+        application_status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: req.user.id,
+      },
+    },
+  });
+  res.json({ ok: true, id: updated.id, role: updated.role });
+}));
+
+// POST /api/partners/applications/:id/reject — leaves the role untouched.
+router.post('/applications/:id/reject', validate(decisionSchema), asyncHandler(async (req, res) => {
+  assertAdmin(req);
+  const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const profile = (user.partnerProfile && typeof user.partnerProfile === 'object') ? user.partnerProfile : {};
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      partnerProfile: {
+        ...profile,
+        application_status: 'rejected',
+        rejected_at: new Date().toISOString(),
+        rejection_reason: req.body.reason ?? null,
+      },
+    },
+  });
   res.json({ ok: true });
 }));
 

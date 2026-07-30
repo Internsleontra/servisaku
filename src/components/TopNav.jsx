@@ -26,7 +26,7 @@ export default function TopNav() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 border-b bg-white transition-all duration-200',
+        'fixed top-0 left-0 right-0 z-50 border-b bg-surface transition-all duration-200',
         scrolled ? 'border-hairline/60 shadow-sm py-2.5' : 'border-hairline/40 py-3.5',
       )}
     >
@@ -52,7 +52,7 @@ export default function TopNav() {
           <button
             type="button"
             onClick={() => navigate('/explore?loc=Kuala%20Lumpur')}
-            className="flex shrink-0 items-center gap-2 rounded-xl border border-hairline bg-white px-3 py-2.5 text-ink hover:bg-raised transition-colors"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-hairline bg-surface px-3 py-2.5 text-ink hover:bg-raised transition-colors"
           >
             <MapPin className="h-4 w-4 text-success" />
             <span className="max-w-[120px] truncate text-sm font-medium">Kuala Lumpur</span>
@@ -65,7 +65,7 @@ export default function TopNav() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("Search for 'AC service'")}
-              className="w-full rounded-xl border border-hairline bg-white py-2.5 pl-11 pr-4 text-sm text-ink outline-none placeholder:text-ink-tertiary focus:ring-2 focus:ring-brand/30"
+              className="w-full rounded-xl border border-hairline bg-surface py-2.5 pl-11 pr-4 text-sm text-ink outline-none placeholder:text-ink-tertiary focus:ring-2 focus:ring-brand/30"
             />
           </form>
         </div>
@@ -75,7 +75,7 @@ export default function TopNav() {
           <Link
             to="/cart"
             aria-label="Cart"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-white text-ink hover:bg-raised transition-colors"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:bg-raised transition-colors"
           >
             <ShoppingCart className="h-5 w-5" />
           </Link>
@@ -84,7 +84,7 @@ export default function TopNav() {
             <Link
               to="/profile"
               aria-label="Account"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-white text-ink hover:bg-raised transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:bg-raised transition-colors"
             >
               {user.full_name
                 ? <span className="text-sm font-bold text-brand">{user.full_name.charAt(0).toUpperCase()}</span>
@@ -94,7 +94,7 @@ export default function TopNav() {
             <Link
               to="/otp-login"
               aria-label="Log in"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-white text-ink hover:bg-raised transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:bg-raised transition-colors"
             >
               <User className="h-5 w-5" />
             </Link>

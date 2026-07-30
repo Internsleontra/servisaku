@@ -9,7 +9,7 @@ const TYPE_META = {
   payment:        { icon: CreditCard,    color: 'bg-emerald-50 text-emerald-600', label: 'Payment' },
   chat:           { icon: MessageSquare, color: 'bg-violet-50 text-violet-600', label: 'Chat'    },
   promo:          { icon: Megaphone,     color: 'bg-amber-50 text-amber-600',   label: 'Promo'   },
-  system:         { icon: Settings,      color: 'bg-slate-50 text-slate-600',   label: 'System'  },
+  system:         { icon: Settings,      color: 'bg-raised text-ink-secondary',   label: 'System'  },
   reminder:       { icon: Bell,          color: 'bg-orange-50 text-orange-600', label: 'Reminder'},
 };
 
@@ -167,7 +167,7 @@ export default function NotificationCenter() {
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-3.5 bg-white rounded-2xl border border-border/60 p-4 animate-pulse">
+              <div key={i} className="flex gap-3.5 bg-surface rounded-2xl border border-border/60 p-4 animate-pulse">
                 <div className="w-10 h-10 bg-muted rounded-xl shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3.5 bg-muted rounded-full w-2/3" />
@@ -194,7 +194,7 @@ export default function NotificationCenter() {
             {Object.entries(groups).map(([date, items]) => (
               <div key={date}>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 mb-2">{date}</p>
-                <div className="bg-white rounded-2xl border border-border/60 shadow-xs overflow-hidden">
+                <div className="bg-surface rounded-2xl border border-border/60 shadow-xs overflow-hidden">
                   {items.map(n => <NotifItem key={n.id} n={n} onRead={handleRead} onDelete={handleDelete} />)}
                 </div>
               </div>

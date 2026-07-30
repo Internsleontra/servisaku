@@ -8,7 +8,7 @@ import { buildBookingTrend, buildCategoryPerformance, buildPeakHours, exportToCS
 const COLORS = ['hsl(151,58%,20%)', '#6366f1', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'];
 
 const TT = ({ active, payload, label }) => active && payload?.length ? (
-  <div className="bg-white border border-border rounded-xl shadow-lg px-3 py-2 text-xs">
+  <div className="bg-surface border border-border rounded-xl shadow-lg px-3 py-2 text-xs">
     <p className="font-bold mb-1">{label}</p>
     {payload.map((p, i) => <p key={i} style={{ color: p.color }}>{p.name}: {p.value}</p>)}
   </div>
@@ -33,7 +33,7 @@ export default function BookingAnalytics({ bookings, period }) {
   return (
     <div className="space-y-5">
       {/* Booking Trend */}
-      <div className="bg-white rounded-2xl border border-border p-4">
+      <div className="bg-surface rounded-2xl border border-border p-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-bold">Booking Trend</h3>
@@ -61,7 +61,7 @@ export default function BookingAnalytics({ bookings, period }) {
       </div>
 
       {/* Service Category */}
-      <div className="bg-white rounded-2xl border border-border p-4">
+      <div className="bg-surface rounded-2xl border border-border p-4">
         <h3 className="text-sm font-bold mb-1">Category Performance</h3>
         <p className="text-xs text-muted-foreground mb-4">Revenue by service type</p>
         <ResponsiveContainer width="100%" height={180}>
@@ -78,7 +78,7 @@ export default function BookingAnalytics({ bookings, period }) {
 
       {/* Peak Hours + Cancellations */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <div className="bg-white rounded-2xl border border-border p-4">
+        <div className="bg-surface rounded-2xl border border-border p-4">
           <h3 className="text-sm font-bold mb-1">Peak Booking Hours</h3>
           <p className="text-xs text-muted-foreground mb-4">Most popular time slots</p>
           <ResponsiveContainer width="100%" height={140}>
@@ -95,7 +95,7 @@ export default function BookingAnalytics({ bookings, period }) {
         </div>
 
         {cancelData.length > 0 && (
-          <div className="bg-white rounded-2xl border border-border p-4">
+          <div className="bg-surface rounded-2xl border border-border p-4">
             <h3 className="text-sm font-bold mb-1">Cancellation Reasons</h3>
             <p className="text-xs text-muted-foreground mb-4">Top reasons for cancellations</p>
             <div className="space-y-2">

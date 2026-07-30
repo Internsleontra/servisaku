@@ -102,7 +102,7 @@ export default function AdminBookings() {
             { label: 'Today', value: counts.today, color: 'bg-primary/10 border-primary/20 text-primary' },
             { label: 'Disputed', value: counts.disputed, color: 'bg-red-50 border-red-200 text-red-700' },
           ].map((k, i) => (
-            <div key={i} className={`border rounded-2xl p-3 text-center bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ${k.color}`}>
+            <div key={i} className={`border rounded-2xl p-3 text-center bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.06)] ${k.color}`}>
               <p className="text-lg font-bold">{k.value}</p>
               <p className="text-[10px] font-medium">{k.label}</p>
             </div>
@@ -114,9 +114,9 @@ export default function AdminBookings() {
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search bookings..."
-              className="w-full bg-white border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none" />
+              className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none" />
           </div>
-          <button onClick={load} className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center hover:bg-muted transition-colors">
+          <button onClick={load} className="w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center hover:bg-muted transition-colors">
             <RefreshCw className={`h-4 w-4 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
@@ -125,7 +125,7 @@ export default function AdminBookings() {
         <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">
           {STATUS_FILTERS.map(s => (
             <button key={s} onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all ${filter === s ? 'bg-primary text-white' : 'bg-white border border-border text-muted-foreground'}`}>
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all ${filter === s ? 'bg-primary text-white' : 'bg-surface border border-border text-muted-foreground'}`}>
               {s === 'all' ? `All (${bookings.length})` : s.replace('_', ' ')}
             </button>
           ))}
@@ -136,7 +136,7 @@ export default function AdminBookings() {
         ) : (
           <div className="space-y-3">
             {filtered.map(b => (
-              <div key={b.id} className="bg-white rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+              <div key={b.id} className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
                 <button className="w-full text-left px-4 py-3.5" onClick={() => setExpanded(expanded === b.id ? null : b.id)}>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function AdminBookings() {
                       <div className="flex flex-wrap gap-1.5">
                         {STATUS_TRANSITIONS[b.status]?.map(nextStatus => (
                           <button key={nextStatus} onClick={() => handleStatusChange(b.id, nextStatus)}
-                            className="text-[11px] px-3 py-1.5 bg-white border border-border rounded-xl font-medium hover:border-primary hover:text-primary transition-all">
+                            className="text-[11px] px-3 py-1.5 bg-surface border border-border rounded-xl font-medium hover:border-primary hover:text-primary transition-all">
                             → {nextStatus.replace('_', ' ')}
                           </button>
                         ))}
@@ -197,7 +197,7 @@ export default function AdminBookings() {
                             <div className="grid grid-cols-1 gap-1.5 max-h-36 overflow-y-auto">
                               {verifiedPartners.map(p => (
                                 <button key={p.id} onClick={() => handleReassign(b.id, p.email, p.full_name)}
-                                  className="flex items-center gap-2 text-xs px-3 py-2 bg-white rounded-xl border border-border hover:border-primary transition-all text-left">
+                                  className="flex items-center gap-2 text-xs px-3 py-2 bg-surface rounded-xl border border-border hover:border-primary transition-all text-left">
                                   <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                                     <span className="text-[10px] font-bold text-primary">{p.full_name?.charAt(0)}</span>
                                   </div>
@@ -210,7 +210,7 @@ export default function AdminBookings() {
                           </div>
                         ) : (
                           <button onClick={() => setReassigning(b.id)}
-                            className="text-[11px] px-3 py-1.5 bg-white border border-border rounded-xl font-medium hover:border-primary hover:text-primary transition-all">
+                            className="text-[11px] px-3 py-1.5 bg-surface border border-border rounded-xl font-medium hover:border-primary hover:text-primary transition-all">
                             Reassign Partner
                           </button>
                         )}
@@ -222,7 +222,7 @@ export default function AdminBookings() {
             ))}
 
             {filtered.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-3xl border border-border">
+              <div className="text-center py-12 bg-surface rounded-3xl border border-border">
                 <p className="text-sm text-muted-foreground">No bookings found</p>
               </div>
             )}

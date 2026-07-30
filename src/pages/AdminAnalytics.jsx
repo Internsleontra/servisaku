@@ -84,7 +84,7 @@ export default function AdminAnalytics() {
           <div className="flex gap-1.5">
             {PERIODS.map(p => (
               <button key={p.id} onClick={() => setPeriod(p.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${period === p.id ? 'bg-white text-primary' : 'bg-white/20 text-white'}`}>
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${period === p.id ? 'bg-surface text-primary' : 'bg-white/20 text-white'}`}>
                 {p.label}
               </button>
             ))}
@@ -111,7 +111,7 @@ export default function AdminAnalytics() {
             <KPIStrip kpis={kpis} loading={loading} />
             {!loading && data && (
               <>
-                <div className="bg-white rounded-2xl border border-border p-4">
+                <div className="bg-surface rounded-2xl border border-border p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold">Quick Summary</h3>
                     <span className="text-[10px] text-muted-foreground">{period} view</span>

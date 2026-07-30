@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { lazy } from 'react';
 import PartnerLayout from './PartnerLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import PartnerOnly from './PartnerOnly';
 import PageNotFound from '@/lib/PageNotFound';
 
 const PartnerDashboard = lazy(() => import('@/pages/PartnerDashboard'));
@@ -17,6 +18,7 @@ const PartnerTrainingCourse = lazy(() => import('@/pages/PartnerTrainingCourse')
 const PartnerReviews = lazy(() => import('@/pages/PartnerReviews'));
 const PartnerSupport = lazy(() => import('@/pages/PartnerSupport'));
 const PartnerInventory = lazy(() => import('@/pages/PartnerInventory'));
+const PartnerSettings = lazy(() => import('@/pages/PartnerSettings'));
 
 const LiveTracking = lazy(() => import('@/pages/LiveTracking'));
 const ChatScreen = lazy(() => import('@/pages/ChatScreen'));
@@ -27,36 +29,26 @@ const ProfileSetup = lazy(() => import('@/pages/ProfileSetup'));
 const OTPLogin = lazy(() => import('@/pages/OTPLogin'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
-const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
-const AdminUsers = lazy(() => import('@/pages/AdminUsers'));
-const AdminBookings = lazy(() => import('@/pages/AdminBookings'));
-const AdminFinance = lazy(() => import('@/pages/AdminFinance'));
-const AdminCommunications = lazy(() => import('@/pages/AdminCommunications'));
-const AdminQualityCenter = lazy(() => import('@/pages/AdminQualityCenter'));
-const AdminAnalytics = lazy(() => import('@/pages/AdminAnalytics'));
-const AdminOperations = lazy(() => import('@/pages/AdminOperations'));
-
-const adminRoles = ['admin', 'super_admin'];
-
 export default function PartnerRoutes() {
   return (
     <Routes>
       <Route element={<PartnerLayout />}>
         {/* Partner home */}
         <Route path="/" element={<Navigate to="/partner" replace />} />
-        <Route path="/partner" element={<ProtectedRoute><PartnerDashboard /></ProtectedRoute>} />
-        <Route path="/partner/calendar" element={<ProtectedRoute><PartnerCalendar /></ProtectedRoute>} />
-        <Route path="/partner/earnings" element={<ProtectedRoute><PartnerEarnings /></ProtectedRoute>} />
-        <Route path="/partner/job/:bookingId" element={<ProtectedRoute><PartnerJobScreen /></ProtectedRoute>} />
+        <Route path="/partner" element={<ProtectedRoute><PartnerOnly><PartnerDashboard /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/calendar" element={<ProtectedRoute><PartnerOnly><PartnerCalendar /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/earnings" element={<ProtectedRoute><PartnerOnly><PartnerEarnings /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/job/:bookingId" element={<ProtectedRoute><PartnerOnly><PartnerJobScreen /></PartnerOnly></ProtectedRoute>} />
         <Route path="/partner/onboarding" element={<ProtectedRoute><PartnerOnboarding /></ProtectedRoute>} />
-        <Route path="/partner/availability" element={<ProtectedRoute><PartnerAvailability /></ProtectedRoute>} />
-        <Route path="/partner/verification" element={<ProtectedRoute><PartnerVerification /></ProtectedRoute>} />
-        <Route path="/partner/analytics" element={<ProtectedRoute><PartnerAnalytics /></ProtectedRoute>} />
-        <Route path="/partner/training" element={<ProtectedRoute><PartnerTraining /></ProtectedRoute>} />
-        <Route path="/partner/training/:courseId" element={<ProtectedRoute><PartnerTrainingCourse /></ProtectedRoute>} />
-        <Route path="/partner/reviews" element={<ProtectedRoute><PartnerReviews /></ProtectedRoute>} />
-        <Route path="/partner/support" element={<ProtectedRoute><PartnerSupport /></ProtectedRoute>} />
-        <Route path="/partner/inventory" element={<ProtectedRoute><PartnerInventory /></ProtectedRoute>} />
+        <Route path="/partner/availability" element={<ProtectedRoute><PartnerOnly><PartnerAvailability /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/verification" element={<ProtectedRoute><PartnerOnly><PartnerVerification /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/analytics" element={<ProtectedRoute><PartnerOnly><PartnerAnalytics /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/training" element={<ProtectedRoute><PartnerOnly><PartnerTraining /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/training/:courseId" element={<ProtectedRoute><PartnerOnly><PartnerTrainingCourse /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/reviews" element={<ProtectedRoute><PartnerOnly><PartnerReviews /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/support" element={<ProtectedRoute><PartnerOnly><PartnerSupport /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/inventory" element={<ProtectedRoute><PartnerOnly><PartnerInventory /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/settings" element={<ProtectedRoute><PartnerOnly><PartnerSettings /></PartnerOnly></ProtectedRoute>} />
 
         {/* Shared job surfaces */}
         <Route path="/tracking/:bookingId" element={<ProtectedRoute><LiveTracking /></ProtectedRoute>} />
@@ -69,16 +61,6 @@ export default function PartnerRoutes() {
         <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="/otp-login" element={<OTPLogin />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-
-        {/* Admin / ops console (role-gated) */}
-        <Route path="/admin" element={<ProtectedRoute roles={adminRoles}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute roles={adminRoles}><AdminUsers /></ProtectedRoute>} />
-        <Route path="/admin/bookings" element={<ProtectedRoute roles={adminRoles}><AdminBookings /></ProtectedRoute>} />
-        <Route path="/admin/finance" element={<ProtectedRoute roles={adminRoles}><AdminFinance /></ProtectedRoute>} />
-        <Route path="/admin/communications" element={<ProtectedRoute roles={adminRoles}><AdminCommunications /></ProtectedRoute>} />
-        <Route path="/admin/quality" element={<ProtectedRoute roles={adminRoles}><AdminQualityCenter /></ProtectedRoute>} />
-        <Route path="/admin/analytics" element={<ProtectedRoute roles={adminRoles}><AdminAnalytics /></ProtectedRoute>} />
-        <Route path="/admin/operations" element={<ProtectedRoute roles={adminRoles}><AdminOperations /></ProtectedRoute>} />
 
         <Route path="*" element={<PageNotFound />} />
       </Route>
