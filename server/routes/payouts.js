@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isAdmin, findUserByEmail, emailsByIds } from '../lib/access.js';
+import { getWallet, debitPayout } from '../lib/wallet/index.js';
+import { round2 } from '../lib/payments/commission.js';
 import { notify } from '../lib/notifications/index.js';
 
 const router = Router();
@@ -79,6 +81,9 @@ router.post('/', requireRole('admin', 'super_admin'), validate(createSchema), as
       scheduledDate: req.body.scheduled_date ?? null,
     },
   });
+  // Keep the ledger truthful: an admin-created payout moves real money out of
+  // the partner's wallet just as a self-service withdrawal does.
+  await debitPayout(item);
   if (item.status === 'completed') notifyPayoutReleased(item);
   res.status(201).json((await mapManyOut([item]))[0]);
 }));
@@ -102,25 +107,37 @@ router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema),
 }));
 
 // ─── Partner wallet ──────────────────────────────────────────────────────────
-// Earnings are computed from completed bookings (partner keeps 80%; 20% platform
-// fee). Requested/paid PayoutRecords reduce the withdrawable balance. (Escrow
-// release is an admin action and not relied on here.)
-const PARTNER_RATE = 0.8;
-const payoutOf = (price) => Math.round((price || 0) * PARTNER_RATE);
-
+// Balances now come from the PartnerWallet ledger (server/lib/wallet/) rather
+// than being re-summed from bookings on every request. The old computation could
+// not represent an adjustment, a reversal, a damage deduction or cash commission
+// at all — and it rounded each job's payout to whole ringgit
+// (`Math.round(price * 0.8)`), silently losing sen on every completed booking.
+//
+// The response keys are deliberately unchanged: src/pages/PartnerEarnings.jsx and
+// both Expo apps read them, and this is a data-source swap, not an API change.
 async function computeWallet(partnerId) {
-  const [completed, active, payouts] = await Promise.all([
-    prisma.booking.findMany({ where: { partnerId, status: 'completed' }, select: { price: true } }),
-    prisma.booking.findMany({ where: { partnerId, status: { in: ['accepted', 'en_route', 'arrived', 'started'] } }, select: { price: true } }),
+  const [wallet, payouts] = await Promise.all([
+    getWallet(partnerId),
     prisma.payoutRecord.findMany({ where: { partnerId }, select: { netPayout: true, status: true } }),
   ]);
-  const lifetime = completed.reduce((s, b) => s + payoutOf(b.price), 0);
-  const pending = active.reduce((s, b) => s + payoutOf(b.price), 0);
-  const withdrawn = payouts
-    .filter((p) => ['pending', 'scheduled', 'completed'].includes(p.status))
-    .reduce((s, p) => s + (p.netPayout || 0), 0);
-  const withdrawable = Math.max(0, lifetime - withdrawn);
-  return { lifetime, pending, withdrawn, withdrawable, balance: withdrawable, currency: 'MYR' };
+  const withdrawn = round2(payouts
+    .filter((p) => ['pending', 'scheduled', 'processing', 'completed'].includes(p.status))
+    .reduce((s, p) => s + (p.netPayout || 0), 0));
+  const withdrawable = round2(Math.max(0, wallet.availableBalance));
+
+  return {
+    lifetime: round2(wallet.lifetimeEarnings),
+    pending: round2(wallet.pendingBalance),
+    withdrawn,
+    withdrawable,
+    balance: withdrawable,
+    currency: wallet.currency || 'MYR',
+    // Additive — the cash-commission side of the wallet, which the old shape
+    // had no way to express.
+    outstanding_commission: round2(wallet.outstandingCommission),
+    payouts_suspended: wallet.payoutsSuspended,
+    is_frozen: wallet.isFrozen,
+  };
 }
 
 // GET /api/payouts/wallet — the caller-partner's computed wallet summary.
@@ -138,6 +155,14 @@ router.get('/wallet', asyncHandler(async (req, res) => {
 const withdrawSchema = z.object({ amount: z.coerce.number().positive() });
 router.post('/withdraw', validate(withdrawSchema), asyncHandler(async (req, res) => {
   if (req.user.role !== 'partner') throw new ApiError(403, 'Only partners can withdraw');
+
+  // Payouts are suspended while commission is badly overdue — see the
+  // enforcement ladder in server/lib/wallet/freeze.js.
+  const walletRow = await getWallet(req.user.id);
+  if (walletRow.payoutsSuspended) {
+    throw new ApiError(403, 'Payouts are on hold until your overdue commission is settled');
+  }
+
   const wallet = await computeWallet(req.user.id);
   if (req.body.amount > wallet.withdrawable) {
     throw new ApiError(400, `Amount exceeds your withdrawable balance (RM${wallet.withdrawable})`);
@@ -154,6 +179,9 @@ router.post('/withdraw', validate(withdrawSchema), asyncHandler(async (req, res)
       status: 'pending',
     },
   });
+  // Move the money out of the wallet now the payout is committed, so a second
+  // withdraw request can't spend the same balance twice.
+  await debitPayout(item);
   res.status(201).json((await mapManyOut([item]))[0]);
 }));
 

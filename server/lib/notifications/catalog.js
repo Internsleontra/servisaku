@@ -204,6 +204,20 @@ export const CATALOG = {
     actionUrl: '/wallet', channels: ['in_app', 'push'],
   },
 
+  payment_due_cash: {
+    category: 'payments', priority: 'high', icon: '💵', role: 'consumer',
+    title: 'Payment due on completion',
+    message: (d) => `Please pay ${d.amount || 'your professional'} in cash for your ${d.serviceName || 'service'}.`,
+    actionUrl: bookingUrl, channels: ['in_app', 'push'],
+  },
+  cash_payment_recorded: {
+    category: 'payments', priority: 'normal', icon: '🧾', role: 'consumer',
+    title: 'Cash payment recorded',
+    message: (d) => `We've recorded your cash payment${d.amount ? ` of ${d.amount}` : ''}. Your receipt is ready.`,
+    actionUrl: bookingUrl, ctaLabel: 'View Receipt', channels: ['in_app', 'email'],
+    email: { subject: 'Your ServisAku cash payment receipt' },
+  },
+
   // ── Consumer: reviews & support ──────────────────────────────────────────
   review_request: {
     category: 'reviews', priority: 'normal', icon: '⭐', role: 'consumer',
@@ -338,6 +352,64 @@ export const CATALOG = {
     title: 'Incentive earned',
     message: (d) => `You earned an incentive${d.amount ? ` of ${d.amount}` : ''}. Keep it up!`,
     actionUrl: '/earnings', channels: ['in_app', 'push'],
+  },
+
+  // ── Partner: cash commission & settlements ───────────────────────────────
+  cash_collected: {
+    category: 'payments', priority: 'normal', icon: '💵', role: 'partner',
+    title: 'Cash payment recorded',
+    message: (d) => `You recorded ${d.amount || 'a cash payment'} for ${d.serviceName || 'the job'}. Commission of ${d.commission || '—'} has been added to your outstanding balance.`,
+    actionUrl: '/partner/wallet', ctaLabel: 'View Wallet', channels: ['in_app'],
+  },
+  settlement_generated: {
+    category: 'wallet', priority: 'high', icon: '🧾', role: 'partner',
+    title: 'Commission settlement ready',
+    message: (d) => `Your settlement ${d.reference || ''} of ${d.amount || '—'} is due by ${d.when || 'the due date'}.`,
+    actionUrl: '/partner/wallet', ctaLabel: 'Settle Now', channels: ['in_app', 'email'],
+    email: { subject: 'Your ServisAku commission settlement is ready' },
+  },
+  commission_due: {
+    category: 'wallet', priority: 'high', icon: '⏰', role: 'partner',
+    title: 'Commission payment due',
+    message: (d) => `${d.amount || 'Your commission'} is due now for settlement ${d.reference || ''}.`,
+    actionUrl: '/partner/wallet', ctaLabel: 'Settle Now', channels: ['in_app', 'push', 'email'],
+    email: { subject: 'Action needed: your ServisAku commission is due' },
+  },
+  commission_overdue: {
+    category: 'wallet', priority: 'urgent', icon: '🚨', role: 'partner',
+    title: 'Commission overdue',
+    message: (d) => `${d.amount || 'Your commission'} is ${d.days || 'several'} day(s) overdue. Settle now to keep receiving jobs.`,
+    actionUrl: '/partner/wallet', ctaLabel: 'Settle Now', channels: ['in_app', 'push', 'email', 'sms'],
+    email: { subject: 'Urgent: your ServisAku commission is overdue' },
+    sms: (d) => `ServisAku: Your commission ${d.amount || ''} is overdue. Settle now to keep receiving jobs.`,
+  },
+  settlement_paid: {
+    category: 'wallet', priority: 'normal', icon: '✅', role: 'partner',
+    title: 'Settlement paid',
+    message: (d) => `Thank you — settlement ${d.reference || ''}${d.amount ? ` of ${d.amount}` : ''} is fully paid.`,
+    actionUrl: '/partner/wallet', channels: ['in_app', 'email'],
+    email: { subject: 'Your ServisAku commission settlement is paid' },
+  },
+  account_frozen_overdue: {
+    category: 'wallet', priority: 'urgent', icon: '🚫', role: 'partner',
+    title: 'New jobs paused',
+    message: (d) => `You won't receive new jobs until your outstanding commission is settled${d.reason ? ` (${d.reason})` : ''}.`,
+    actionUrl: '/partner/wallet', ctaLabel: 'Settle Now', channels: ['in_app', 'push', 'email', 'sms'],
+    email: { subject: 'Your ServisAku account is paused for overdue commission' },
+    sms: () => 'ServisAku: New jobs are paused until your outstanding commission is settled.',
+  },
+  account_unfrozen: {
+    category: 'wallet', priority: 'high', icon: '🎉', role: 'partner',
+    title: 'You\'re back online',
+    message: 'Your commission is settled — you\'ll start receiving new jobs again.',
+    actionUrl: '/partner/wallet', channels: ['in_app', 'push'],
+  },
+  payouts_suspended: {
+    category: 'wallet', priority: 'urgent', icon: '⛔', role: 'partner',
+    title: 'Payouts suspended',
+    message: 'Payouts are on hold until your overdue commission is settled.',
+    actionUrl: '/partner/wallet', ctaLabel: 'Settle Now', channels: ['in_app', 'email'],
+    email: { subject: 'Your ServisAku payouts are on hold' },
   },
 
   // ── Partner: account ─────────────────────────────────────────────────────

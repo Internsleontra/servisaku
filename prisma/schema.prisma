@@ -60,6 +60,7 @@ model User {
   training           TrainingProgress[]
   supportTickets     SupportTicket[]
   inventory          InventoryItem[]
+  wallet             PartnerWallet?
 
   @@index([role, partnerVerified])
 }
@@ -213,17 +214,32 @@ model Review {
   user    User    @relation(fields: [userId], references: [id])
 }
 
-// ─── Payments (gateway abstraction: mock | billplz) ─────────────────────────
+// ─── Payments (gateway abstraction: mock | billplz | stripe | cash) ──────────
+// NOTE ON UNITS: `amount` is in **sen** (integer-valued) because that is what the
+// gateways transact in; `amountMyr` mirrors it in ringgit, matching Booking.price
+// and every model in §5. Only the provider adapters convert between the two.
 model Payment {
   id          String    @id @default(cuid())
   bookingId   String
-  amount      Float
+  amount      Float // sen
+  amountMyr   Float? // ringgit mirror of `amount`
   currency    String    @default("MYR")
-  method      String // fpx | card | tng | grabpay | boost | cash
-  provider    String    @default("mock") // mock | billplz
+  method      String // fpx | duitnow | card | applepay | googlepay | tng | grabpay | boost | cash
+  provider    String    @default("mock") // mock | billplz | stripe | cash
   status      String    @default("pending") // pending | paid | failed | refunded
+  // What this payment settles. `booking` is a consumer paying for a service;
+  // `commission_settlement` is a partner paying ServisAku what they owe on cash jobs.
+  type        String    @default("booking") // booking | commission_settlement | damage_compensation
+  partnerId   String? // payer, when the payer is a partner rather than the consumer
+  settlementId String?
   gatewayRef  String? // gateway bill / transaction id
   checkoutUrl String? // hosted checkout URL (real gateways)
+  refundedAmount Float  @default(0) // MYR, cumulative — supports repeated partial refunds
+  sstAmount   Float     @default(0) // MYR
+  platformFee Float     @default(0) // MYR — commission snapshot at payment time
+  netToPartner Float    @default(0) // MYR
+  collectedById String? // partner user id who recorded a cash collection
+  idempotencyKey String? @unique
   paidAt      DateTime?
   raw         Json? // gateway payload snapshot
   createdAt   DateTime  @default(now())
@@ -233,6 +249,8 @@ model Payment {
 
   @@index([bookingId])
   @@index([gatewayRef])
+  @@index([type, status])
+  @@index([partnerId])
 }
 
 // Idempotency ledger for gateway webhooks — a given (provider,eventId) is processed once.
@@ -291,6 +309,113 @@ model PayoutRecord {
   createdAt        DateTime  @default(now())
 
   @@index([partnerId])
+}
+
+// ─── §5 Partner wallet & cash-commission settlement ──────────────────────────
+// Online bookings: the consumer pays up front, ServisAku holds the money in
+// EscrowLedger and pays the partner out net of commission — the platform is never
+// owed anything. Cash bookings invert that: the partner collects the full fare at
+// the door, so the *commission* becomes a debt the partner owes ServisAku. That
+// debt lives in PartnerWallet.outstandingCommission and is cleared periodically
+// through a CommissionSettlement.
+//
+// All amounts are MYR (see the units note on Payment).
+
+model PartnerWallet {
+  id                    String    @id @default(cuid())
+  partnerId             String    @unique
+  availableBalance      Float     @default(0) // released earnings, withdrawable
+  pendingBalance        Float     @default(0) // earned but still held in escrow
+  outstandingCommission Float     @default(0) // owed to ServisAku from cash jobs
+  lifetimeEarnings      Float     @default(0)
+  lifetimeCommission    Float     @default(0)
+  // Grace before the overdue ladder starts — freezing a partner who owes RM 3 is
+  // hostile and costs more in support than it recovers.
+  creditLimit           Float     @default(50)
+  settlementCycle       String    @default("weekly") // weekly | monthly
+  nextSettlementDate    DateTime?
+  isFrozen              Boolean   @default(false) // blocks new job dispatch
+  payoutsSuspended      Boolean   @default(false)
+  freezeReason          String?
+  frozenAt              DateTime?
+  currency              String    @default("MYR")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  partner     User                   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  entries     WalletLedgerEntry[]
+  settlements CommissionSettlement[]
+
+  @@index([isFrozen])
+  @@index([nextSettlementDate])
+}
+
+// Append-only. Never UPDATE or DELETE a row — corrections are new `reversal` rows
+// pointing at what they undo. `balanceAfter` makes any historical balance
+// reproducible without replaying the whole table.
+model WalletLedgerEntry {
+  id           String   @id @default(cuid())
+  walletId     String
+  partnerId    String
+  type         String // earning_credit | commission_debit | payout_debit | settlement_credit
+  // | escrow_hold | escrow_release | refund_debit | damage_deduction | penalty | bonus
+  // | adjustment | reversal | opening_balance
+  direction    String // credit | debit
+  bucket       String // available | pending | outstanding
+  amount       Float
+  balanceAfter Float // the bucket's balance immediately after this entry
+  description  String
+  bookingId    String?
+  paymentId    String?
+  payoutId     String?
+  settlementId String?
+  claimId      String?
+  reversalOf   String? // WalletLedgerEntry.id this entry reverses
+  createdById  String? // admin user id, for manual adjustments
+  // Guards against double-crediting when a gateway redelivers a webhook. Composed
+  // by the caller (e.g. "earning:<bookingId>") so the DB — not application logic —
+  // enforces once-only semantics.
+  idempotencyKey String? @unique
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  wallet PartnerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, createdAt])
+  @@index([bookingId])
+  @@index([type])
+}
+
+model CommissionSettlement {
+  id                  String    @id @default(cuid())
+  walletId            String
+  partnerId           String
+  reference           String    @unique // "STL-2026W31-3F9A" — also the concurrency guard
+  cycle               String // weekly | monthly
+  periodStart         DateTime
+  periodEnd           DateTime
+  grossCashCollected  Float     @default(0)
+  commissionDue       Float     @default(0)
+  sstOnCommission     Float     @default(0) // ServisAku's commission is itself a taxable supply
+  totalDue            Float     @default(0)
+  amountPaid          Float     @default(0)
+  status              String    @default("pending") // pending | partially_paid | paid | overdue | waived | written_off
+  dueDate             DateTime
+  paidAt              DateTime?
+  paymentId           String? // Payment row of type 'commission_settlement'
+  bookingIds          Json? // snapshot of the bookings rolled into this settlement
+  remindersSent       Int       @default(0)
+  lastReminderAt      DateTime?
+  adminOverrideById   String?
+  adminOverrideReason String?
+  adminOverrideAt     DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  wallet PartnerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, status])
+  @@index([status, dueDate])
 }
 
 model ChatMessage {

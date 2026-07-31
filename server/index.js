@@ -30,7 +30,9 @@ import supportRouter from './routes/support.js';
 import catalogRouter from './routes/catalog.js';
 import addressesRouter from './routes/addresses.js';
 import notificationSettingsRouter from './routes/notificationSettings.js';
+import walletRouter from './routes/wallet.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
+import { startSettlementWorker } from './lib/wallet/settlement.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -78,6 +80,7 @@ api.use('/escrow', escrowRouter);
 api.use('/payments', paymentsRouter);
 api.use('/refunds', refundsRouter);
 api.use('/payouts', payoutsRouter);
+api.use('/wallet', walletRouter);
 api.use('/chat', chatRouter);
 api.use('/notifications', notificationsRouter);
 api.use('/notification-settings', notificationSettingsRouter);
@@ -111,6 +114,10 @@ attachRealtime(server, { cors: { origin: corsOrigins, credentials: true } })
 
 // Background workers: release scheduled notifications when they come due.
 startNotificationWorkers();
+// Generate commission settlements for closed periods and run the overdue ladder.
+// Idempotent per period (unique settlement reference), so it is safe to re-run
+// after a restart and safe to run on more than one instance.
+startSettlementWorker();
 
 server.listen(PORT, () => {
   console.log(`✅ ServisAku API running on http://localhost:${PORT}`);

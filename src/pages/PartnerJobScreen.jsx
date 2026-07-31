@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Navigation, Phone, MessageSquare, CheckCircle2,
-  AlertTriangle, Clock, MapPin, ArrowLeft, ClipboardList, Receipt, History,
+  AlertTriangle, Clock, MapPin, ArrowLeft, ClipboardList, Receipt, History, Banknote,
 } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { useRealtimeBooking } from '@/hooks/useRealtimeBooking';
@@ -42,6 +42,7 @@ export default function PartnerJobScreen() {
   const [showCannotAccess, setShowCannotAccess] = useState(false);
   const [delayMinutes, setDelayMinutes] = useState('15');
   const [uploadingPhase, setUploadingPhase] = useState(null);
+  const [collectingCash, setCollectingCash] = useState(false);
 
   useEffect(() => {
     servisaku.auth.me().then(setUser);
@@ -86,6 +87,24 @@ export default function PartnerJobScreen() {
   const afterPhotos = booking.photos?.after || [];
   const customerPhotos = booking.service_specific_data?.customer_uploads || [];
   const completed = booking.status === 'completed';
+  const isCashJob = booking.payment_method === 'cash';
+  const cashCollected = ['paid', 'escrowed'].includes(booking.payment_status);
+
+  // Record cash taken at the door. The server re-derives the amount from the
+  // booking and rejects a mismatch, so this only ever confirms — it never sets
+  // the figure.
+  const handleCollectCash = async () => {
+    setCollectingCash(true);
+    try {
+      await servisaku.payments.collectCash(booking.id, booking.price);
+      setBooking((b) => ({ ...b, payment_status: 'paid' }));
+      toast.success('Cash payment recorded');
+    } catch (err) {
+      toast.error(err?.message || 'Could not record the cash payment');
+    } finally {
+      setCollectingCash(false);
+    }
+  };
 
   const handleAction = async () => {
     if (!action) return;
@@ -387,7 +406,49 @@ export default function PartnerJobScreen() {
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center">
             <span className="text-4xl mb-2 block">🎉</span>
             <p className="font-bold text-emerald-700 text-lg">Job Completed!</p>
-            <p className="text-xs text-emerald-600 mt-1">RM {payout} will be credited within 48 hours</p>
+            <p className="text-xs text-emerald-600 mt-1">
+              {isCashJob
+                ? `Collect RM ${booking.price?.toFixed(2)} from the customer`
+                : `RM ${payout} will be credited within 48 hours`}
+            </p>
+          </div>
+        )}
+
+        {/* Cash collection — the entry point of the cash flow. Only shown on a
+            completed cash job that hasn't been recorded yet. */}
+        {completed && isCashJob && !cashCollected && (
+          <div className="bg-surface border-2 border-amber-300 rounded-2xl p-5">
+            <div className="flex items-start gap-3">
+              <Banknote className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold text-sm text-ink">Record cash payment</p>
+                <p className="text-xs text-ink-secondary mt-1">
+                  Confirm you received <strong>RM {booking.price?.toFixed(2)}</strong> from the
+                  customer. ServisAku's commission will be added to your outstanding
+                  balance and settled {'later'} — see your wallet.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={handleCollectCash}
+              disabled={collectingCash}
+              className="w-full h-11 rounded-xl mt-4 bg-amber-600 hover:bg-amber-700 text-white font-bold"
+            >
+              {collectingCash ? 'Recording…' : `Confirm RM ${booking.price?.toFixed(2)} received`}
+            </Button>
+          </div>
+        )}
+
+        {completed && isCashJob && cashCollected && (
+          <div className="bg-surface border border-hairline/20 rounded-2xl p-4 flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-ink">Cash payment recorded</p>
+              <p className="text-xs text-ink-secondary">
+                Commission added to your outstanding balance.{' '}
+                <Link to="/partner/wallet" className="font-semibold text-brand underline">View wallet</Link>
+              </p>
+            </div>
           </div>
         )}
       </div>

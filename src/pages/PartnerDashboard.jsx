@@ -6,10 +6,13 @@ import {
   ChevronDown, LifeBuoy, Trophy, CheckCircle2, TrendingUp, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { OutstandingCommissionBanner } from '@/components/partner/OutstandingCommissionBanner';
 import { toast } from 'sonner';
 import moment from 'moment';
 
-const payoutOf = (j) => j.partner_payout ?? Math.round((j.price || 0) * 0.8);
+// Keep the sen. The server splits to 2dp (server/lib/payments/commission.js);
+// rounding to whole ringgit here would show a figure the wallet disagrees with.
+const payoutOf = (j) => j.partner_payout ?? Math.round((j.price || 0) * 0.8 * 100) / 100;
 const fmt = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 const ONGOING = ['accepted', 'en_route', 'arrived', 'started'];
 
@@ -203,6 +206,12 @@ export default function PartnerDashboard() {
             </Link>
           </div>
         </header>
+
+        {/* Outstanding cash commission / freeze warning. Self-hiding when there
+            is nothing to report. */}
+        <div className="mt-6">
+          <OutstandingCommissionBanner />
+        </div>
 
         {/* Body grid */}
         <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_340px]">

@@ -259,12 +259,18 @@ export const apiClient = {
     createBooking: (payload) => post('/bookings/dynamic', payload),
   },
 
-  // Payments (Billplz). create → hosted checkout URL; sync → confirm after the
-  // redirect back (needed in local dev where the webhook can't reach us).
+  // Payments. `methods` is served from the backend provider registry so the
+  // available list reflects which gateways are actually configured, rather than
+  // a hardcoded front-end constant. create → hosted checkout URL; sync → confirm
+  // after the redirect back (needed in local dev where the webhook can't reach us).
   payments: {
+    methods: () => get('/payments/methods'),
     create: (bookingId, method) => post('/payments/create', { booking_id: bookingId, method }),
     sync: (paymentId) => post(`/payments/${paymentId}/sync`),
     get: (paymentId) => get(`/payments/${paymentId}`),
+    // Partner records cash taken at the door. Amount must match the booking total.
+    collectCash: (bookingId, amountCollected) =>
+      post('/payments/cash/collect', { booking_id: bookingId, amount_collected: amountCollected }),
   },
 
   // Saved service addresses (consumer).
@@ -275,10 +281,19 @@ export const apiClient = {
     remove: (id) => del(`/addresses/${id}`),
   },
 
-  // Partner wallet (computed balance + withdrawals).
+  // Partner wallet. `get` keeps hitting /payouts/wallet — same response shape as
+  // before, now ledger-backed. The richer surface (ledger entries, commission
+  // settlements) lives under /wallet.
   wallet: {
     get: () => get('/payouts/wallet'),
     withdraw: (amount) => post('/payouts/withdraw', { amount }),
+    detail: () => get('/wallet'),
+    ledger: (query = {}) => get(`/wallet/ledger?${new URLSearchParams(query)}`),
+    settlements: () => get('/wallet/settlements'),
+    settlement: (id) => get(`/wallet/settlements/${id}`),
+    paySettlement: (id, method) => post(`/wallet/settlements/${id}/pay`, { method }),
+    paySettlementFromBalance: (id, amount) =>
+      post(`/wallet/settlements/${id}/pay-from-balance`, amount ? { amount } : {}),
   },
 
   // Partner availability config.

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Lock, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Shield, Lock, CheckCircle2, XCircle, RefreshCw, Banknote } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
-import { PAYMENT_METHODS, calcPriceBreakdown, formatRM } from '@/lib/paymentEngine';
+import { formatRM } from '@/lib/paymentEngine';
 import { generateIdempotencyKey, markPaymentSubmitted, clearPaymentRecord, auditLog } from '@/lib/security';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,12 +15,9 @@ export default function PaymentCheckout() {
   const bookingId = params.get('booking');
 
   const [booking, setBooking] = useState(null);
+  const [methods, setMethods] = useState([]);
   const [method, setMethod] = useState('fpx');
   const [selectedBank, setSelectedBank] = useState('');
-  const [cardNo, setCardNo] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardName, setCardName] = useState('');
   const [processing, setProcessing] = useState(false);
   const [payState, setPayState] = useState('idle'); // idle | processing | success | failed
 
@@ -28,37 +25,72 @@ export default function PaymentCheckout() {
     if (bookingId) servisaku.entities.Booking.get(bookingId).then(setBooking);
   }, [bookingId]);
 
+  // The method list comes from the backend provider registry, so what's offered
+  // reflects which gateways are actually configured for this deployment.
+  useEffect(() => {
+    servisaku.payments.methods()
+      .then((list) => {
+        setMethods(list);
+        const firstAvailable = list.find((m) => m.available);
+        if (firstAvailable) setMethod(firstAvailable.id);
+      })
+      .catch(() => setMethods([]));
+  }, []);
+
   if (!booking && bookingId) return (
     <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
   );
 
-  const raw = booking?.price || 120;
-  const breakdown = calcPriceBreakdown(raw, booking?.discount_amount || 0);
+  // The server charges Booking.price — the amount already includes whatever tax
+  // and fees the pricing engine applied at booking time (Booking.priceBreakdown).
+  // Recomputing a total here would show the customer a figure the gateway never
+  // charges, so display exactly what will be taken.
+  const total = booking?.price ?? 0;
+  const breakdown = booking?.price_breakdown ?? null;
+  const taxLine = breakdown?.breakdown?.find?.((l) => l.type === 'TAX') ?? null;
+  const selected = methods.find((m) => m.id === method) ?? null;
+  const isCash = method === 'cash';
 
   const handlePay = async () => {
-    // Payment replay prevention
-    const idemKey = generateIdempotencyKey(booking?.id || 'demo', breakdown.total, method);
-    if (!markPaymentSubmitted(idemKey)) {
-      toast.error('This payment was already submitted. Check your booking status.');
-      auditLog('PAYMENT_REPLAY_BLOCKED', { bookingId: booking?.id, amount: breakdown.total });
+    // Cash is not charged now — the partner collects at completion and records
+    // it from their app. Just mark the booking's intent and send the customer on.
+    if (isCash) {
+      try {
+        setProcessing(true);
+        await servisaku.entities.Booking.update(booking.id, { payment_method: 'cash' });
+        auditLog('PAYMENT_METHOD_CASH', { bookingId: booking?.id, amount: total });
+        toast.success('Cash selected — pay your professional when the job is done');
+        navigate(`/booking/${booking.id}`);
+      } catch (e) {
+        toast.error(e.message || 'Could not select cash payment');
+        setProcessing(false);
+      }
       return;
     }
 
-    auditLog('PAYMENT_INITIATED', { method, amount: breakdown.total, bookingId: booking?.id });
+    // Payment replay prevention
+    const idemKey = generateIdempotencyKey(booking?.id || 'demo', total, method);
+    if (!markPaymentSubmitted(idemKey)) {
+      toast.error('This payment was already submitted. Check your booking status.');
+      auditLog('PAYMENT_REPLAY_BLOCKED', { bookingId: booking?.id, amount: total });
+      return;
+    }
+
+    auditLog('PAYMENT_INITIATED', { method, amount: total, bookingId: booking?.id });
     setPayState('processing');
     setProcessing(true);
 
     try {
       if (!booking?.id) throw new Error('No booking selected to pay for');
-      // Create a Billplz bill on the backend and hand off to its hosted checkout.
-      // Payment/escrow are confirmed server-side when Billplz redirects back to
-      // /payment/return (and via webhook in production).
+      // The backend picks the gateway for this method and returns its hosted
+      // checkout URL. Payment/escrow are confirmed server-side on the redirect
+      // back to /payment/return (and via webhook in production).
       const payment = await servisaku.payments.create(booking.id, method);
       if (!payment?.checkout_url) throw new Error('Could not start payment');
       window.location.href = payment.checkout_url;
     } catch (e) {
-      clearPaymentRecord(booking?.id || 'demo', breakdown.total);
-      auditLog('PAYMENT_FAILED', { method, amount: breakdown.total, error: e.message });
+      clearPaymentRecord(booking?.id || 'demo', total);
+      auditLog('PAYMENT_FAILED', { method, amount: total, error: e.message });
       toast.error(e.message || 'Payment could not be started');
       setPayState('failed');
       setProcessing(false);
@@ -71,10 +103,10 @@ export default function PaymentCheckout() {
         <CheckCircle2 className="h-12 w-12 text-emerald-600" />
       </div>
       <h2 className="text-2xl font-bold mb-1">Payment Successful</h2>
-      <p className="text-sm text-muted-foreground mb-1">{formatRM(breakdown.total)} paid via {PAYMENT_METHODS.find(m => m.id === method)?.label}</p>
+      <p className="text-sm text-muted-foreground mb-1">{formatRM(total)} paid via {selected?.label || method}</p>
       <p className="text-xs text-muted-foreground mb-6">Funds held in escrow until service completion</p>
       <div className="bg-surface rounded-2xl border border-border p-4 w-full max-w-xs mb-6 text-left space-y-2 text-xs">
-        <div className="flex justify-between"><span className="text-muted-foreground">Amount paid</span><span className="font-bold">{formatRM(breakdown.total)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Amount paid</span><span className="font-bold">{formatRM(total)}</span></div>
         <div className="flex justify-between"><span className="text-muted-foreground">Transaction ID</span><span className="font-mono text-[10px]">TXN{Date.now().toString().slice(-8)}</span></div>
         <div className="flex justify-between"><span className="text-muted-foreground">Escrow release</span><span className="font-medium">48h after completion</span></div>
       </div>
@@ -123,18 +155,24 @@ export default function PaymentCheckout() {
         <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3">Order Summary</p>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">{booking?.service_type || 'Service'} ({booking?.package_name || 'Basic'})</span><span>{formatRM(raw)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{booking?.service_type || 'Service'} ({booking?.package_name || 'Basic'})</span><span>{formatRM(total)}</span></div>
             {(booking?.discount_amount || 0) > 0 && (
               <div className="flex justify-between text-emerald-600"><span>Promo ({booking?.coupon_code})</span><span>-{formatRM(booking.discount_amount)}</span></div>
             )}
-            <div className="flex justify-between text-muted-foreground text-xs"><span>SST (6%)</span><span>{formatRM(breakdown.tax)}</span></div>
+            {/* Tax comes from the server's price snapshot, not a client-side rate —
+                the booking was priced once and the invoice never recalculates. */}
+            {taxLine && (
+              <div className="flex justify-between text-muted-foreground text-xs"><span>{taxLine.label}</span><span>{formatRM(taxLine.amount)}</span></div>
+            )}
             <div className="border-t border-border pt-2 flex justify-between font-bold">
-              <span>Total Payable</span><span className="text-primary text-lg">{formatRM(breakdown.total)}</span>
+              <span>Total Payable</span><span className="text-primary text-lg">{formatRM(total)}</span>
             </div>
           </div>
-          <div className="mt-3 flex items-start gap-2 bg-blue-50 rounded-xl p-2.5 text-xs text-blue-700">
-            <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            Funds are held in escrow and released to the partner only after service completion
+          <div className={`mt-3 flex items-start gap-2 rounded-xl p-2.5 text-xs ${isCash ? 'bg-amber-50 text-amber-800' : 'bg-blue-50 text-blue-700'}`}>
+            {isCash ? <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" /> : <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
+            {isCash
+              ? `Pay ${formatRM(total)} directly to your professional when the job is complete. They'll record it in the app and you'll get a receipt.`
+              : 'Funds are held in escrow and released to the partner only after service completion'}
           </div>
         </div>
 
@@ -142,13 +180,18 @@ export default function PaymentCheckout() {
         <div>
           <p className="text-sm font-bold mb-2">Payment Method</p>
           <div className="space-y-2">
-            {PAYMENT_METHODS.map(pm => (
-              <button key={pm.id} onClick={() => setMethod(pm.id)}
-                className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${method === pm.id ? 'border-primary bg-accent' : 'border-border bg-surface'}`}>
+            {methods.map(pm => (
+              <button key={pm.id} onClick={() => pm.available && setMethod(pm.id)}
+                disabled={!pm.available}
+                className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
+                  method === pm.id ? 'border-primary bg-accent' : 'border-border bg-surface'
+                } ${pm.available ? '' : 'opacity-45 cursor-not-allowed'}`}>
                 <span className="text-xl w-7 text-center">{pm.icon}</span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold">{pm.label}</p>
-                  <p className="text-xs text-muted-foreground">{pm.sub}</p>
+                  {/* Unavailable methods stay visible but explain themselves rather
+                      than silently vanishing from the list. */}
+                  <p className="text-xs text-muted-foreground">{pm.available ? pm.sub : 'Currently unavailable'}</p>
                 </div>
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${method === pm.id ? 'border-primary bg-primary' : 'border-border'}`}>
                   {method === pm.id && <div className="w-2 h-2 bg-surface rounded-full" />}
@@ -173,35 +216,24 @@ export default function PaymentCheckout() {
           </div>
         )}
 
-        {/* Card Fields */}
-        {method === 'visa' && (
-          <div className="space-y-3">
-            <p className="text-sm font-bold">Card Details</p>
-            <input value={cardNo} onChange={e => setCardNo(e.target.value.replace(/\D/g,'').slice(0,16))}
-              placeholder="Card Number" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
-            <input value={cardName} onChange={e => setCardName(e.target.value)}
-              placeholder="Cardholder Name" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-primary/20" />
-            <div className="grid grid-cols-2 gap-3">
-              <input value={expiry} onChange={e => setExpiry(e.target.value)} placeholder="MM/YY"
-                className="bg-surface border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
-              <input value={cvv} onChange={e => setCvv(e.target.value.slice(0,3))} placeholder="CVV"
-                type="password" className="bg-surface border border-border rounded-xl px-4 py-3 text-sm font-mono outline-none focus:ring-2 ring-primary/20" />
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3" /> PCI DSS compliant — card data never stored
-            </div>
+        {/* Card / wallet methods.
+            No card fields here by design: card, Apple Pay and Google Pay are all
+            captured on the gateway's own hosted page. Collecting a card number
+            in this app would put it in PCI scope for no benefit — the previous
+            fields were never sent anywhere. */}
+        {['card', 'applepay', 'googlepay'].includes(method) && (
+          <div className="flex items-start gap-2 bg-surface rounded-2xl border border-border p-4 text-xs text-muted-foreground">
+            <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            You'll be taken to our payment provider's secure page to complete this
+            payment. ServisAku never sees or stores your card details.
           </div>
         )}
 
-        {/* DuitNow QR */}
+        {/* DuitNow */}
         {method === 'duitnow' && (
-          <div className="flex flex-col items-center bg-surface rounded-3xl border border-border p-6">
-            <div className="w-40 h-40 bg-muted rounded-2xl flex flex-col items-center justify-center mb-3">
-              <span className="text-5xl mb-1">🇲🇾</span>
-              <p className="text-xs font-bold text-muted-foreground">DuitNow QR</p>
-              <p className="text-[10px] text-muted-foreground">Scan to pay {formatRM(breakdown.total)}</p>
-            </div>
-            <p className="text-xs text-muted-foreground text-center">Open your banking app and scan the QR code above</p>
+          <div className="flex items-start gap-2 bg-surface rounded-2xl border border-border p-4 text-xs text-muted-foreground">
+            <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            You'll be redirected to complete the DuitNow transfer from your banking app.
           </div>
         )}
       </div>
@@ -211,13 +243,15 @@ export default function PaymentCheckout() {
         <div className="max-w-lg mx-auto bg-white/95 backdrop-blur-xl border-t border-border px-5 py-4">
           <Button
             onClick={handlePay}
-            disabled={processing || (method === 'fpx' && !selectedBank) || (method === 'visa' && (!cardNo || !cvv || !expiry || !cardName))}
+            disabled={processing || !selected?.available || (method === 'fpx' && !selectedBank)}
             className="w-full h-12 rounded-2xl shadow-[0_8px_40px_rgba(20,83,45,0.18)] text-base font-bold"
           >
             {processing ? (
               <span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" /> Processing...</span>
+            ) : isCash ? (
+              <span className="flex items-center gap-2"><Banknote className="h-4 w-4" /> Confirm Cash Payment</span>
             ) : (
-              <span className="flex items-center gap-2"><Lock className="h-4 w-4" /> Pay {formatRM(breakdown.total)}</span>
+              <span className="flex items-center gap-2"><Lock className="h-4 w-4" /> Pay {formatRM(total)}</span>
             )}
           </Button>
           <p className="text-center text-[10px] text-muted-foreground mt-2">

@@ -8,6 +8,7 @@ import PageNotFound from '@/lib/PageNotFound';
 const PartnerDashboard = lazy(() => import('@/pages/PartnerDashboard'));
 const PartnerCalendar = lazy(() => import('@/pages/PartnerCalendar'));
 const PartnerEarnings = lazy(() => import('@/pages/PartnerEarnings'));
+const PartnerWallet = lazy(() => import('@/pages/PartnerWallet'));
 const PartnerJobScreen = lazy(() => import('@/pages/PartnerJobScreen'));
 const PartnerOnboarding = lazy(() => import('@/pages/PartnerOnboarding'));
 const PartnerAvailability = lazy(() => import('@/pages/PartnerAvailability'));
@@ -38,6 +39,7 @@ export default function PartnerRoutes() {
         <Route path="/partner" element={<ProtectedRoute><PartnerOnly><PartnerDashboard /></PartnerOnly></ProtectedRoute>} />
         <Route path="/partner/calendar" element={<ProtectedRoute><PartnerOnly><PartnerCalendar /></PartnerOnly></ProtectedRoute>} />
         <Route path="/partner/earnings" element={<ProtectedRoute><PartnerOnly><PartnerEarnings /></PartnerOnly></ProtectedRoute>} />
+        <Route path="/partner/wallet" element={<ProtectedRoute><PartnerOnly><PartnerWallet /></PartnerOnly></ProtectedRoute>} />
         <Route path="/partner/job/:bookingId" element={<ProtectedRoute><PartnerOnly><PartnerJobScreen /></PartnerOnly></ProtectedRoute>} />
         <Route path="/partner/onboarding" element={<ProtectedRoute><PartnerOnboarding /></ProtectedRoute>} />
         <Route path="/partner/availability" element={<ProtectedRoute><PartnerOnly><PartnerAvailability /></PartnerOnly></ProtectedRoute>} />

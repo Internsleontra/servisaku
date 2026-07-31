@@ -309,14 +309,42 @@ export const mockClient = {
   },
 
   payments: {
+    // Demo mode has no gateway, but the checkout still needs a method list to
+    // render — return the same shape the backend registry produces.
+    async methods() {
+      return [
+        { id: 'fpx', label: 'FPX Online Banking', icon: '🏦', sub: 'Maybank, CIMB, Public Bank, RHB', online: true, available: false, provider: null },
+        { id: 'duitnow', label: 'DuitNow', icon: '🇲🇾', sub: 'Pay from any Malaysian bank', online: true, available: false, provider: null },
+        { id: 'card', label: 'Credit / Debit Card', icon: '💳', sub: 'Visa, Mastercard', online: true, available: false, provider: null },
+        { id: 'cash', label: 'Cash on Service', icon: '💵', sub: 'Pay your professional at completion', online: false, available: false, provider: null },
+      ];
+    },
     async create() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
     async sync() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
     async get() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
+    async collectCash() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
   },
 
   wallet: {
-    async get() { return { lifetime: 0, pending: 0, withdrawn: 0, withdrawable: 0, balance: 0, currency: 'MYR' }; },
+    async get() {
+      return {
+        lifetime: 0, pending: 0, withdrawn: 0, withdrawable: 0, balance: 0, currency: 'MYR',
+        outstanding_commission: 0, payouts_suspended: false, is_frozen: false,
+      };
+    },
     async withdraw() { throw new Error('Withdrawals require the backend (demo mode)'); },
+    async detail() {
+      return {
+        available_balance: 0, pending_balance: 0, outstanding_commission: 0,
+        lifetime_earnings: 0, lifetime_commission: 0, credit_limit: 50,
+        settlement_cycle: 'weekly', is_frozen: false, payouts_suspended: false, currency: 'MYR',
+      };
+    },
+    async ledger() { return { items: [], total: 0, limit: 50, offset: 0 }; },
+    async settlements() { return []; },
+    async settlement() { throw new Error('Settlements require the backend (demo mode)'); },
+    async paySettlement() { throw new Error('Settlements require the backend (demo mode)'); },
+    async paySettlementFromBalance() { throw new Error('Settlements require the backend (demo mode)'); },
   },
 
   availability: {

@@ -14,7 +14,7 @@ const NAV = [
   { label: 'Availability', icon: Clock, to: '/partner/availability' },
   { label: 'Earnings', icon: Banknote, to: '/partner/earnings' },
   { label: 'Reviews', icon: Star, to: '/partner/reviews' },
-  { label: 'Wallet', icon: Wallet, to: '/partner/earnings' },
+  { label: 'Wallet', icon: Wallet, to: '/partner/wallet' },
   { label: 'Notifications', icon: Bell, to: '/notifications', badge: NOTIF_COUNT },
   { label: 'Help & Support', icon: HelpCircle, to: '/partner/support' },
   { label: 'Settings', icon: Settings, to: '/partner/settings' },

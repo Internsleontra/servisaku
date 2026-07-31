@@ -4,6 +4,7 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, bookingScope, isBookingParticipant } from '../lib/access.js';
+import { creditEarning } from '../lib/wallet/index.js';
 
 const router = Router();
 router.use(authenticate);
@@ -49,10 +50,24 @@ const patchSchema = z.object({
 // Money-state transitions are admin-only. Escrow rows are created by the server
 // itself during booking creation — there is no client create endpoint.
 router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema), asyncHandler(async (req, res) => {
+  const existing = await prisma.escrowLedger.findUnique({
+    where: { id: req.params.id },
+    include: { booking: { include: { partner: true } } },
+  });
+  if (!existing) throw new ApiError(404, 'Not found');
+
   const data = { status: req.body.status };
   if (req.body.freeze_reason !== undefined) data.freezeReason = req.body.freeze_reason;
   if (req.body.status === 'released') data.releasedAt = new Date();
   const item = await prisma.escrowLedger.update({ where: { id: req.params.id }, data });
+
+  // Releasing escrow is the moment the partner's earnings become withdrawable:
+  // the money moves from `pending` to `available` in their wallet. Fire once, on
+  // the transition, and let the ledger's idempotency key absorb any repeat.
+  if (existing.status !== 'released' && item.status === 'released' && existing.booking?.partnerId) {
+    creditEarning(existing.booking, { partner: existing.booking.partner }).catch((err) =>
+      console.error('[escrow] wallet credit failed:', err?.message || err));
+  }
   res.json(mapOut(item));
 }));
 
