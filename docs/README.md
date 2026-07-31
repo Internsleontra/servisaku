@@ -18,6 +18,9 @@ here is an incremental path from the code as it exists today.
 | [05-roadmap.md](05-roadmap.md) | Phased implementation plan (0–5), prioritized by business impact × dev effort, with acceptance criteria per phase |
 | [06-phase0-security-report.md](06-phase0-security-report.md) | **Phase 0 (done 2026-06-11):** 14 vulnerabilities found & fixed, 6 functional defects fixed, deferred items; verified by `scripts/phase0-smoke.mjs` (39 assertions) |
 | [07-postgres-migration.md](07-postgres-migration.md) | PostgreSQL migration runbook (reset-and-reseed) — target schema prepared at `prisma/postgres/schema.prisma`, includes the Phase 1 catalog tables |
+| [08-booking-engine.md](08-booking-engine.md) | Dynamic, configuration-driven booking engine — DB-driven Step-A questions, `computePrice()`, price snapshots |
+| [09-partner-app.md](09-partner-app.md) | Commercial-grade upgrade of the **web** Partner app (`src/apps/partner/`), 12-phase roadmap |
+| [10-remaining-features.md](10-remaining-features.md) | **Specification for the 10 remaining feature areas** — payments (online + cash commission), payouts, refunds/disputes, damage claims, AI chatbot, notifications, email templates, support, legal/T&C, Malaysian SST. Per-feature: business logic, Prisma delta, API changes, backend/frontend/admin work, notifications, validation, security, edge cases, tests |
 
 ## Executive summary
 
