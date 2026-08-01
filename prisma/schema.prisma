@@ -61,6 +61,7 @@ model User {
   supportTickets     SupportTicket[]
   inventory          InventoryItem[]
   wallet             PartnerWallet?
+  bankAccountDetail  PartnerBankAccount?
 
   @@index([role, partnerVerified])
 }
@@ -303,12 +304,79 @@ model PayoutRecord {
   commissionAmount Float
   netPayout        Float
   payoutMethod     String    @default("Bank Transfer")
+  // pending | scheduled | processing | completed | failed | cancelled
   status           String    @default("pending")
   failureReason    String?
   scheduledDate    DateTime?
   createdAt        DateTime  @default(now())
+  // ── Batch / period context ────────────────────────────────────────────────
+  batchId            String?
+  cycle              String    @default("manual") // weekly | monthly | manual
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  reference          String?   @unique // "PO-3F9A2B"
+  commissionDeducted Float     @default(0)
+  adjustments        Float     @default(0)
+  // Bank details AS AT payout time. Details change; a payout record must not.
+  bankSnapshot       Json?
+  gatewayRef         String?
+  paidAt             DateTime?
+  bookingIds         Json?
+
+  batch PayoutBatch? @relation(fields: [batchId], references: [id])
 
   @@index([partnerId])
+  @@index([batchId])
+  @@index([status, scheduledDate])
+}
+
+// A payout run. Generated as a draft, reviewed, approved, then processed —
+// approval is a deliberate second step; money never disburses automatically.
+model PayoutBatch {
+  id              String    @id @default(cuid())
+  reference       String    @unique // "PB-2026W31"
+  cycle           String // weekly | monthly | manual
+  periodStart     DateTime
+  periodEnd       DateTime
+  status          String    @default("draft") // draft | approved | processing | completed | failed | cancelled
+  partnerCount    Int       @default(0)
+  totalGross      Float     @default(0)
+  totalCommission Float     @default(0)
+  totalNet        Float     @default(0)
+  approvedById    String?
+  approvedAt      DateTime?
+  processedAt     DateTime?
+  exportUrl       String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  payouts PayoutRecord[]
+
+  @@index([status, periodEnd])
+}
+
+// User.bankAccount is a single opaque string — not enough for a real transfer,
+// which needs a bank code, an account name to match against, and a verification
+// state. That column stays for backward compatibility; this is the real record.
+model PartnerBankAccount {
+  id              String    @id @default(cuid())
+  partnerId       String    @unique
+  bankName        String
+  bankCode        String? // SWIFT / DuitNow proxy resolution
+  accountNumber   String
+  accountName     String // must match the partner's verified legal name
+  accountType     String    @default("savings")
+  isVerified      Boolean   @default(false)
+  verifiedAt      DateTime?
+  verifiedById    String?
+  rejectionReason String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  partner User @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([isVerified])
 }
 
 // ─── §5 Partner wallet & cash-commission settlement ──────────────────────────

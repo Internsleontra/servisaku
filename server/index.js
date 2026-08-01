@@ -34,6 +34,7 @@ import walletRouter from './routes/wallet.js';
 import invoicesRouter, { taxRouter } from './routes/invoices.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
+import { startPayoutWorker } from './lib/payouts/schedule.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -123,6 +124,9 @@ startNotificationWorkers();
 // Idempotent per period (unique settlement reference), so it is safe to re-run
 // after a restart and safe to run on more than one instance.
 startSettlementWorker();
+// Draft payout batches when a period closes. Stops at `draft` — approval and
+// processing stay human actions, so a bug here can never disburse money.
+startPayoutWorker();
 
 server.listen(PORT, () => {
   console.log(`✅ ServisAku API running on http://localhost:${PORT}`);

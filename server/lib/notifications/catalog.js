@@ -412,6 +412,43 @@ export const CATALOG = {
     email: { subject: 'Your ServisAku payouts are on hold' },
   },
 
+  // ── Partner: payouts ─────────────────────────────────────────────────────
+  payout_scheduled: {
+    category: 'payments', priority: 'normal', icon: '📅', role: 'partner',
+    title: 'Payout scheduled',
+    message: (d) => `${d.amount || 'Your payout'} is scheduled${d.when ? ` for ${d.when}` : ''}.`,
+    actionUrl: '/partner/earnings', channels: ['in_app'],
+  },
+  payout_completed: {
+    category: 'payments', priority: 'high', icon: '🏦', role: 'partner',
+    title: 'Payout sent',
+    message: (d) => `${d.amount || 'Your payout'} is on its way to your bank — funds usually arrive within 1–3 working days.`,
+    actionUrl: '/partner/earnings', ctaLabel: 'View Earnings', channels: ['in_app', 'push', 'email'],
+    email: { subject: 'Your ServisAku payout has been sent' },
+  },
+  payout_failed: {
+    category: 'payments', priority: 'urgent', icon: '⚠️', role: 'partner',
+    title: 'Payout failed',
+    message: (d) => `We couldn't send ${d.amount || 'your payout'}${d.reason ? `: ${d.reason}` : ''}. Please check your bank details.`,
+    actionUrl: '/partner/bank-details', ctaLabel: 'Check Details',
+    channels: ['in_app', 'push', 'email'],
+    email: { subject: 'Action needed: your ServisAku payout failed' },
+  },
+  bank_details_verified: {
+    category: 'payments', priority: 'normal', icon: '✅', role: 'partner',
+    title: 'Bank details verified',
+    message: 'Your bank details are verified — you\'ll be included in the next payout run.',
+    actionUrl: '/partner/bank-details', channels: ['in_app', 'push'],
+  },
+  bank_details_rejected: {
+    category: 'payments', priority: 'high', icon: '⚠️', role: 'partner',
+    title: 'Bank details need attention',
+    message: (d) => `Your bank details couldn't be verified${d.reason ? `: ${d.reason}` : ''}. Please update them.`,
+    actionUrl: '/partner/bank-details', ctaLabel: 'Update Details',
+    channels: ['in_app', 'push', 'email'],
+    email: { subject: 'Action needed: your ServisAku bank details' },
+  },
+
   // ── Partner: account ─────────────────────────────────────────────────────
   profile_approved: {
     category: 'system', priority: 'high', icon: '🎊', role: 'partner',
