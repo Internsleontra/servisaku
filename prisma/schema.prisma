@@ -177,6 +177,7 @@ model Booking {
   review         Review?
   refundRequests RefundRequest[]
   disputes       Dispute[]
+  damageClaims   DamageClaim[]
   chatMessages   ChatMessage[]
   payments       Payment[]
 
@@ -543,6 +544,104 @@ model CommissionSettlement {
 
   @@index([partnerId, status])
   @@index([status, dueDate])
+}
+
+// ─── §7 Damage claims ────────────────────────────────────────────────────────
+// Distinct from a refund: the loss is to the customer's property, not the
+// service fee, and the amount is unrelated to the booking price — a RM120
+// aircon service can damage a RM4,000 television.
+
+model DamageClaim {
+  id                      String    @id @default(cuid())
+  reference               String    @unique // "DMG-3F9A2B"
+  bookingId               String
+  consumerId              String
+  partnerId               String?
+  category                String // property | appliance | furniture | fixture | vehicle | personal_item | other
+  itemDescription         String
+  incidentDescription     String
+  incidentAt              DateTime?
+  claimedAmount           Float
+  approvedAmount          Float     @default(0)
+  currency                String    @default("MYR")
+  // submitted | acknowledged | awaiting_partner_response | investigating
+  // | awaiting_evidence | approved | partially_approved | rejected
+  // | compensating | compensated | closed | appealed
+  status                  String    @default("submitted")
+  isLate                  Boolean   @default(false) // filed outside the reporting window
+  partnerResponse         String?
+  partnerRespondedAt      DateTime?
+  // Liability is an explicit split, never inferred: 100% partner fault, 0% for
+  // pre-existing damage, shared when genuinely ambiguous.
+  partnerLiabilityPercent Float     @default(0)
+  partnerLiabilityAmount  Float     @default(0)
+  platformAbsorbed        Float     @default(0)
+  investigatorId          String?
+  investigationNotes      String?
+  decisionReason          String?
+  decidedById             String?
+  decidedAt               DateTime?
+  compensationMethod      String? // wallet_credit | original_payment | bank_transfer | insurance | replacement
+  compensationRef         String?
+  compensatedAt           DateTime?
+  insuranceClaimRef       String?
+  // SLA clocks — each is notified on breach risk.
+  acknowledgeDueAt        DateTime?
+  responseDueAt           DateTime?
+  investigationDueAt      DateTime?
+  compensationDueAt       DateTime?
+  appealCount             Int       @default(0)
+  closedAt                DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  booking  Booking               @relation(fields: [bookingId], references: [id])
+  evidence DamageClaimEvidence[]
+  events   DamageClaimEvent[]
+
+  @@index([status, createdAt])
+  @@index([partnerId])
+  @@index([consumerId])
+}
+
+model DamageClaimEvidence {
+  id             String   @id @default(cuid())
+  claimId        String
+  uploadedById   String
+  uploadedByRole String // consumer | partner | admin
+  kind           String // photo | video | document | invoice | quote | receipt
+  fileUrl        String
+  thumbnailUrl   String?
+  mimeType       String?
+  sizeBytes      Int?
+  durationSec    Int?
+  caption        String?
+  capturedAt     DateTime? // EXIF timestamp where available
+  createdAt      DateTime @default(now())
+
+  claim DamageClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+}
+
+// Immutable investigation timeline. This is the audit record behind a money
+// decision and must be defensible after the fact.
+model DamageClaimEvent {
+  id         String   @id @default(cuid())
+  claimId    String
+  actorId    String?
+  actorRole  String // consumer | partner | admin | system
+  action     String // submitted | acknowledged | evidence_added | partner_responded
+                    // | note_added | status_changed | decided | compensated | appealed
+  fromStatus String?
+  toStatus   String?
+  note       String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  claim DamageClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId, createdAt])
 }
 
 // Access-control record for an uploaded file. Appwrite Storage holds the bytes;
