@@ -32,6 +32,7 @@ import addressesRouter from './routes/addresses.js';
 import notificationSettingsRouter from './routes/notificationSettings.js';
 import walletRouter from './routes/wallet.js';
 import invoicesRouter, { taxRouter } from './routes/invoices.js';
+import uploadsRouter from './routes/uploads.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
 import { startPayoutWorker } from './lib/payouts/schedule.js';
@@ -84,6 +85,9 @@ api.use('/refunds', refundsRouter);
 api.use('/payouts', payoutsRouter);
 api.use('/wallet', walletRouter);
 api.use('/invoices', invoicesRouter);
+// Multipart — multer parses the body on this router, so express.json() above
+// leaves it alone.
+api.use('/uploads', uploadsRouter);
 // GET /tax/config is public (the client reads the SST rate rather than
 // hardcoding it); the PATCH inside is super_admin-gated on its own.
 api.use('/tax', taxRouter);

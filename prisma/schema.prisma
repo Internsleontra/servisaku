@@ -62,6 +62,7 @@ model User {
   inventory          InventoryItem[]
   wallet             PartnerWallet?
   bankAccountDetail  PartnerBankAccount?
+  uploads            UploadedFile[]
 
   @@index([role, partnerVerified])
 }
@@ -484,6 +485,27 @@ model CommissionSettlement {
 
   @@index([partnerId, status])
   @@index([status, dueDate])
+}
+
+// Access-control record for an uploaded file. Appwrite Storage holds the bytes;
+// this row decides who may read them. Files are never served from a public
+// bucket URL — every read goes through GET /api/uploads/:fileId so the check
+// happens per request.
+model UploadedFile {
+  id        String   @id @default(cuid())
+  fileId    String   @unique // Appwrite Storage file id
+  ownerId   String
+  context   String   @default("general") // damage_claim | dispute | support | booking_photo | general
+  filename  String
+  mimeType  String
+  sizeBytes Int
+  kind      String // image | video | document
+  createdAt DateTime @default(now())
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([context])
 }
 
 // ─── §6 Malaysian taxation (SST) & invoicing ─────────────────────────────────
