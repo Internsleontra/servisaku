@@ -368,6 +368,40 @@ export const CATALOG = {
     actionUrl: '/support', channels: ['in_app'],
   },
 
+  ticket_assigned: {
+    category: 'support', priority: 'normal', icon: '📥', role: 'partner',
+    title: 'Ticket assigned to you',
+    message: (d) => `Support ticket ${d.ticketRef || ''} has been assigned to you.`,
+    actionUrl: (d) => (d.ticketId ? `/support/${d.ticketId}` : '/support'),
+    channels: ['in_app'],
+  },
+  csat_request: {
+    category: 'support', priority: 'low', icon: '⭐', role: 'consumer',
+    title: 'How did we do?',
+    message: (d) => `Your ticket ${d.ticketRef || ''} is resolved. Rate the support you received.`,
+    actionUrl: (d) => (d.ticketId ? `/support/${d.ticketId}` : '/support'),
+    ctaLabel: 'Rate Support', channels: ['in_app'],
+  },
+  callback_requested: {
+    category: 'support', priority: 'normal', icon: '📞', role: 'consumer',
+    title: 'Callback requested',
+    message: (d) => `We'll call you back${d.when ? ` around ${d.when}` : ' in your chosen window'}.`,
+    actionUrl: '/support', channels: ['in_app', 'email'],
+    email: { subject: 'Your ServisAku callback request' },
+  },
+  callback_scheduled: {
+    category: 'support', priority: 'high', icon: '🗓️', role: 'consumer',
+    title: 'Callback scheduled',
+    message: (d) => `An agent will call you${d.when ? ` at ${d.when}` : ' shortly'}.`,
+    actionUrl: '/support', channels: ['in_app', 'push'],
+  },
+  callback_completed: {
+    category: 'support', priority: 'low', icon: '✔️', role: 'consumer',
+    title: 'Callback completed',
+    message: 'Thanks for speaking with us. Let us know if anything is still outstanding.',
+    actionUrl: '/support', channels: ['in_app'],
+  },
+
   // ── Consumer: promotions ─────────────────────────────────────────────────
   promo_offer: {
     category: 'promotions', priority: 'low', icon: '🎉', role: 'consumer',

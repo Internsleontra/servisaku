@@ -63,25 +63,131 @@ model User {
   wallet             PartnerWallet?
   bankAccountDetail  PartnerBankAccount?
   uploads            UploadedFile[]
+  callbackRequests   CallbackRequest[]
 
   @@index([role, partnerVerified])
 }
 
-// Support tickets raised by partners (or consumers).
+// Support tickets raised by consumers or partners.
 model SupportTicket {
   id        String   @id @default(cuid())
   userId    String
-  category  String // technical | payment | booking | report_customer | other
+  category  String // technical | payment | booking | report_customer | refund | damage | account | complaint | other
   subject   String
   message   String
-  status    String   @default("open") // open | resolved
+  // open | in_progress | awaiting_customer | escalated | resolved | closed | reopened
+  // (`open` and `resolved` keep their original meaning — this is a widening)
+  status    String   @default("open")
   bookingId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // ── Queue management ──────────────────────────────────────────────────────
+  reference          String?   @unique // "TKT-3F9A2B"
+  priority           String    @default("normal") // low | normal | high | urgent
+  channel            String    @default("app") // app | email | phone | chatbot | whatsapp
+  assignedToId       String?
+  escalationLevel    Int       @default(1) // 1 agent | 2 specialist | 3 manager
+  slaFirstResponseAt DateTime?
+  slaResolutionAt    DateTime?
+  firstResponseAt    DateTime?
+  resolvedAt         DateTime?
+  closedAt           DateTime?
+  reopenCount        Int       @default(0)
+  csatRating         Int? // 1–5
+  csatComment        String?
+  tags               Json?
+  chatbotConversationId String?
+  relatedClaimId     String?
+  relatedDisputeId   String?
+
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SupportTicketMessage[]
+
+  @@index([userId])
+  @@index([status, priority])
+  @@index([assignedToId, status])
+}
+
+model SupportTicketMessage {
+  id          String   @id @default(cuid())
+  ticketId    String
+  senderId    String
+  senderRole  String // consumer | partner | agent | system
+  message     String
+  // Agent-only note. Filtered out server-side in the customer view — a
+  // client-side-only filter is one API call away from leaking.
+  isInternal  Boolean  @default(false)
+  attachments Json? // [{ url, name, mimeType, sizeBytes }]
+  createdAt   DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+// A lighter object than a ticket: the customer asks to be phoned back in a
+// window, an agent claims it and completes it. Modelling this as a ticket would
+// distort ticket volume and response-time metrics.
+model CallbackRequest {
+  id            String    @id @default(cuid())
+  userId        String
+  phone         String
+  preferredFrom DateTime
+  preferredTo   DateTime
+  topic         String?
+  bookingId     String?
+  status        String    @default("requested") // requested | scheduled | attempted | completed | cancelled
+  assignedToId  String?
+  scheduledAt   DateTime?
+  attemptCount  Int       @default(0)
+  lastAttemptAt DateTime?
+  completedAt   DateTime?
+  outcomeNote   String?
+  ticketId      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([status, preferredFrom])
   @@index([userId])
+}
+
+// ─── Help centre ─────────────────────────────────────────────────────────────
+model HelpCategory {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  name      String
+  nameMy    String
+  iconKey   String  @default("HelpCircle")
+  audience  String  @default("consumer") // consumer | partner | all
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  articles HelpArticle[]
+}
+
+model HelpArticle {
+  id              String   @id @default(cuid())
+  categoryId      String
+  slug            String   @unique
+  title           String
+  titleMy         String
+  bodyMd          String
+  bodyMdMy        String
+  audience        String   @default("consumer")
+  tags            Json?
+  viewCount       Int      @default(0)
+  helpfulCount    Int      @default(0)
+  notHelpfulCount Int      @default(0)
+  isPublished     Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  category HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId, isPublished])
 }
 
 // Partner-managed inventory (tools, consumables, equipment).

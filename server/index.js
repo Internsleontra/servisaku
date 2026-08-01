@@ -35,6 +35,7 @@ import invoicesRouter, { taxRouter } from './routes/invoices.js';
 import uploadsRouter from './routes/uploads.js';
 import disputesRouter from './routes/disputes.js';
 import damageClaimsRouter from './routes/damageClaims.js';
+import helpRouter from './routes/help.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
 import { startPayoutWorker } from './lib/payouts/schedule.js';
@@ -74,6 +75,9 @@ api.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() 
 
 // Public catalog (browse + price quote) — no auth.
 api.use('/', catalogRouter);
+// Public help centre — an article behind a login wall cannot help someone who
+// can't log in.
+api.use('/', helpRouter);
 
 api.use('/auth', authLimiter, authRouter);
 api.use('/bookings', bookingsRouter);
