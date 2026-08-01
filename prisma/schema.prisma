@@ -176,6 +176,7 @@ model Booking {
   escrow         EscrowLedger?
   review         Review?
   refundRequests RefundRequest[]
+  disputes       Dispute[]
   chatMessages   ChatMessage[]
   payments       Payment[]
 
@@ -289,12 +290,69 @@ model RefundRequest {
   refundAmount   Float
   refundType     String
   reason         String
+  // pending | under_review | approved | processing | completed | rejected | failed | cancelled
   status         String   @default("pending")
   adminNote      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  // ── Execution ─────────────────────────────────────────────────────────────
+  paymentId              String?
+  refundMethod           String    @default("original") // original | wallet_credit | bank_transfer | manual
+  gatewayRefundRef       String?
+  creditNoteId           String?
+  processedAt            DateTime?
+  approvedById           String?
+  approvedAt             DateTime?
+  rejectionReason        String?
+  // Who bears the cost. An explicit admin decision, never inferred.
+  partnerLiabilityAmount Float     @default(0)
+  liableParty            String? // partner | platform | customer | shared
+  evidence               Json? // [{ kind, url, caption, uploadedBy }]
+  policyApplied          String? // which rule produced the amount, e.g. "cancel_gt_48h"
+  isAutoApproved         Boolean   @default(false)
+  slaDueAt               DateTime?
+  disputeId              String?
+  failureReason          String?
 
   booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([consumerId])
+}
+
+// A dispute is distinct from a refund: it may resolve with no refund at all
+// (redo the service, partner warning), and a refund can happen with no dispute.
+model Dispute {
+  id              String    @id @default(cuid())
+  reference       String    @unique // "DSP-3F9A2B"
+  bookingId       String
+  raisedById      String
+  raisedByRole    String // consumer | partner
+  againstId       String?
+  category        String // service_quality | no_show | overcharge | damage | behaviour | payment | other
+  description     String
+  desiredOutcome  String? // refund | redo | compensation | apology | other
+  status          String    @default("open") // open | investigating | awaiting_response | resolved | closed | escalated
+  priority        String    @default("normal") // low | normal | high | urgent
+  assignedToId    String?
+  resolution      String?
+  resolutionType  String? // full_refund | partial_refund | redo | no_action | compensation
+  refundRequestId String?
+  slaDueAt        DateTime?
+  resolvedAt      DateTime?
+  resolvedById    String?
+  evidence        Json?
+  // Both sides get to state their case before a liability decision.
+  respondedAt     DateTime?
+  response        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([status, priority])
+  @@index([bookingId])
+  @@index([raisedById])
 }
 
 model PayoutRecord {
