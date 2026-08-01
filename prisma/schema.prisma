@@ -154,6 +154,53 @@ model CallbackRequest {
   @@index([userId])
 }
 
+// ─── §9 AI support chatbot ───────────────────────────────────────────────────
+// Deliberately separate from ChatMessage, which is booking-scoped consumer↔partner
+// chat with different privacy rules and a different lifecycle.
+
+model ChatbotConversation {
+  id              String    @id @default(cuid())
+  userId          String? // null for anonymous pre-login visitors
+  sessionId       String // browser/device session, for anonymous continuity
+  role            String    @default("consumer") // consumer | partner — selects the corpus
+  locale          String    @default("en") // en | ms
+  status          String    @default("active") // active | escalated | resolved | abandoned
+  topic           String?
+  escalatedAt     DateTime?
+  supportTicketId String?
+  messageCount    Int       @default(0)
+  wasHelpful      Boolean?
+  lastMessageAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  messages ChatbotMessage[]
+
+  @@index([userId, lastMessageAt])
+  @@index([sessionId])
+  @@index([status])
+}
+
+model ChatbotMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  sender         String // user | bot | agent | system
+  content        String
+  intent         String?
+  confidence     Float? // 0–1; drives escalation
+  sources        Json? // knowledge-base article keys cited
+  model          String? // model id used, for cost attribution
+  tokensIn       Int?
+  tokensOut      Int?
+  latencyMs      Int?
+  flagged        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation ChatbotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
 // ─── §8 Legal documents & acceptance ─────────────────────────────────────────
 // Documents are immutable once published — a change creates a new version row.
 // The acceptance log is the entire legal value of this feature, so it captures

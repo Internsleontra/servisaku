@@ -36,6 +36,7 @@ import uploadsRouter from './routes/uploads.js';
 import disputesRouter from './routes/disputes.js';
 import damageClaimsRouter from './routes/damageClaims.js';
 import helpRouter from './routes/help.js';
+import chatbotRouter from './routes/chatbot.js';
 import legalRouter, { legalAuthRouter } from './routes/legal.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
@@ -110,6 +111,9 @@ api.use('/notification-settings', notificationSettingsRouter);
 api.use('/partner-locations', partnerLocationsRouter);
 api.use('/partners', partnersRouter);
 api.use('/support', supportRouter);
+// Auth is optional inside this router — anonymous visitors get FAQ answers
+// without account context.
+api.use('/chatbot', chatbotRouter);
 
 // /api stays the canonical mount; /api/v1 is the forward-compatible alias the
 // mobile clients will use (Phase 1 makes v1 canonical).
