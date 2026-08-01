@@ -19,6 +19,7 @@ import { enqueue } from './queue.js';
 import { sendMail } from '../mailer.js';
 import { sendSms } from '../sms.js';
 import { sendPush } from './push.js';
+import { renderTemplate } from '../emailTemplates/index.js';
 
 export { shortRef };
 
@@ -134,7 +135,7 @@ export async function notify(params) {
 
     if (scheduled) return mapOut(row); // the poller will release + deliver it
 
-    await deliver(row, recipient, rendered, channels);
+    await deliver(row, recipient, rendered, channels, requested, pref?.language || 'en');
     return mapOut(row);
   } catch (err) {
     console.error('[notifications] notify failed:', err?.message || err);
@@ -142,35 +143,133 @@ export async function notify(params) {
   }
 }
 
+// Record one delivery attempt per channel. Never throws — a tracking failure
+// must not break the notification it is tracking.
+async function trackDelivery(notificationId, userId, channel, data) {
+  return prisma.notificationDelivery.create({
+    data: { notificationId, userId, channel, ...data },
+  }).catch((err) => {
+    console.error('[notifications] delivery tracking failed:', err?.message || err);
+    return null;
+  });
+}
+
+async function markDelivery(id, data) {
+  if (!id) return;
+  await prisma.notificationDelivery.update({ where: { id }, data }).catch(() => {});
+}
+
+/**
+ * Record channels the preference layer dropped, and why.
+ *
+ * Knowing a notification was NOT sent — and whether that was quiet hours, an
+ * opt-out, or a missing address — is most of production notification debugging.
+ * Without this, an unreceived message is indistinguishable from a bug.
+ */
+async function trackSkipped(row, recipient, requested, allowed) {
+  const dropped = requested.filter((c) => !allowed.includes(c));
+  for (const channel of dropped) {
+    await trackDelivery(row.id, recipient.id, channel, { status: 'skipped', skipReason: 'preference_off' });
+  }
+}
+
 // Perform real-time emit + external channel fan-out for a ready notification.
-async function deliver(row, recipient, rendered, channels) {
+async function deliver(row, recipient, rendered, channels, requested = channels, locale = 'en') {
   // Real-time: push the new item and refresh the badge across the user's devices.
   emitNotification(recipient.id, mapOut(row));
   emitUnreadCount(recipient.id, await unreadCount(recipient.id));
 
-  if (channels.includes('email') && recipient.email && rendered.emailSubject) {
-    enqueue(() => sendMail({
-      to: recipient.email,
-      subject: rendered.emailSubject,
-      html: buildEmailHtml(rendered),
-      text: `${rendered.title}\n\n${rendered.message}`,
-    }), { label: `email:${rendered.event}` });
+  await trackSkipped(row, recipient, requested, channels);
+
+  if (channels.includes('in_app')) {
+    await trackDelivery(row.id, recipient.id, 'in_app', {
+      status: 'delivered', provider: 'socket', sentAt: new Date(), deliveredAt: new Date(),
+    });
   }
 
-  if (channels.includes('sms') && recipient.phone && rendered.smsBody) {
-    enqueue(() => sendSms({ to: recipient.phone, body: rendered.smsBody }), { label: `sms:${rendered.event}` });
+  if (channels.includes('email')) {
+    if (!recipient.email) {
+      await trackDelivery(row.id, recipient.id, 'email', { status: 'skipped', skipReason: 'no_address' });
+    } else if (!rendered.emailSubject) {
+      await trackDelivery(row.id, recipient.id, 'email', { status: 'skipped', skipReason: 'no_template' });
+    } else {
+      const tracked = await trackDelivery(row.id, recipient.id, 'email', { status: 'queued', provider: 'smtp' });
+      enqueue(async () => {
+        try {
+          // Per-event template when one exists; the generic layout is the
+          // fallback, so an event without a bespoke template still sends.
+          const built = renderTemplate(rendered, row.metadata || {}, { locale });
+          const result = await sendMail({
+            to: recipient.email,
+            subject: built.subject,
+            html: built.html,
+            text: built.text,
+          });
+          await markDelivery(tracked?.id, {
+            status: result.delivered ? 'sent' : 'skipped',
+            skipReason: result.delivered ? null : 'provider_not_configured',
+            sentAt: new Date(),
+            attempts: { increment: 1 },
+          });
+        } catch (err) {
+          await markDelivery(tracked?.id, { status: 'failed', error: String(err.message).slice(0, 500), attempts: { increment: 1 } });
+          throw err; // let the queue retry
+        }
+      }, { label: `email:${rendered.event}` });
+    }
+  }
+
+  if (channels.includes('sms')) {
+    if (!recipient.phone) {
+      await trackDelivery(row.id, recipient.id, 'sms', { status: 'skipped', skipReason: 'no_address' });
+    } else if (!rendered.smsBody) {
+      await trackDelivery(row.id, recipient.id, 'sms', { status: 'skipped', skipReason: 'no_template' });
+    } else {
+      const tracked = await trackDelivery(row.id, recipient.id, 'sms', { status: 'queued', provider: 'twilio' });
+      enqueue(async () => {
+        try {
+          const result = await sendSms({ to: recipient.phone, body: rendered.smsBody });
+          await markDelivery(tracked?.id, {
+            status: result.delivered ? 'sent' : 'skipped',
+            skipReason: result.delivered ? null : 'provider_not_configured',
+            sentAt: new Date(), attempts: { increment: 1 },
+          });
+        } catch (err) {
+          await markDelivery(tracked?.id, { status: 'failed', error: String(err.message).slice(0, 500), attempts: { increment: 1 } });
+          throw err;
+        }
+      }, { label: `sms:${rendered.event}` });
+    }
   }
 
   if (channels.includes('push')) {
+    const tracked = await trackDelivery(row.id, recipient.id, 'push', { status: 'queued', provider: 'fcm' });
     enqueue(async () => {
       const tokens = await prisma.pushToken.findMany({ where: { userId: recipient.id } });
-      if (tokens.length) {
-        await sendPush({
+      if (!tokens.length) {
+        await markDelivery(tracked?.id, { status: 'skipped', skipReason: 'no_token' });
+        return;
+      }
+      try {
+        const result = await sendPush({
           tokens: tokens.map((t) => ({ token: t.token, platform: t.platform, provider: t.provider })),
           title: rendered.title,
           body: rendered.message,
           data: { notificationId: row.id, actionUrl: rendered.actionUrl || '', category: rendered.category },
         });
+        // A token the provider rejects is dead — delete it rather than retrying
+        // it forever on every future notification.
+        for (const dead of result.invalidTokens || []) {
+          await prisma.pushToken.deleteMany({ where: { token: dead } }).catch(() => {});
+        }
+        await markDelivery(tracked?.id, {
+          status: result.delivered ? 'sent' : 'skipped',
+          skipReason: result.delivered ? null : (result.reason || 'provider_not_configured'),
+          sentAt: new Date(), attempts: { increment: 1 },
+        });
+      } catch (err) {
+        await markDelivery(tracked?.id, { status: 'failed', error: String(err.message).slice(0, 500), attempts: { increment: 1 } });
+        throw err;
       }
     }, { label: `push:${rendered.event}` });
   }

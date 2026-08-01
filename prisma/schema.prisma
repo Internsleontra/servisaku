@@ -951,12 +951,40 @@ model Notification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user       User                   @relation(fields: [userId], references: [id])
+  deliveries NotificationDelivery[]
 
   @@index([userId, isRead])
   @@index([userId, isArchived, createdAt])
   @@index([userId, category])
   @@index([bookingId])
+}
+
+// Per-channel delivery record. Notification.deliveryStatus is a single value
+// for what are four independent deliveries, so a bounced email was previously
+// invisible. This tracks each channel separately — including WHY a channel was
+// skipped, which is most of production notification debugging.
+model NotificationDelivery {
+  id             String    @id @default(cuid())
+  notificationId String
+  userId         String
+  channel        String // in_app | email | sms | push
+  status         String    @default("queued") // queued | sent | delivered | failed | bounced | skipped
+  provider       String? // smtp | twilio | fcm | expo | socket
+  providerRef    String? // provider-side message id, for lookup
+  attempts       Int       @default(0)
+  error          String?
+  skipReason     String? // dnd | preference_off | no_address | no_token
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId])
+  @@index([userId, channel, status])
+  @@index([status, createdAt])
 }
 
 // Per-user notification channel + category preferences and quiet-hours.
@@ -983,6 +1011,10 @@ model NotificationPreference {
   dndEnd           String? // "07:00"
   language         String   @default("en")
   timezone         String   @default("Asia/Kuala_Lumpur")
+  // Batch low-priority notifications into a periodic summary.
+  digestEnabled    Boolean  @default(false)
+  digestFrequency  String   @default("daily") // daily | weekly
+  digestHour       Int      @default(9)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
