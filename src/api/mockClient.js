@@ -325,6 +325,18 @@ export const mockClient = {
     async collectCash() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
   },
 
+  invoices: {
+    async list() { return []; },
+    async get() { throw new Error('Invoices require the live backend (VITE_BACKEND=real).'); },
+    async forBooking() { return []; },
+  },
+
+  tax: {
+    async config() {
+      return { code: 'SST_SERVICE', rate: 0.08, rate_percent: 8, inclusive: false, registration_no: null, configured: false };
+    },
+  },
+
   wallet: {
     async get() {
       return {

@@ -2,28 +2,42 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Send, CheckCircle2, Receipt } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
-import { calcPriceBreakdown, formatRM } from '@/lib/paymentEngine';
+import { formatRM } from '@/lib/paymentEngine';
 import { toast } from 'sonner';
 import moment from 'moment';
 
+// "FM-" was left over from the FixMate naming. Booking references are SA-prefixed;
+// the invoice number (INV-YYYY-NNNNNN) is separate and comes from the server.
 function formatBookingRef(id) {
-  return `FM-${new Date().getFullYear()}-${(id || '').slice(-6).toUpperCase()}`;
+  return `SA-${new Date().getFullYear()}-${(id || '').slice(-6).toUpperCase()}`;
 }
 
 export default function BookingInvoice() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
+  const [invoice, setInvoice] = useState(null);
 
   useEffect(() => {
     servisaku.entities.Booking.get(bookingId).then(setBooking);
+    // The issued Invoice is the authoritative document — it carries the rate the
+    // booking was actually charged, the supplier's SST registration number, and
+    // party details frozen at issue time.
+    servisaku.invoices.forBooking(bookingId)
+      .then((list) => setInvoice(list.find((i) => i.type === 'tax_invoice') || null))
+      .catch(() => setInvoice(null));
   }, [bookingId]);
 
   if (!booking) return (
     <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
   );
 
-  const breakdown = calcPriceBreakdown(booking.price || 0, booking.discount_amount || 0);
+  // Prefer the issued invoice; fall back to the booking for one not yet paid.
+  const subtotal = invoice ? invoice.taxable_amount : (booking.price || 0) - (booking.discount_amount || 0);
+  const taxAmount = invoice ? invoice.sst_amount : 0;
+  const taxPercent = invoice ? invoice.sst_rate_percent : null;
+  const total = invoice ? invoice.total : (booking.price || 0);
+  const credited = invoice?.refunded_amount || 0;
 
   return (
     <div className="min-h-screen bg-background font-inter pb-24">
@@ -133,16 +147,26 @@ export default function BookingInvoice() {
               )}
               <div className="flex justify-between text-muted-foreground text-xs">
                 <span>Subtotal (before tax)</span>
-                <span>{formatRM(breakdown.taxable)}</span>
+                <span>{formatRM(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-muted-foreground text-xs">
-                <span>SST (6%)</span>
-                <span>{formatRM(breakdown.tax)}</span>
-              </div>
+              {/* Rate comes from the issued invoice, so a booking priced under an
+                  earlier SST regime still shows the rate it was charged. */}
+              {taxPercent !== null && (
+                <div className="flex justify-between text-muted-foreground text-xs">
+                  <span>SST ({taxPercent}%)</span>
+                  <span>{formatRM(taxAmount)}</span>
+                </div>
+              )}
               <div className="border-t border-border pt-3 flex justify-between font-bold text-base">
-                <span>Total Paid</span>
-                <span className="text-primary">{formatRM(breakdown.total)}</span>
+                <span>{invoice ? 'Total Paid' : 'Total Payable'}</span>
+                <span className="text-primary">{formatRM(total)}</span>
               </div>
+              {credited > 0 && (
+                <div className="flex justify-between text-xs text-amber-700">
+                  <span>Credited (refunded)</span>
+                  <span>-{formatRM(credited)}</span>
+                </div>
+              )}
             </div>
 
             {/* Payment Status */}
@@ -155,11 +179,27 @@ export default function BookingInvoice() {
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Footer. Supplier details come from the issued invoice — never
+              hardcoded, since this is the legal face of a tax document. Without
+              an invoice this is only a booking summary and must not claim
+              otherwise. */}
           <div className="bg-muted/30 px-5 py-4 border-t border-border">
             <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-              This is an official tax invoice issued by FixMate Sdn Bhd (Company No. 123456-X).<br />
-              SST Registration No: W10-1234-56789012. For inquiries: support@fixmate.my
+              {invoice ? (
+                <>
+                  Tax invoice <span className="font-mono">{invoice.invoice_no}</span> issued by {invoice.supplier_name}.
+                  {invoice.sst_registration_no
+                    ? <> SST Registration No: {invoice.sst_registration_no}.</>
+                    : null}
+                  <br />
+                  Issued {moment(invoice.issued_at).format('D MMM YYYY')}. For enquiries: support@servisaku.my
+                </>
+              ) : (
+                <>
+                  Booking summary — a tax invoice is issued once payment is received.<br />
+                  For enquiries: support@servisaku.my
+                </>
+              )}
             </p>
           </div>
         </div>

@@ -31,6 +31,7 @@ import catalogRouter from './routes/catalog.js';
 import addressesRouter from './routes/addresses.js';
 import notificationSettingsRouter from './routes/notificationSettings.js';
 import walletRouter from './routes/wallet.js';
+import invoicesRouter, { taxRouter } from './routes/invoices.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
 
@@ -81,6 +82,10 @@ api.use('/payments', paymentsRouter);
 api.use('/refunds', refundsRouter);
 api.use('/payouts', payoutsRouter);
 api.use('/wallet', walletRouter);
+api.use('/invoices', invoicesRouter);
+// GET /tax/config is public (the client reads the SST rate rather than
+// hardcoding it); the PATCH inside is super_admin-gated on its own.
+api.use('/tax', taxRouter);
 api.use('/chat', chatRouter);
 api.use('/notifications', notificationsRouter);
 api.use('/notification-settings', notificationSettingsRouter);

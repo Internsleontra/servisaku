@@ -19,6 +19,7 @@ import {
 import { priceBooking } from '../lib/pricing.js';
 import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
+import { withLiveSstRate, taxSummary } from '../lib/tax/index.js';
 import { findEligiblePartners } from '../lib/matching.js';
 import { SLOT_GROUPS } from '../../src/lib/bookingEngine.js';
 
@@ -154,11 +155,11 @@ router.post('/bookings/calculate', validate(dynamicCalcSchema), asyncHandler(asy
   if (!ok) throw new ApiError(400, errors.join('; '));
 
   const pricing = computePrice(engineService, req.body.answers, {
-    globalConfig: GLOBAL_CONFIG,
+    globalConfig: await withLiveSstRate(GLOBAL_CONFIG),
     afterHours: req.body.after_hours,
     urgent: req.body.urgent,
   });
-  res.json(mapDynamicPricing(service, pricing));
+  res.json({ ...mapDynamicPricing(service, pricing), tax: await taxSummary() });
 }));
 
 export function mapDynamicPricing(service, p) {

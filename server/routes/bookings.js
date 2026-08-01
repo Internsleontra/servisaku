@@ -8,6 +8,7 @@ import { priceBooking } from '../lib/pricing.js';
 import { resolveService, resolveServiceDetailOr404, validateServiceParams, toEngineService } from '../lib/catalog.js';
 import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
+import { withLiveSstRate } from '../lib/tax/index.js';
 import { isPartnerEligible } from '../lib/matching.js';
 import { canTransition } from '../../src/lib/bookingEngine.js';
 import { notifyConsumer, notifyPartner } from '../lib/notifications/index.js';
@@ -306,8 +307,11 @@ router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, 
     }
   }
 
+  // The rate in force right now is snapshotted into Booking.priceBreakdown, so
+  // this booking invoices at this rate forever — a later change cannot rewrite
+  // what the customer was quoted.
   const pricing = computePrice(engineService, body.answers, {
-    globalConfig: GLOBAL_CONFIG,
+    globalConfig: await withLiveSstRate(GLOBAL_CONFIG),
     afterHours: body.after_hours,
     urgent: body.urgent,
   });

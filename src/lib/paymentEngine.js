@@ -8,7 +8,17 @@ export const COMMISSION_RATES = {
   new_partner:   0.25,
 };
 
-export const TAX_RATE = 0.06; // SST 6%
+/**
+ * @deprecated The SST rate is server-authoritative — read it from
+ * `GET /api/tax/config` (via `servisaku.tax.config()`), which resolves the rate
+ * in force from TaxConfig and keeps historical bookings on their original rate.
+ *
+ * This constant was 0.06 while the pricing engine used 0.08, and because the
+ * front end recomputed the total for display, customers were shown a figure the
+ * gateway never charged. Kept only so any remaining importer still resolves;
+ * it now matches the server default instead of contradicting it.
+ */
+export const TAX_RATE = 0.08;
 
 export const PAYMENT_METHODS = [
   { id: 'fpx',      label: 'FPX Online Banking',     icon: '🏦', sub: 'Maybank, CIMB, Public Bank, RHB' },
@@ -19,11 +29,21 @@ export const PAYMENT_METHODS = [
   { id: 'cash',     label: 'Cash on Service',         icon: '💵', sub: 'Pay partner at completion' },
 ];
 
-export function calcPriceBreakdown(subtotal, couponDiscount = 0) {
+/**
+ * @deprecated Display the server's figures instead of recomputing them.
+ * A booking's authoritative amounts live in `Booking.price` and
+ * `Booking.price_breakdown` (the snapshot taken at booking time), and an issued
+ * invoice carries them verbatim. Recomputing here is what produced a checkout
+ * total the gateway never charged.
+ *
+ * `rate` defaults to TAX_RATE only as a last resort — pass the rate from
+ * `servisaku.tax.config()` when a live figure is genuinely needed.
+ */
+export function calcPriceBreakdown(subtotal, couponDiscount = 0, rate = TAX_RATE) {
   const discounted = subtotal - couponDiscount;
-  const tax = parseFloat((discounted * TAX_RATE).toFixed(2));
+  const tax = parseFloat((discounted * rate).toFixed(2));
   const total = parseFloat((discounted + tax).toFixed(2));
-  return { subtotal, couponDiscount, taxable: discounted, tax, total };
+  return { subtotal, couponDiscount, taxable: discounted, tax, total, rate };
 }
 
 export function calcPartnerPayout(grossAmount, partnerTier = 'default') {

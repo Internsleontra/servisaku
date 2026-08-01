@@ -418,6 +418,74 @@ model CommissionSettlement {
   @@index([status, dueDate])
 }
 
+// ─── §6 Malaysian taxation (SST) & invoicing ─────────────────────────────────
+// Two distinct taxable supplies exist in this marketplace and must not be
+// conflated: ServisAku → customer (the service fee) and ServisAku → partner
+// (the commission, which is itself a taxable service).
+//
+// Rates are data, never literals: a booking made under a 6% regime must invoice
+// at 6% forever. Invoices read Booking.priceBreakdown — the snapshot taken at
+// booking time — and never recompute.
+
+model TaxConfig {
+  id             String    @id @default(cuid())
+  code           String // SST_SERVICE | SST_COMMISSION
+  rate           Float // 0.08
+  registrationNo String? // ServisAku's SST registration number
+  appliesTo      Json? // category/service slugs; null = all taxable supplies
+  isInclusive    Boolean   @default(false) // displayed price already contains the tax
+  isActive       Boolean   @default(true)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime? // set when superseded — preserves the full rate history
+  notes          String?
+  createdAt      DateTime  @default(now())
+
+  @@unique([code, effectiveFrom])
+  @@index([code, isActive])
+}
+
+// Immutable once issued. A correction is a credit note referencing the original,
+// never an edit — that is what makes the sequence auditable.
+model Invoice {
+  id                String   @id @default(cuid())
+  invoiceNo         String   @unique // "INV-2026-000001" — sequential and gapless
+  type              String   @default("tax_invoice") // tax_invoice | credit_note
+  bookingId         String?
+  consumerId        String?
+  partnerId         String? // set on commission/settlement invoices
+  settlementId      String?
+  paymentId         String?
+  // Amounts in MYR, copied from the booking's price snapshot.
+  subtotal          Float
+  discountTotal     Float    @default(0)
+  platformFee       Float    @default(0)
+  taxableAmount     Float
+  sstRate           Float
+  sstAmount         Float
+  total             Float
+  currency          String   @default("MYR")
+  refundedAmount    Float    @default(0)
+  // Party snapshots — an invoice must not change when a profile is edited.
+  supplierName      String
+  supplierAddress   String?
+  sstRegistrationNo String?
+  customerName      String
+  customerAddress   String?
+  customerPhone     String?
+  customerEmail     String?
+  lineItems         Json // [{ description, qty, unitPrice, amount, taxable }]
+  creditNoteFor     String? // Invoice.id this credit note reverses
+  reason            String? // credit-note reason
+  issuedAt          DateTime @default(now())
+  pdfUrl            String?
+  createdAt         DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([consumerId, issuedAt])
+  @@index([partnerId, issuedAt])
+  @@index([type, issuedAt])
+}
+
 model ChatMessage {
   id         String    @id @default(cuid())
   bookingId  String

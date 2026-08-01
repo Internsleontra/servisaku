@@ -273,6 +273,20 @@ export const apiClient = {
       post('/payments/cash/collect', { booking_id: bookingId, amount_collected: amountCollected }),
   },
 
+  // SST tax invoices + credit notes. Invoices are immutable once issued, so
+  // there is deliberately no update method.
+  invoices: {
+    list: (query = {}) => get(`/invoices?${new URLSearchParams(query)}`),
+    get: (id) => get(`/invoices/${id}`),
+    forBooking: (bookingId) => get(`/invoices?booking_id=${bookingId}`),
+  },
+
+  // The SST rate in force. Read this rather than hardcoding a rate — see the
+  // deprecation note on TAX_RATE in src/lib/paymentEngine.js.
+  tax: {
+    config: () => get('/tax/config'),
+  },
+
   // Saved service addresses (consumer).
   addresses: {
     list: () => get('/addresses'),

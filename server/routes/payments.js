@@ -8,7 +8,15 @@ import { getProvider, providerForMethod, listMethods, PAYMENT_METHODS, toSen, fr
 import { split } from '../lib/payments/commission.js';
 import { creditEscrowHold, debitCommission } from '../lib/wallet/index.js';
 import { applyPayment } from '../lib/wallet/settlement.js';
+import { issueInvoice } from '../lib/tax/invoice.js';
 import { notify } from '../lib/notifications/index.js';
+
+// Issue the tax invoice off the response path. A failure here must never undo a
+// successful payment — it is logged and retryable, not fatal.
+function issueInvoiceSafely(booking, paymentId) {
+  issueInvoice(booking, { paymentId }).catch((err) =>
+    console.error('[payments] invoice issue failed:', err?.message || err));
+}
 
 const router = Router();
 
@@ -70,6 +78,8 @@ async function markPaidAndEscrow(payment, rawPayload) {
     creditEscrowHold(booking, { partner: booking.partner }).catch((err) =>
       console.error('[payments] escrow hold ledger entry failed:', err?.message || err));
   }
+
+  if (booking) issueInvoiceSafely(booking, payment.id);
 
   // Notify the consumer their payment went through (best-effort, off the response path).
   if (booking?.consumerId) {
@@ -206,6 +216,10 @@ router.post('/cash/collect', authenticate, validate(cashSchema), asyncHandler(as
 
   // The commission the partner now owes ServisAku.
   await debitCommission(booking, { partner: booking.partner, paymentId: payment.id });
+
+  // Cash bookings are invoiced at collection, not at booking — this is the
+  // moment money actually changed hands.
+  issueInvoiceSafely(booking, payment.id);
 
   const amountLabel = `RM ${gross.toFixed(2)}`;
   notify({
