@@ -36,6 +36,7 @@ import uploadsRouter from './routes/uploads.js';
 import disputesRouter from './routes/disputes.js';
 import damageClaimsRouter from './routes/damageClaims.js';
 import helpRouter from './routes/help.js';
+import legalRouter, { legalAuthRouter } from './routes/legal.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
 import { startPayoutWorker } from './lib/payouts/schedule.js';
@@ -78,6 +79,10 @@ api.use('/', catalogRouter);
 // Public help centre — an article behind a login wall cannot help someone who
 // can't log in.
 api.use('/', helpRouter);
+// Public legal documents — a policy behind a login wall is arguably not
+// disclosed. The authenticated half (accept, pending, admin) mounts separately.
+api.use('/', legalRouter);
+api.use('/legal', legalAuthRouter);
 
 api.use('/auth', authLimiter, authRouter);
 api.use('/bookings', bookingsRouter);

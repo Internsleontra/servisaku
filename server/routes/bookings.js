@@ -12,6 +12,7 @@ import { withLiveSstRate } from '../lib/tax/index.js';
 import { isPartnerEligible } from '../lib/matching.js';
 import { canTransition } from '../../src/lib/bookingEngine.js';
 import { notifyConsumer, notifyPartner } from '../lib/notifications/index.js';
+import { requireAcceptance } from '../lib/legal/enforce.js';
 
 const router = Router();
 
@@ -51,6 +52,10 @@ function fireNotifications(promises) {
   Promise.allSettled(promises).catch(() => {});
 }
 router.use(authenticate);
+// Must come AFTER authenticate — the check needs req.user. Gates creation only:
+// browsing and viewing existing bookings stay open to someone who has not yet
+// re-accepted updated terms.
+router.use(requireAcceptance());
 
 const PAYMENT_METHODS = ['fpx', 'tng', 'grabpay', 'boost', 'card', 'cash'];
 

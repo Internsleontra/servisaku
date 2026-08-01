@@ -64,6 +64,7 @@ model User {
   bankAccountDetail  PartnerBankAccount?
   uploads            UploadedFile[]
   callbackRequests   CallbackRequest[]
+  legalAcceptances   LegalAcceptance[]
 
   @@index([role, partnerVerified])
 }
@@ -151,6 +152,62 @@ model CallbackRequest {
 
   @@index([status, preferredFrom])
   @@index([userId])
+}
+
+// ─── §8 Legal documents & acceptance ─────────────────────────────────────────
+// Documents are immutable once published — a change creates a new version row.
+// The acceptance log is the entire legal value of this feature, so it captures
+// the tuple that makes it evidentiary: user, exact version, timestamp, IP and
+// user agent (all recorded server-side, never from the request body).
+
+model LegalDocument {
+  id                 String    @id @default(cuid())
+  slug               String // customer_terms | partner_terms | privacy_policy
+                            // | refund_policy | cancellation_policy | damage_policy
+  version            String // "1.0", "1.1", "2.0"
+  title              String
+  titleMy            String
+  contentMd          String
+  contentMdMy        String
+  summary            String? // "what changed", shown in the re-acceptance prompt
+  summaryMy          String?
+  audience           String    @default("consumer") // consumer | partner | all
+  // false for a typo fix — only a material change forces re-acceptance.
+  requiresAcceptance Boolean   @default(true)
+  isActive           Boolean   @default(false) // exactly one active version per slug
+  effectiveFrom      DateTime
+  publishedById      String?
+  publishedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  acceptances LegalAcceptance[]
+
+  @@unique([slug, version])
+  @@index([slug, isActive])
+  @@index([audience, isActive])
+}
+
+// Append-only evidentiary record. There is deliberately no update or delete
+// endpoint anywhere in the API for this model.
+model LegalAcceptance {
+  id         String   @id @default(cuid())
+  userId     String
+  documentId String
+  slug       String // denormalised so the log survives a document purge
+  version    String
+  acceptedAt DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  source     String   @default("web") // web | mobile_consumer | mobile_partner | onboarding | api
+  locale     String   @default("en")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document LegalDocument @relation(fields: [documentId], references: [id])
+
+  @@unique([userId, documentId])
+  @@index([userId])
+  @@index([slug, version])
 }
 
 // ─── Help centre ─────────────────────────────────────────────────────────────

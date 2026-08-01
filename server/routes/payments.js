@@ -10,6 +10,7 @@ import { creditEscrowHold, debitCommission } from '../lib/wallet/index.js';
 import { applyPayment } from '../lib/wallet/settlement.js';
 import { issueInvoice } from '../lib/tax/invoice.js';
 import { notify } from '../lib/notifications/index.js';
+import { requireAcceptance } from '../lib/legal/enforce.js';
 
 // Issue the tax invoice off the response path. A failure here must never undo a
 // successful payment — it is logged and retryable, not fatal.
@@ -104,7 +105,10 @@ const createSchema = z.object({
   booking_id: z.string(),
   method: z.enum(PAYMENT_METHODS).optional(),
 });
-router.post('/create', authenticate, validate(createSchema), asyncHandler(async (req, res) => {
+// requireAcceptance sits after authenticate (it needs req.user) and gates only
+// this route. A partner's cash collection is deliberately NOT gated — that would
+// stop them recording money they have already physically taken.
+router.post('/create', authenticate, requireAcceptance(), validate(createSchema), asyncHandler(async (req, res) => {
   const method = req.body.method || 'fpx';
   if (method === 'cash') throw new ApiError(400, 'Cash payments are recorded at completion, not through checkout');
 
