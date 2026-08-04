@@ -174,7 +174,24 @@ model ChatbotConversation {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  // ── Chatbot v2 ─────────────────────────────────────────────────────────────
+  // `role` (above) says WHO is talking and selects the corpus; `mode` says what
+  // they want and selects the tools and the prompt. Support is not a separate
+  // bot — it is this conversation switching into a troubleshooting tree.
+  mode       String  @default("assistant") // assistant | support
+  // Active decision-tree position: { treeId, node, answers, step }. Persisted so
+  // a diagnostic survives a page reload and a resumed session.
+  treeState  Json?
+  intent     String? // last classified intent, for analytics
+  priority   String  @default("normal") // normal | high | urgent (safety)
+  deviceInfo Json? // { platform, osVersion, appVersion, model } — attached on escalation
+  // Locale is detected PER TURN, not once per conversation: Malaysian users
+  // code-switch mid-sentence, so the reply follows the latest message rather
+  // than the language the conversation opened in.
+  lastLocale String?
+
   messages ChatbotMessage[]
+  actions  ChatbotAction[]
 
   @@index([userId, lastMessageAt])
   @@index([sessionId])
@@ -196,9 +213,78 @@ model ChatbotMessage {
   flagged        Boolean  @default(false)
   createdAt      DateTime @default(now())
 
+  // ── Chatbot v2 ─────────────────────────────────────────────────────────────
+  locale       String? // detected on this turn
+  attachments  Json? // [{ uploadId, url, mimeType, kind, classifiedAs }]
+  // Cards and quick replies are stored, not recomputed, so replaying history
+  // renders exactly what the user originally saw.
+  cards        Json?
+  quickReplies Json?
+  treeNode     String? // which tree node produced this turn
+  cacheRead    Int? // cached prompt tokens — cost attribution
+
   conversation ChatbotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+// Consumable restock reminders for a partner.
+//
+// DELIBERATELY NOT A STOCK TABLE. There is no way for the platform to know what
+// is in someone's van, and a schema that implies otherwise would produce
+// confidently wrong counts. This is a counter of jobs completed since the
+// partner last said "restocked", with a threshold — a reminder, and honest
+// about being one.
+model PartnerConsumable {
+  id               String    @id @default(cuid())
+  partnerId        String
+  category         String // aircon | plumbing | cleaning | pest | electrical | painting
+  item             String // "coil cleaner"
+  jobsSinceRestock Int       @default(0)
+  threshold        Int       @default(10)
+  lastRestockedAt  DateTime?
+  // Set when a partner dismisses a prompt, so it does not reappear next job.
+  dismissedUntil   DateTime?
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([partnerId, category, item])
+  @@index([partnerId])
+}
+
+// A proposed state-mutating action awaiting the user's confirmation.
+//
+// THE SAFETY MODEL (docs/11-ai-chatbots.md §B2): the model cannot execute any of
+// these. It proposes; the server validates against the caller's own rows and
+// mints a card; the user taps; the confirmation calls the EXISTING REST endpoint
+// with the user's own auth and its own validation. A successful prompt injection
+// can therefore produce a card a human declines — never an action.
+//
+// The payload lives here, server-side. The client sends back only the id, so a
+// tampered client cannot alter what it is confirming. Single-use with a short
+// TTL, which also makes it the idempotency key: a double tap, a retry after a
+// dropped connection, or a replayed request all execute exactly once.
+model ChatbotAction {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  // book | reschedule | cancel | job_accept | job_reject | job_start
+  // | job_complete | settle_commission
+  type           String
+  payload        Json // validated server-side at mint time
+  summary        String // exactly what the user is shown before confirming
+  destructive    Boolean   @default(false)
+  status         String    @default("pending") // pending | confirmed | declined | expired | failed
+  expiresAt      DateTime
+  confirmedAt    DateTime?
+  resultRef      String? // id of the row the confirmation created
+  error          String?
+  createdAt      DateTime  @default(now())
+
+  conversation ChatbotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, status])
+  @@index([userId, createdAt])
+  @@index([status, expiresAt])
 }
 
 // ─── §8 Legal documents & acceptance ─────────────────────────────────────────
@@ -229,10 +315,39 @@ model LegalDocument {
   updatedAt          DateTime  @updatedAt
 
   acceptances LegalAcceptance[]
+  clauses     LegalClause[]
 
   @@unique([slug, version])
   @@index([slug, isActive])
   @@index([audience, isActive])
+}
+
+// A citable chunk of a published legal document.
+//
+// DERIVED DATA. Rebuilt from LegalDocument.contentMd whenever a version is
+// published, never edited directly — editing a clause here without changing the
+// document it came from would produce a citation that does not match the
+// contract, which is worse than no citation at all.
+//
+// Chunking on the numbered-clause boundary is what makes a citation verifiable:
+// a chunk is always a whole clause, so "— Terms & Conditions, clause 8.1" can be
+// checked against a real row rather than trusted.
+model LegalClause {
+  id         String   @id @default(cuid())
+  documentId String
+  clauseNo   String // "8.1"
+  partLabel  String? // "PART B"
+  heading    String? // "Cancellation Policy"
+  text       String
+  locale     String   @default("en") // en | ms
+  ordinal    Int // document order, for range citations and stable sorting
+  createdAt  DateTime @default(now())
+
+  document LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, clauseNo, locale])
+  @@index([documentId, ordinal])
+  @@index([clauseNo])
 }
 
 // Append-only evidentiary record. There is deliberately no update or delete
@@ -358,6 +473,12 @@ model Booking {
   timeSlot       String?
   address        String?
   city           String?
+  // Service-address coordinates, for partner route suggestion. Nullable and
+  // currently unpopulated: filling them needs a geocoder, which is a separate
+  // decision. Route suggestion degrades cleanly to "no locations" until then
+  // rather than guessing from the address string.
+  lat            Float?
+  lng            Float?
   notes          String?
   couponCode     String?
   discountAmount Float     @default(0)
