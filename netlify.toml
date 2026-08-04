@@ -1,13 +1,81 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Netlify configuration — CONSUMER app.
+#
+# This repo builds TWO web apps from one codebase (see vite.config.js): the
+# consumer app to dist/consumer and the partner app to dist/partner. A Netlify
+# site publishes exactly one directory, so the two need TWO Netlify sites:
+#
+#   Site 1 (consumer) — uses this file as-is.
+#   Site 2 (partner)  — set "Configuration file path" to netlify.partner.toml
+#                       under Site settings → Build & deploy → Continuous deployment.
+#
+# The previous version published "dist", which the build never creates —
+# `npm run build` emits dist/consumer and dist/partner, so the deploy served an
+# empty directory. It also had no /api rule, so with VITE_BACKEND=real every API
+# call fell through to the SPA catch-all and received HTML.
+# ─────────────────────────────────────────────────────────────────────────────
+
 [build]
-  command = "npm run build"
-  publish = "dist"
+  command = "npm run build:consumer"
+  publish = "dist/consumer"
 
 [build.environment]
   NODE_VERSION = "20"
-  DATABASE_URL = "file:./placeholder.db"
+  # Prisma reads DATABASE_URL when generating its client. The web build never
+  # talks to the database — this placeholder only satisfies that check. It must
+  # be a postgresql:// URL because the schema's datasource declares that
+  # provider; the old file:./ SQLite value fails validation.
+  DATABASE_URL = "postgresql://placeholder:placeholder@localhost:5432/placeholder"
   CI = "true"
+  VITE_APP = "consumer"
+  # Pin to the real backend. Left on "auto" the client probes /api/health and
+  # silently falls back to the localStorage demo client on any hiccup — which
+  # presents as "the site loads but nothing saves".
+  VITE_BACKEND = "real"
 
+# ─── API proxy ───────────────────────────────────────────────────────────────
+# MUST come before the SPA catch-all: Netlify applies the first matching rule,
+# so a catch-all declared first swallows /api/* and returns index.html.
+#
+# Replace the host below with the deployed backend origin (no trailing slash).
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.servisaku.my/api/:splat"
+  status = 200
+  force = true
+
+# Socket.IO (real-time notifications) negotiates over HTTP before upgrading.
+[[redirects]]
+  from = "/socket.io/*"
+  to = "https://api.servisaku.my/socket.io/:splat"
+  status = 200
+  force = true
+
+# ─── SPA fallback ────────────────────────────────────────────────────────────
+# Last rule: anything not matched above is a client-side route.
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# ─── Security headers ────────────────────────────────────────────────────────
+# The API sets its own via helmet; these cover the static site.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self), camera=(self), microphone=()"
+
+# Vite emits content-hashed filenames under /assets, so they are immutable.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# index.html must never be cached, or users stay on a stale bundle after deploy.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

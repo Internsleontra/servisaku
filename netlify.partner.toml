@@ -1,0 +1,59 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Netlify configuration — PARTNER app.
+#
+# Point a SECOND Netlify site at this file:
+#   Site settings → Build & deploy → Continuous deployment
+#   → Configuration file path: netlify.partner.toml
+#
+# Same repo, same branch, different build target and publish directory. See
+# netlify.toml for why the two apps cannot share one site.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[build]
+  command = "npm run build:partner"
+  publish = "dist/partner"
+
+[build.environment]
+  NODE_VERSION = "20"
+  DATABASE_URL = "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+  CI = "true"
+  VITE_APP = "partner"
+  VITE_BACKEND = "real"
+
+# Both apps talk to the SAME backend — the API scopes every response by the
+# caller's role, so there is nothing partner-specific to route differently.
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.servisaku.my/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/socket.io/*"
+  to = "https://api.servisaku.my/socket.io/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # The partner app uses live location for job tracking.
+    Permissions-Policy = "geolocation=(self), camera=(self), microphone=()"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

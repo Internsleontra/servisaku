@@ -91,31 +91,31 @@ carry (`Booking.priceBreakdown`, `Booking.configVersion`) rather than recomputin
 > per-service, so the answer is configuration, not code. Implementation below assumes 8% on
 > taxable services with per-service opt-in — flag if that is wrong.
 
-### A5. The admin UI exists but is not reachable
+### A5. The admin UI is a separate repository — out of scope here
+
+The admin website is built by another developer in its own repo
+(`admin` remote → `Dineshkuppuraj17/servisaku-admin`). **This repo does not scaffold
+`src/apps/admin/`, and no admin app is mounted in `vite.config.js`.**
 
 `src/pages/Admin{Analytics,Bookings,Communications,Dashboard,Finance,Operations,QualityCenter,Users}.jsx`
-are eight built pages. **Neither `src/apps/consumer/routes.jsx` nor `src/apps/partner/routes.jsx`
-imports any of them**, and there is no `/admin` route anywhere in `src/`.
+are eight pages left over from an earlier stage. Nothing imports them and there is no `/admin`
+route anywhere in `src/`. They are dead code superseded by the separate repo; leave them alone
+rather than extending them.
 
-Six of the ten features below require an admin surface (refund approval, damage
-investigation, settlement override, payout batches, ticket queue, legal publishing). So the
-first frontend task is to mount a third app, mirroring the existing two exactly:
+Consequences for everything below:
 
-```
-src/apps/admin/
-  index.jsx          ← copy of src/apps/partner/index.jsx
-  AdminLayout.jsx    ← copy of PartnerLayout.jsx pattern
-  AdminOnly.jsx      ← copy of PartnerOnly.jsx, gating on ['admin','super_admin']
-  AdminSidebar.jsx
-  routes.jsx         ← mounts the 8 existing pages + the new ones in this spec
-```
+- Every **§7 Admin changes** section is an **API contract for the separate admin app**, not UI
+  work in this repo. Ship the admin-scoped endpoints, guarded by
+  `requireRole('admin','super_admin')` (`server/middleware/auth.js:60`), and treat their request
+  and response shapes as a public interface once the other repo builds against them.
+- The admin app runs on a **different origin**, so its URL must be added to the
+  `CORS_ORIGIN` env var (`server/index.js:49`, comma-separated). This is deploy configuration,
+  not a code change — but nothing admin-facing works until it is done.
+- Admin authentication reuses the same JWT and the same `User.role`. No separate admin identity
+  system, and no new middleware.
 
-Plus `.env.admin` (`VITE_APP=admin`), a `dev:admin` / `build:admin` script pair in
-`package.json`, and one line in `vite.config.js` — it currently does
-`env.VITE_APP === 'partner' ? 'partner' : 'consumer'`; make it a three-way with port 5175 and
-`outDir: dist/admin`. `src/main.jsx` picks the app the same way it does today.
-
-**This is a prerequisite for Features 3, 4, 8, 9 and the admin half of 1, 2, 10.**
+**Nothing in this spec is blocked on admin UI work.** Each feature ships its backend, its
+consumer surface, and its partner surface independently.
 
 ---
 
@@ -165,7 +165,7 @@ Nine migrations, each independently deployable. Names follow the existing
 Notifications (6) and email templates (7) are code-only except one small table, and are
 folded into whichever migration ships first.
 
-Recommended build order: **A5 (admin app) → 1 → 10 → 2 → 3 → 4 → 8 → 6/7 → 9 → 5.**
+Recommended build order: **1 → 10 → 2 → 3 → 4 → 8 → 6/7 → 9 → 5.**
 Rationale: taxation lands before payouts because an invoice's SST line determines the
 commissionable base; support lands before the chatbot because escalation needs a ticket to
 escalate into.
@@ -2589,18 +2589,19 @@ scripts/             backfill-wallets.mjs
 
 ## New frontend files (~30)
 
-`src/apps/admin/` (5 files) · `src/pages/`: PartnerWallet, PartnerBankDetails, RefundRequest,
-RefundStatus, DisputeCenter, DisputeDetail, DamageClaimSubmit, DamageClaimDetail,
-PartnerDamageClaims, ChatbotHistory, HelpArticle, SupportTickets, SupportTicketDetail,
-CallbackRequest, Legal · `src/pages/admin/`: AdminCommissions, AdminPayoutBatches,
-AdminDisputes, AdminDamageClaims, AdminSupportQueue, AdminSupportTicket, AdminLegalDocuments,
-AdminTaxReports, AdminEmailTemplates · `src/components/`: ChatbotWidget, EvidenceUploader,
-LegalAcceptanceModal, OutstandingCommissionBanner
+`src/pages/`: PartnerWallet, PartnerBankDetails, RefundRequest, RefundStatus, DisputeCenter,
+DisputeDetail, DamageClaimSubmit, DamageClaimDetail, PartnerDamageClaims, ChatbotHistory,
+HelpArticle, SupportTickets, SupportTicketDetail, CallbackRequest, Legal ·
+`src/components/`: ChatbotWidget, EvidenceUploader, LegalAcceptanceModal,
+OutstandingCommissionBanner
+
+No admin pages — that UI lives in the separate `servisaku-admin` repo (§A5); this repo ships
+only the admin-scoped API.
 
 ## Config
 
-`.env.admin` · `package.json` (`dev:admin`, `build:admin`) · `vite.config.js` (three-way app
-switch, port 5175) · new env vars: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+`CORS_ORIGIN` must gain the admin app's deployed origin (§A5) · new env vars:
+`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `ANTHROPIC_API_KEY`, `FCM_SERVICE_ACCOUNT`, `EXPO_ACCESS_TOKEN`, `SST_REGISTRATION_NO`,
 `APPWRITE_STORAGE_BUCKET_ID`
 
@@ -2620,8 +2621,10 @@ switch, port 5175) · new env vars: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 4. **No file upload exists yet.** Features 3, 4, and 8 all depend on it. Build
    `server/lib/uploads/` on Appwrite Storage first; it is a shared prerequisite, not a
    per-feature task.
-5. **Admin is unrouted (§A5).** Six of ten features have no place to put their admin UI until
-   `src/apps/admin/` exists. Do it first.
+5. **The admin UI is a different repo and a different developer (§A5).** Six of ten features
+   expose admin-scoped endpoints that nothing in this repo calls, so they are only exercised by
+   tests until the other app integrates. Keep their response shapes stable, and add the admin
+   origin to `CORS_ORIGIN` before that integration is attempted.
 6. **Legal/tax retention conflicts with cascade deletes.** `LegalAcceptance` and `Invoice` must
    survive user deletion. Resolve the retention policy with counsel before implementing account
    deletion.
