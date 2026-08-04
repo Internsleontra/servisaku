@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav } from '@/components/nav/BottomNav';
 import PartnerTopNav from './PartnerTopNav';
 import PartnerSidebar from './PartnerSidebar';
+import { ChatbotWidget } from '@/components/chatbot/ChatbotWidget';
 
 export default function PartnerLayout() {
   const location = useLocation();
@@ -35,6 +36,10 @@ export default function PartnerLayout() {
           <BottomNav />
         </div>
       )}
+
+      {/* Partner-audience assistant: own schedule, earnings, commission and the
+          message drafter. Same engine, different corpus and tools. */}
+      <ChatbotWidget role="partner" title="Partner Assistant" />
     </div>
   );
 }

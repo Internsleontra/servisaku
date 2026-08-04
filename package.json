@@ -19,7 +19,7 @@
     "db:seed:users": "node prisma/seedUsers.js",
     "app:tunnel": "\"%LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe\" reverse tcp:5173 tcp:5173",
     "db:studio": "npx prisma studio",
-    "test": "node --test \"server/**/*.test.js\"",
+    "test": "node --test \"server/**/*.test.js\" \"src/**/*.test.js\"",
     "build": "npm run build:consumer && npm run build:partner",
     "build:consumer": "vite build --mode consumer",
     "build:partner": "vite build --mode partner",

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { BottomNav } from '@/components/nav/BottomNav';
 import TopNav from '@/components/TopNav';
 import { variants, safeMotion } from '@/lib/design/motion';
+import { ChatbotWidget } from '@/components/chatbot/ChatbotWidget';
 
 export default function ConsumerLayout() {
   const location = useLocation();
@@ -34,6 +35,10 @@ export default function ConsumerLayout() {
           <BottomNav />
         </div>
       )}
+
+      {/* Available on every consumer page. The conversation is created lazily on
+          the first message, so an unopened bubble costs nothing. */}
+      <ChatbotWidget role="consumer" />
     </div>
   );
 }
