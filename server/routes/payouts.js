@@ -21,7 +21,7 @@ function notifyPayoutReleased(payout) {
   if (!payout?.partnerId) return;
   notify({
     userId: payout.partnerId, event: 'payment_released',
-    data: { amount: `RM ${Number(payout.netPayout || 0).toFixed(2)}` },
+    data: { amount: `RM ${Number(payout.amountPaid || 0).toFixed(2)}` },
   }).catch(() => {});
 }
 
@@ -32,9 +32,11 @@ async function mapManyOut(items) {
     partner_id: p.partnerId,
     partner_email: emails[p.partnerId],
     partner_name: p.partnerName,
-    gross_earning: p.grossEarning,
-    commission_amount: p.commissionAmount,
-    net_payout: p.netPayout,
+    amount_requested: p.amountRequested,
+    amount_paid: p.amountPaid,
+    // DEPRECATED aliases — a withdrawal has no per-job gross or commission.
+    gross_earning: p.amountRequested,
+    net_payout: p.amountPaid,
     payout_method: p.payoutMethod,
     status: p.status,
     failure_reason: p.failureReason,
@@ -77,9 +79,8 @@ router.post('/', requireRole('admin', 'super_admin'), validate(createSchema), as
     data: {
       partnerId: partner.id,
       partnerName: partner.fullName,
-      grossEarning: req.body.gross_earning,
-      commissionAmount: req.body.commission_amount,
-      netPayout: req.body.net_payout,
+      amountRequested: req.body.gross_earning,
+      amountPaid: req.body.net_payout,
       payoutMethod: req.body.payout_method,
       status: req.body.status,
       scheduledDate: req.body.scheduled_date ?? null,
@@ -120,13 +121,20 @@ router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema),
 // The response keys are deliberately unchanged: src/pages/PartnerEarnings.jsx and
 // both Expo apps read them, and this is a data-source swap, not an API change.
 async function computeWallet(partnerId) {
-  const [wallet, payouts] = await Promise.all([
+  // `withdrawn` now comes from the SAME ledger as every other balance. Summing
+  // PayoutRecord meant it was sourced from a table the ledger never touches, so
+  // a record written outside the withdraw endpoint (as two seeded rows were)
+  // reported money as withdrawn that had never been earned, released or debited
+  // — the wallet showed withdrawn=232 against lifetime=0 and available=0.
+  const [wallet, debits] = await Promise.all([
     getWallet(partnerId),
-    prisma.payoutRecord.findMany({ where: { partnerId }, select: { netPayout: true, status: true } }),
+    prisma.walletLedgerEntry.aggregate({
+      // `payout_debit` is this ledger's name for a withdrawal debit.
+      where: { partnerId, type: 'payout_debit' },
+      _sum: { amount: true },
+    }),
   ]);
-  const withdrawn = round2(payouts
-    .filter((p) => ['pending', 'scheduled', 'processing', 'completed'].includes(p.status))
-    .reduce((s, p) => s + (p.netPayout || 0), 0));
+  const withdrawn = round2(debits._sum.amount || 0);
   const withdrawable = round2(Math.max(0, wallet.availableBalance));
 
   return {
@@ -176,9 +184,8 @@ router.post('/withdraw', validate(withdrawSchema), asyncHandler(async (req, res)
     data: {
       partnerId: req.user.id,
       partnerName: partner?.fullName || req.user.email,
-      grossEarning: req.body.amount,
-      commissionAmount: 0,
-      netPayout: req.body.amount,
+      amountRequested: req.body.amount,
+      amountPaid: req.body.amount,
       payoutMethod: 'Bank Transfer',
       status: 'pending',
     },
@@ -210,12 +217,12 @@ router.get('/dashboard', asyncHandler(async (req, res) => {
   const eightWeeksAgo = new Date(Date.now() - 56 * 86400000);
   const recent = await prisma.payoutRecord.findMany({
     where: { partnerId, status: 'completed', paidAt: { gte: eightWeeksAgo } },
-    select: { netPayout: true, paidAt: true },
+    select: { amountPaid: true, paidAt: true },
   });
   const series = {};
   for (const p of recent) {
     const key = p.paidAt.toISOString().slice(0, 10);
-    series[key] = round2((series[key] || 0) + p.netPayout);
+    series[key] = round2((series[key] || 0) + p.amountPaid);
   }
 
   res.json({

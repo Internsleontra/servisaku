@@ -604,7 +604,14 @@ model EscrowLedger {
   id            String    @id @default(cuid())
   bookingId     String    @unique
   grossAmount   Float
-  platformFee   Float
+  // ServisAku's commission on the partner, from payments/commission.js split().
+  // Renamed from `platformFee`: that name was shared with the CUSTOMER-facing
+  // booking fee, and the booking fee was being written here — recording a flat
+  // RM5 cut instead of the 20% commission.
+  commissionAmount Float
+  // Rate in force when the booking was created, snapshotted so a later tier
+  // change cannot retroactively alter a settled split.
+  commissionRate   Float  @default(0.20)
   partnerPayout Float
   status        String    @default("held")
   freezeReason  String?
@@ -687,13 +694,20 @@ model Dispute {
   @@index([raisedById])
 }
 
+// A WITHDRAWAL of available balance to a bank account — not a per-booking
+// earnings record. One withdrawal covers many bookings' earnings, so it has no
+// `bookingId` by design. Per-booking earnings live on EscrowLedger and
+// WalletLedgerEntry.bookingId.
+//
+// Renamed from grossEarning/netPayout, which read like job earnings and caused
+// exactly that misreading; `commissionAmount` is retired because commission is
+// taken at booking time, never on a withdrawal.
 model PayoutRecord {
   id               String    @id @default(cuid())
   partnerId        String
   partnerName      String
-  grossEarning     Float
-  commissionAmount Float
-  netPayout        Float
+  amountRequested  Float
+  amountPaid       Float
   payoutMethod     String    @default("Bank Transfer")
   // pending | scheduled | processing | completed | failed | cancelled
   status           String    @default("pending")

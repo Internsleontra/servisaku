@@ -14,7 +14,12 @@ function mapOut(e) {
     id: e.id,
     booking_id: e.bookingId,
     gross_amount: e.grossAmount,
-    platform_fee: e.platformFee,
+    commission_amount: e.commissionAmount,
+    commission_rate: e.commissionRate,
+    // DEPRECATED alias — existing clients still read platform_fee. Same value as
+    // commission_amount; it is the partner commission, never the customer's
+    // booking fee. Remove once no client reads it.
+    platform_fee: e.commissionAmount,
     partner_payout: e.partnerPayout,
     status: e.status,
     freeze_reason: e.freezeReason,

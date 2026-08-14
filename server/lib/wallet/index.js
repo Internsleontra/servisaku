@@ -21,6 +21,64 @@ export async function getWallet(partnerId) {
 }
 
 /**
+ * Ensure the escrow hold for a booking exists, loading the booking itself.
+ *
+ * Safe to call repeatedly: `post()` keys the entry `escrow_hold:<bookingId>`
+ * and that column is `@unique`, so a duplicate is returned rather than written.
+ * That is what makes it callable from the "already paid" branch of settlement —
+ * a hold lost on the first pass is recovered on any later redelivery instead of
+ * being skipped forever.
+ *
+ * Returns the entry, or null when there is nothing to write:
+ *   · no booking, or the customer has not actually paid
+ *   · no partner assigned yet — there is nobody to hold the liability for. That
+ *     case is a known lifecycle gap (docs/14-escrow-attribution-gap.md); it is
+ *     deliberately NOT invented here.
+ */
+export async function ensureEscrowHold(bookingId, { db = prisma } = {}) {
+  if (!bookingId) return null;
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: { partner: true },
+  });
+  if (!booking) return null;
+  if (!['paid', 'escrowed'].includes(booking.paymentStatus)) return null;
+  if (!booking.partnerId) return null;
+  return creditEscrowHold(booking, { partner: booking.partner });
+}
+
+/**
+ * Funded bookings that have a partner but no escrow_hold entry.
+ *
+ * The reconciliation sweep behind the reliability fix: settlement now awaits the
+ * hold and recovers it on redelivery, but anything already lost — or written by
+ * a path that bypassed settlement entirely, as seed data does — is only visible
+ * here. Read-only; the caller decides whether to repair.
+ */
+export async function findMissingEscrowHolds({ db = prisma } = {}) {
+  const funded = await db.booking.findMany({
+    where: { paymentStatus: { in: ['paid', 'escrowed'] }, partnerId: { not: null } },
+    include: { partner: true, escrow: true },
+  });
+  const out = [];
+  for (const booking of funded) {
+    const existing = await db.walletLedgerEntry.findUnique({
+      where: { idempotencyKey: `escrow_hold:${booking.id}` },
+    });
+    if (existing) continue;
+    out.push({
+      bookingId: booking.id,
+      partnerId: booking.partnerId,
+      expected: split(booking.price, { partner: booking.partner }).netPayout,
+      escrowPayout: booking.escrow?.partnerPayout ?? null,
+      paymentStatus: booking.paymentStatus,
+      status: booking.status,
+    });
+  }
+  return out;
+}
+
+/**
  * A consumer paid online — the partner's share is earned but still in escrow.
  * Called from markPaidAndEscrow in server/routes/payments.js.
  */
@@ -102,7 +160,7 @@ export function debitPayout(payout) {
   return post({
     partnerId: payout.partnerId,
     type: 'payout_debit',
-    amount: payout.netPayout,
+    amount: payout.amountPaid,
     description: `Payout ${payout.reference || payout.id}`,
     payoutId: payout.id,
     idempotencyKey: `payout:${payout.id}`,

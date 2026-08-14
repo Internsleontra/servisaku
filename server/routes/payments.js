@@ -6,7 +6,7 @@ import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isBookingParticipant } from '../lib/access.js';
 import { getProvider, providerForMethod, listMethods, PAYMENT_METHODS, toSen, fromSen } from '../lib/payments/index.js';
 import { split } from '../lib/payments/commission.js';
-import { creditEscrowHold, debitCommission } from '../lib/wallet/index.js';
+import { creditEscrowHold, debitCommission, ensureEscrowHold } from '../lib/wallet/index.js';
 import { applyPayment } from '../lib/wallet/settlement.js';
 import { issueInvoice } from '../lib/tax/invoice.js';
 import { notify } from '../lib/notifications/index.js';
@@ -40,7 +40,16 @@ function mapOut(p) {
 
 // Flip a payment to paid (idempotent) and move funds into escrow.
 async function markPaidAndEscrow(payment, rawPayload) {
-  if (payment.status === 'paid') return payment;
+  if (payment.status === 'paid') {
+    // Do NOT return here without checking the hold. The hold used to be
+    // fire-and-forget, so a failure left a funded booking with no partner-side
+    // entry — and because this guard short-circuits, every later redelivery
+    // skipped the hold too, making the loss permanent. `ensureEscrowHold` is
+    // idempotent, so re-running it on an already-paid payment either recovers
+    // the missing entry or returns the existing one.
+    await ensureEscrowHold(payment.bookingId);
+    return payment;
+  }
 
   // A settlement payment is a partner paying ServisAku — it has no escrow and no
   // consumer receipt; it clears commission debt instead.
@@ -57,7 +66,7 @@ async function markPaidAndEscrow(payment, rawPayload) {
 
   const booking = await prisma.booking.findUnique({ where: { id: payment.bookingId }, include: { partner: true } });
   const gross = payment.amountMyr ?? fromSen(payment.amount);
-  const { commission, netPayout } = split(gross, { partner: booking?.partner });
+  const { commission, netPayout, rate } = split(gross, { partner: booking?.partner });
 
   const updated = await prisma.payment.update({
     where: { id: payment.id },
@@ -70,14 +79,21 @@ async function markPaidAndEscrow(payment, rawPayload) {
 
   await prisma.escrowLedger.upsert({
     where: { bookingId: payment.bookingId },
-    create: { bookingId: payment.bookingId, grossAmount: gross, platformFee: commission, partnerPayout: netPayout, status: 'held' },
+    create: { bookingId: payment.bookingId, grossAmount: gross, commissionAmount: commission, commissionRate: rate, partnerPayout: netPayout, status: 'held' },
     update: {},
   });
 
   // The partner's share is earned but not yet withdrawable — it sits in escrow.
+  //
+  // AWAITED, not fire-and-forget. A swallowed failure here left the booking
+  // funded with no partner hold and no way to notice. Letting it throw fails the
+  // webhook, the gateway redelivers, and the idempotency key makes the retry
+  // safe — the entry is written once however many times this runs.
+  //
+  // A booking with no partner yet writes nothing: there is nobody to hold the
+  // liability for. See docs/14-escrow-attribution-gap.md.
   if (booking?.partnerId) {
-    creditEscrowHold(booking, { partner: booking.partner }).catch((err) =>
-      console.error('[payments] escrow hold ledger entry failed:', err?.message || err));
+    await creditEscrowHold(booking, { partner: booking.partner });
   }
 
   if (booking) issueInvoiceSafely(booking, payment.id);

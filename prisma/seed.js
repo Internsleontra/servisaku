@@ -109,13 +109,13 @@ async function main() {
   await prisma.escrowLedger.upsert({
     where: { bookingId: 'bk-seed-1' },
     update: {},
-    create: { bookingId: 'bk-seed-1', grossAmount: 120, platformFee: 24, partnerPayout: 96, status: 'released' },
+    create: { bookingId: 'bk-seed-1', grossAmount: 120, commissionAmount: 24, commissionRate: 0.2, partnerPayout: 96, status: 'released' },
   });
 
   await prisma.escrowLedger.upsert({
     where: { bookingId: 'bk-seed-3' },
     update: {},
-    create: { bookingId: 'bk-seed-3', grossAmount: 200, platformFee: 40, partnerPayout: 160, status: 'held' },
+    create: { bookingId: 'bk-seed-3', grossAmount: 200, commissionAmount: 40, commissionRate: 0.2, partnerPayout: 160, status: 'held' },
   });
 
   // --- Reviews ---
@@ -127,7 +127,7 @@ async function main() {
 
   // --- Payout ---
   await prisma.payoutRecord.create({
-    data: { partnerId: partner1.id, partnerName: partner1.fullName, grossEarning: 120, commissionAmount: 24, netPayout: 96, status: 'completed', payoutMethod: 'Bank Transfer' },
+    data: { partnerId: partner1.id, partnerName: partner1.fullName, amountRequested: 96, amountPaid: 96, status: 'completed', payoutMethod: 'Bank Transfer' },
   }).catch(() => {}); // ignore if already exists
 
   console.log('✅ Database seeded successfully!');

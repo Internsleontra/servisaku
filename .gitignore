@@ -39,6 +39,13 @@ scratch/
 prisma/dev.db
 prisma/*.db
 
+# Financial remediation run artifacts (pre-migration snapshots, correction and
+# reconciliation logs). These contain live partner and banking data — partnerName,
+# bankSnapshot — from the dev database and must NEVER be committed.
+# Keep them on disk: prisma/migrations/20260813000000_financial_naming_and_commission
+# cites them as the pre-migration capture, and they are the rollback evidence.
+.backups/
+
 # Firebase Admin service-account key — NEVER commit
 serviceAccountKey.json
 *serviceAccount*.json

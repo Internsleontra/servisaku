@@ -15,9 +15,12 @@
 //
 //   serviceTotal = base(pricingType) + Σ question contributions
 //   subtotal     = serviceTotal + visitFee + surcharges
-//   platformFee  = globalConfig.platformFee (flat)
-//   tax          = sstEnabled ? (subtotal + platformFee) × sstRate : 0
-//   total        = subtotal + platformFee + tax − promoDiscount
+//   bookingFee   = globalConfig.bookingFee (flat, CHARGED TO THE CUSTOMER)
+//   tax          = sstEnabled ? (subtotal + bookingFee) × sstRate : 0
+//   total        = subtotal + bookingFee + tax − promoDiscount
+//
+// The booking fee is NOT the partner commission. Partner commission is
+// server/lib/payments/commission.js `split()` and is DEDUCTED from the partner.
 // ════════════════════════════════════════════════════════════════════════════
 
 /** Supported pricing strategies (Service.pricingType). */
@@ -34,6 +37,9 @@ export const QUESTION_TYPES = Object.freeze([
 
 /** Platform-wide defaults (mirror servisaku-services-config.json → globalConfig). */
 export const DEFAULT_GLOBAL_CONFIG = Object.freeze({
+  // Flat fee added to the CUSTOMER's bill. Not a partner commission.
+  bookingFee: 5,
+  // DEPRECATED alias — servisaku-services-config.json still ships `platformFee`.
   platformFee: 5,
   afterHoursSurcharge: 30,
   urgentSurcharge: 30,
@@ -200,20 +206,26 @@ export function computePrice(service, answers = {}, context = {}) {
   const surchargeTotal = round2(afterHours + urgent);
 
   const subtotal = round2(serviceTotal + visitFee + surchargeTotal);
-  const platformFee = num(cfg.platformFee);
+  // CUSTOMER-FACING booking fee — added to what the customer pays. This is NOT
+  // ServisAku's commission on the partner; that is computed by
+  // server/lib/payments/commission.js `split()` and is deducted from the
+  // partner's earnings. The two were previously both called "platform fee",
+  // and the booking fee was written into EscrowLedger as if it were the
+  // commission — recording a RM5 cut on a RM285 job instead of RM57.
+  const bookingFee = num(cfg.bookingFee ?? cfg.platformFee);
 
   const sstEnabled = context.sstEnabled ?? service.sstEnabled ?? cfg.sstEnabled ?? false;
-  const tax = sstEnabled ? round2((subtotal + platformFee) * num(cfg.sstRate)) : 0;
+  const tax = sstEnabled ? round2((subtotal + bookingFee) * num(cfg.sstRate)) : 0;
 
   const promoDiscount = round2(context.promoDiscount);
-  const total = round2(subtotal + platformFee + tax - promoDiscount);
+  const total = round2(subtotal + bookingFee + tax - promoDiscount);
 
   // Fee/surcharge lines complete the breakdown shown on Step F.
   const breakdown = [...lines];
   if (visitFee) breakdown.push({ questionId: null, label: 'Visit / call-out fee', type: 'VISIT_FEE', amount: visitFee });
   if (afterHours) breakdown.push({ questionId: null, label: 'After-hours surcharge', type: 'SURCHARGE', amount: afterHours });
   if (urgent) breakdown.push({ questionId: null, label: 'Urgent (same-day) surcharge', type: 'SURCHARGE', amount: urgent });
-  breakdown.push({ questionId: null, label: 'Platform fee', type: 'PLATFORM_FEE', amount: platformFee });
+  breakdown.push({ questionId: null, label: 'Booking fee', type: 'BOOKING_FEE', amount: bookingFee });
   if (tax) breakdown.push({ questionId: null, label: `SST (${(num(cfg.sstRate) * 100).toFixed(0)}%)`, type: 'TAX', amount: tax });
   if (promoDiscount) breakdown.push({ questionId: null, label: 'Promo discount', type: 'DISCOUNT', amount: -promoDiscount });
 
@@ -224,7 +236,12 @@ export function computePrice(service, answers = {}, context = {}) {
     visitFee,
     surcharges: { afterHours, urgent, total: surchargeTotal },
     subtotal,
-    platformFee,
+    bookingFee,
+    // DEPRECATED alias. Bookings created before this rename carry `platformFee`
+    // in their persisted priceBreakdown snapshot, and tax/invoice.js reads that
+    // snapshot back for historical invoices — so the key has to keep existing.
+    // Read `bookingFee` in new code; never use either as a partner commission.
+    platformFee: bookingFee,
     sstEnabled: !!sstEnabled,
     tax,
     promoDiscount,

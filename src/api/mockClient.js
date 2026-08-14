@@ -345,6 +345,14 @@ export const mockClient = {
       };
     },
     async withdraw() { throw new Error('Withdrawals require the backend (demo mode)'); },
+    async dashboard() {
+      return {
+        lifetime: 0, pending: 0, withdrawn: 0, withdrawable: 0, balance: 0, currency: 'MYR',
+        outstanding_commission: 0, payouts_suspended: false, is_frozen: false,
+        minimum_payout: 50, next_payout_date: null, bank_account: null,
+        payout_blocked_reason: null, recent_payouts: [], series: [],
+      };
+    },
     async detail() {
       return {
         available_balance: 0, pending_balance: 0, outstanding_commission: 0,

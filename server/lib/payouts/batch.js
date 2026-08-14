@@ -112,9 +112,8 @@ export async function generateBatch(cycle = 'weekly', now = new Date()) {
         data: {
           partnerId: e.partnerId,
           partnerName: e.partnerName || e.partnerEmail || e.partnerId,
-          grossEarning: e.amount,
-          commissionAmount: 0,
-          netPayout: e.amount,
+          amountRequested: e.amount,
+          amountPaid: e.amount,
           payoutMethod: 'Bank Transfer',
           status: 'scheduled',
           batchId: created.id,
@@ -176,7 +175,7 @@ export async function processBatch(batchId) {
       // Re-check the balance inside the run: it may have moved since the draft
       // was generated (a refund clawback, a damage deduction).
       const wallet = await prisma.partnerWallet.findUnique({ where: { partnerId: payout.partnerId } });
-      if (!wallet || wallet.availableBalance < payout.netPayout) {
+      if (!wallet || wallet.availableBalance < payout.amountPaid) {
         await prisma.payoutRecord.update({
           where: { id: payout.id },
           data: { status: 'failed', failureReason: `Insufficient balance at processing time (RM${round2(wallet?.availableBalance ?? 0)})` },
@@ -219,8 +218,8 @@ export async function retryPayout(payoutId) {
   if (payout.status !== 'failed') throw new Error(`Payout is ${payout.status}, only a failed payout can be retried`);
 
   const wallet = await prisma.partnerWallet.findUnique({ where: { partnerId: payout.partnerId } });
-  if (!wallet || wallet.availableBalance < payout.netPayout) {
-    throw new Error(`Insufficient balance (RM${round2(wallet?.availableBalance ?? 0)}) for RM${payout.netPayout}`);
+  if (!wallet || wallet.availableBalance < payout.amountPaid) {
+    throw new Error(`Insufficient balance (RM${round2(wallet?.availableBalance ?? 0)}) for RM${payout.amountPaid}`);
   }
   await debitPayout(payout);
   return prisma.payoutRecord.update({

@@ -34,7 +34,7 @@ export async function toBankFile(batchId) {
       bank_name: bank.bankName ?? '',
       account_number: bank.accountNumber ?? '',
       account_name: bank.accountName ?? p.partnerName,
-      amount: p.netPayout.toFixed(2),
+      amount: p.amountPaid.toFixed(2),
       currency: 'MYR',
       reference: p.reference ?? p.id,
       email: '',

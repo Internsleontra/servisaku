@@ -301,6 +301,11 @@ export const apiClient = {
   wallet: {
     get: () => get('/payouts/wallet'),
     withdraw: (amount) => post('/payouts/withdraw', { amount }),
+    // Everything the wallet screen needs in one round trip: balances, withdrawn,
+    // minimum/next payout, bank account, block reason, recent payouts, series.
+    // Sits here rather than in a `payouts` namespace to match `get()` above,
+    // which already maps a /payouts/* path onto the wallet surface.
+    dashboard: () => get('/payouts/dashboard'),
     detail: () => get('/wallet'),
     ledger: (query = {}) => get(`/wallet/ledger?${new URLSearchParams(query)}`),
     settlements: () => get('/wallet/settlements'),

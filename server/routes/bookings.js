@@ -5,6 +5,7 @@ import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { ApiError, asyncHandler, findUserByEmail, getBookingOr404, isAdmin, assertBookingParticipant } from '../lib/access.js';
 import { priceBooking } from '../lib/pricing.js';
+import { split } from '../lib/payments/commission.js';
 import { resolveService, resolveServiceDetailOr404, validateServiceParams, toEngineService } from '../lib/catalog.js';
 import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
@@ -79,6 +80,14 @@ function mapBookingOut(b) {
     })),
     config_version: b.configVersion ?? null,
     price: b.price,
+    // Canonical partner split, straight from the escrow row — never recomputed
+    // on a client. Dashboard, JobScreen and Earnings each carried their own
+    // `price * 0.8` estimate with three different roundings; these fields
+    // replace all of them. `null` when no escrow row exists yet (the caller
+    // should render "—", not fall back to an estimate).
+    partner_payout: b.escrow?.partnerPayout ?? null,
+    commission_amount: b.escrow?.commissionAmount ?? null,
+    commission_rate: b.escrow?.commissionRate ?? null,
     date: b.date,
     time_slot: b.timeSlot,
     address: b.address,
@@ -133,7 +142,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const items = await prisma.booking.findMany({
     where, take,
     orderBy: { createdAt: 'desc' },
-    include: { consumer: true, partner: true },
+    include: { consumer: true, partner: true, escrow: true },
   });
   res.json(items.map(mapBookingOut));
 }));
@@ -142,7 +151,7 @@ router.get('/', asyncHandler(async (req, res) => {
 router.get('/:id', asyncHandler(async (req, res) => {
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
-    include: { consumer: true, partner: true, items: true },
+    include: { consumer: true, partner: true, items: true, escrow: true },
   });
   if (!booking) throw new ApiError(404, 'Booking not found');
   assertBookingParticipant(req.user, booking);
@@ -236,7 +245,7 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
         consumerId: req.user.id,
         partnerId: partner?.id ?? null,
       },
-      include: { consumer: true, partner: true },
+      include: { consumer: true, partner: true, escrow: true },
     });
     if (pricing.lineItems?.length) {
       await tx.bookingItem.createMany({
@@ -252,12 +261,18 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
         })),
       });
     }
+    // Partner commission comes from the canonical split() — NOT from the
+    // customer's booking fee. Writing `pricing.bookingFee` here recorded a flat
+    // RM5 cut on every job regardless of value (RM5 on a RM285 booking instead
+    // of RM57), overstating partner liability on every row.
+    const escrowSplit = split(pricing.total, { partner });
     await tx.escrowLedger.create({
       data: {
         bookingId: created.id,
-        grossAmount: pricing.total,
-        platformFee: pricing.platformFee,
-        partnerPayout: pricing.partnerPayout,
+        grossAmount: escrowSplit.gross,
+        commissionAmount: escrowSplit.commission,
+        commissionRate: escrowSplit.rate,
+        partnerPayout: escrowSplit.netPayout,
         status: 'held',
       },
     });
@@ -345,7 +360,7 @@ router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, 
         consumerId: req.user.id,
         partnerId: partner?.id ?? null,
       },
-      include: { consumer: true, partner: true },
+      include: { consumer: true, partner: true, escrow: true },
     });
 
     // Line-item rows mirror the price breakdown for reporting parity with the
@@ -364,12 +379,15 @@ router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, 
       });
     }
 
+    // Canonical split — see the note on the other escrow create above.
+    const escrowSplit = split(pricing.total, { partner });
     await tx.escrowLedger.create({
       data: {
         bookingId: created.id,
-        grossAmount: pricing.total,
-        platformFee: pricing.platformFee,
-        partnerPayout: Math.max(0, pricing.total - pricing.platformFee),
+        grossAmount: escrowSplit.gross,
+        commissionAmount: escrowSplit.commission,
+        commissionRate: escrowSplit.rate,
+        partnerPayout: escrowSplit.netPayout,
         status: 'held',
       },
     });
@@ -454,7 +472,7 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
   const updated = await prisma.booking.update({
     where: { id: booking.id },
     data,
-    include: { consumer: true, partner: true },
+    include: { consumer: true, partner: true, escrow: true },
   });
 
   // Fire notifications after the write succeeds (off the response path).
@@ -483,7 +501,7 @@ router.post('/:id/claim', asyncHandler(async (req, res) => {
   const updated = await prisma.booking.update({
     where: { id: booking.id },
     data: { partnerId: req.user.id, status: 'accepted' },
-    include: { consumer: true, partner: true },
+    include: { consumer: true, partner: true, escrow: true },
   });
   // Consumer: your pro is assigned. Partner: confirm the job is theirs.
   fireNotifications([
@@ -523,7 +541,7 @@ router.post('/:id/photos', validate(photosSchema), asyncHandler(async (req, res)
   const updated = await prisma.booking.update({
     where: { id: booking.id },
     data: { details: nextDetails },
-    include: { consumer: true, partner: true },
+    include: { consumer: true, partner: true, escrow: true },
   });
   res.json(mapBookingOut(updated));
 }));
@@ -550,7 +568,7 @@ router.post('/:id/extras', validate(extraSchema), asyncHandler(async (req, res) 
   await prisma.bookingItem.create({
     data: { bookingId: booking.id, kind: 'addon', label: req.body.label, qty, unitPrice: req.body.unit_price, total, status: 'pending', addedBy: req.user.id },
   });
-  const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { consumer: true, partner: true, items: true } });
+  const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { consumer: true, partner: true, items: true, escrow: true } });
   res.json(mapBookingOut(updated));
 }));
 
@@ -577,7 +595,7 @@ router.patch('/:id/extras/:itemId', validate(extraDecisionSchema), asyncHandler(
     prisma.bookingItem.update({ where: { id: item.id }, data: { status: req.body.status } }),
     prisma.booking.update({ where: { id: booking.id }, data: bookingData }),
   ]);
-  const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { consumer: true, partner: true, items: true } });
+  const updated = await prisma.booking.findUnique({ where: { id: booking.id }, include: { consumer: true, partner: true, items: true, escrow: true } });
   res.json(mapBookingOut(updated));
 }));
 
