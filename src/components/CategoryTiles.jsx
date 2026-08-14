@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn, formatMYR } from '@/lib/utils';
 import { avatarFor, tintFor } from '@/lib/categoryAvatars';
+import { House } from 'lucide-react';
 
 // Urban-Company-style category tiles: an avatar on a soft tile, name beneath.
 // `onPick(slug)` overrides the default navigation to /catalog/:slug.
@@ -33,11 +34,11 @@ export default function CategoryTiles({ categories = [], onPick, className }) {
                   className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (
-                <span className="text-2xl">🏠</span>
+                <House className="size-6 text-brand" />
               )}
               {c.price_from > 0 && (
-                <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-bold text-ink shadow-e1">
-                  RM{Math.round(c.price_from)}+
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-ink shadow-e1">
+                  {formatMYR(Math.round(c.price_from))}+
                 </span>
               )}
             </div>

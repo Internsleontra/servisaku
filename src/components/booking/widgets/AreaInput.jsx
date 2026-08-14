@@ -26,7 +26,7 @@ export default function AreaInput({ question, value, onChange }) {
       {rate > 0 && (
         <div className="mt-2 flex items-center justify-between border-t border-hairline pt-2 text-sm">
           <span className="text-ink-secondary">{rm(rate)}/{unit}</span>
-          {area > 0 && <span className="font-bold tabular-nums text-brand">{rm(rate * area)}</span>}
+          {area > 0 && <span className="font-semibold tabular-nums text-brand">{rm(rate * area)}</span>}
         </div>
       )}
     </div>

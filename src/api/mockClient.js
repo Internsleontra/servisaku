@@ -313,10 +313,10 @@ export const mockClient = {
     // render — return the same shape the backend registry produces.
     async methods() {
       return [
-        { id: 'fpx', label: 'FPX Online Banking', icon: '🏦', sub: 'Maybank, CIMB, Public Bank, RHB', online: true, available: false, provider: null },
-        { id: 'duitnow', label: 'DuitNow', icon: '🇲🇾', sub: 'Pay from any Malaysian bank', online: true, available: false, provider: null },
-        { id: 'card', label: 'Credit / Debit Card', icon: '💳', sub: 'Visa, Mastercard', online: true, available: false, provider: null },
-        { id: 'cash', label: 'Cash on Service', icon: '💵', sub: 'Pay your professional at completion', online: false, available: false, provider: null },
+        { id: 'fpx', label: 'FPX Online Banking', icon: 'Landmark', sub: 'Maybank, CIMB, Public Bank, RHB', online: true, available: false, provider: null },
+        { id: 'duitnow', label: 'DuitNow', icon: 'QrCode', sub: 'Pay from any Malaysian bank', online: true, available: false, provider: null },
+        { id: 'card', label: 'Credit / Debit Card', icon: 'CreditCard', sub: 'Visa, Mastercard', online: true, available: false, provider: null },
+        { id: 'cash', label: 'Cash on Service', icon: 'Banknote', sub: 'Pay your professional at completion', online: false, available: false, provider: null },
       ];
     },
     async create() { throw new Error('Payments require the live backend (VITE_BACKEND=real).'); },
@@ -390,6 +390,45 @@ export const mockClient = {
   support: {
     async list() { return []; },
     async create() { throw new Error('Requires the backend (demo mode)'); },
+    async get() { throw new Error('Requires the backend (demo mode)'); },
+    async reply() { throw new Error('Requires the backend (demo mode)'); },
+    async resolve() { throw new Error('Requires the backend (demo mode)'); },
+    async reopen() { throw new Error('Requires the backend (demo mode)'); },
+    async csat() { throw new Error('Requires the backend (demo mode)'); },
+    async requestCallback() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  // Money and legal records have no meaningful demo behaviour — a fake refund
+  // amount or a fake acceptance record would be worse than an honest error.
+  refunds: {
+    async list() { return []; },
+    async get() { throw new Error('Requires the backend (demo mode)'); },
+    async preview() { throw new Error('Refund amounts require the live backend (VITE_BACKEND=real).'); },
+    async request() { throw new Error('Refunds require the live backend (VITE_BACKEND=real).'); },
+    async cancel() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  disputes: {
+    async list() { return []; },
+    async get() { throw new Error('Requires the backend (demo mode)'); },
+    async create() { throw new Error('Requires the backend (demo mode)'); },
+    async addEvidence() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  damageClaims: {
+    async list() { return []; },
+    async get() { throw new Error('Requires the backend (demo mode)'); },
+    async create() { throw new Error('Requires the backend (demo mode)'); },
+    async addEvidence() { throw new Error('Requires the backend (demo mode)'); },
+    async appeal() { throw new Error('Requires the backend (demo mode)'); },
+  },
+
+  legal: {
+    async documents() { return []; },
+    async document() { throw new Error('Requires the backend (demo mode)'); },
+    async pending() { return { documents: [] }; },
+    async accept() { throw new Error('Legal acceptance requires the live backend (VITE_BACKEND=real).'); },
+    async acceptMany() { throw new Error('Legal acceptance requires the live backend (VITE_BACKEND=real).'); },
   },
 
   inventory: {

@@ -5,8 +5,8 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import { useRealtimeBooking, usePartnerLocation } from '@/hooks/useRealtimeBooking';
 import { calcETA, KL_CENTER } from '@/lib/realtimeService';
-import { STATUS_META } from '@/lib/bookingEngine';
 import 'leaflet/dist/leaflet.css';
+import { statusIconFor } from '@/lib/statusIcons';
 
 // Fix leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -16,25 +16,38 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Partner marker with smooth CSS transitions and a subtle pulse
+/* Leaflet divIcons are raw HTML injected outside React, so Lucide components
+   cannot be used here. These are the same Lucide glyphs (wrench, house) inlined
+   as SVG paths so the markers stay on the design system's icon vocabulary —
+   2px stroke, round caps — with no emoji. */
+const LUCIDE = { stroke: 'white', fill: 'none', width: 2, linecap: 'round', linejoin: 'round' };
+const svg = (paths, size) => `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"
+       fill="${LUCIDE.fill}" stroke="${LUCIDE.stroke}" stroke-width="${LUCIDE.width}"
+       stroke-linecap="${LUCIDE.linecap}" stroke-linejoin="${LUCIDE.linejoin}">${paths}</svg>`;
+
+const WRENCH = '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>';
+const HOUSE = '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+
+// Partner marker — brand fill, pulsing halo.
 const partnerIcon = L.divIcon({
   className: 'transition-transform duration-75 ease-linear',
   html: `
     <div class="relative flex items-center justify-center w-11 h-11">
       <div class="absolute inset-0 bg-brand rounded-full animate-pulse opacity-40"></div>
-      <div class="relative z-10 w-11 h-11 bg-brand rounded-full border-[3px] border-white shadow-[0_4px_16px_rgba(20,83,45,0.4)] flex items-center justify-center text-[18px]">🔧</div>
+      <div class="relative z-10 w-11 h-11 bg-brand rounded-full shadow-[0_0_0_3px_white,0_4px_16px_rgba(0,0,238,0.4)] flex items-center justify-center">${svg(WRENCH, 18)}</div>
     </div>
   `,
   iconSize: [44, 44], iconAnchor: [22, 22],
 });
 
-// Destination marker with an aggressive radar ping
+// Destination marker — radar ping.
 const destIcon = L.divIcon({
   className: '',
   html: `
     <div class="relative flex items-center justify-center w-10 h-10">
-      <div class="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-60"></div>
-      <div class="relative z-10 w-9 h-9 bg-red-500 rounded-full border-[2.5px] border-white shadow-lg flex items-center justify-center text-sm">🏠</div>
+      <div class="absolute inset-0 bg-danger rounded-full animate-ping opacity-60"></div>
+      <div class="relative z-10 w-9 h-9 bg-danger rounded-full shadow-[0_0_0_2.5px_white,0_4px_12px_rgba(2,2,43,0.25)] flex items-center justify-center">${svg(HOUSE, 16)}</div>
     </div>
   `,
   iconSize: [40, 40], iconAnchor: [20, 20],
@@ -110,10 +123,16 @@ export default function LiveTracking() {
     </div>
   );
 
-  const statusMeta = STATUS_META[booking.status];
+  const StatusIcon = statusIconFor(booking.status);
 
   return (
     <div className="h-screen flex flex-col font-inter relative bg-surface">
+      {/* The map is the page; a visible title would cover it. This names the
+          route for assistive tech and gives the document its single h1. */}
+      <h1 className="sr-only">
+        Live tracking — {booking.service_type}{booking.partner_name ? ` with ${booking.partner_name}` : ''}
+      </h1>
+
       {/* Full-screen Map */}
       <div className="flex-1 relative z-0">
         <MapContainer
@@ -128,16 +147,16 @@ export default function LiveTracking() {
           />
           {partnerPos && (
             <Marker position={[partnerPos.lat, partnerPos.lng]} icon={partnerIcon}>
-              <Popup className="font-inter rounded-xl overflow-hidden font-bold">{booking.partner_name || 'Partner'}</Popup>
+              <Popup className="font-inter rounded-xl overflow-hidden font-semibold">{booking.partner_name || 'Partner'}</Popup>
             </Marker>
           )}
           <Marker position={[destPos.lat, destPos.lng]} icon={destIcon}>
-            <Popup className="font-inter font-bold">Your location</Popup>
+            <Popup className="font-inter font-semibold">Your location</Popup>
           </Marker>
           {partnerPos && (
             <Polyline
               positions={[[partnerPos.lat, partnerPos.lng], [destPos.lat, destPos.lng]]}
-              pathOptions={{ color: 'hsl(var(--brand))', weight: 4, dashArray: '8 8', opacity: 0.8, lineCap: 'round' }}
+              pathOptions={{ color: 'rgb(var(--brand))', weight: 4, dashArray: '8 8', opacity: 0.8, lineCap: 'round' }}
             />
           )}
           {partnerPos && <FlyTo center={[partnerPos.lat, partnerPos.lng]} />}
@@ -145,35 +164,38 @@ export default function LiveTracking() {
 
         {/* Floating Back Button */}
         <button onClick={() => navigate(`/booking/${bookingId}`)}
-          className="absolute top-5 left-5 z-[1000] w-11 h-11 bg-surface/90 backdrop-blur-md rounded-2xl shadow-e2 border border-hairline/10 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+          aria-label="Close tracking"
+          className="absolute top-5 left-5 z-[1000] w-11 h-11 bg-surface/90 backdrop-blur-md rounded-2xl shadow-e2 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
           <X className="h-5 w-5 text-ink" />
         </button>
 
         {/* Dynamic ETA Pill */}
         {eta && booking.status === 'en_route' && (
-          <div className="absolute top-5 left-1/2 -translate-x-1/2 z-[1000] bg-surface/95 backdrop-blur-md rounded-full px-5 py-2.5 shadow-e2 border border-hairline/10 flex items-center gap-2.5">
-            <div className="w-2.5 h-2.5 bg-brand rounded-full animate-pulse shadow-[0_0_8px_hsl(var(--brand))]" />
-            <span className="text-sm font-bold text-ink tracking-tight">{eta} min away</span>
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 z-[1000] bg-surface/95 backdrop-blur-md rounded-full px-5 py-2.5 shadow-e2 flex items-center gap-2.5">
+            <div className="w-2.5 h-2.5 bg-live rounded-full animate-pulse shadow-[0_0_8px_rgb(var(--live))]" />
+            <span className="text-sm font-semibold text-ink tracking-tight">{eta} min away</span>
           </div>
         )}
       </div>
 
       {/* Modern Bottom Sheet Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 z-[1000] bg-surface rounded-t-[32px] shadow-[0_-8px_40px_rgba(0,0,0,0.08)] border-t border-hairline/5">
+      <div className="absolute bottom-0 left-0 right-0 z-[1000] bg-surface rounded-t-sheet shadow-[0_-8px_40px_rgba(4,4,74,0.16)]">
         <div className="w-12 h-1.5 bg-hairline/20 rounded-full mx-auto mt-3.5 mb-5" />
 
-        {/* Dynamic Status Banner */}
+        {/* Live status banner. The glyph comes from the client-only icon map
+            (statusIcons.js); bookingEngine.js is server-safe and carries no
+            React components. */}
         <div className={`mx-5 mb-5 rounded-2xl p-4 flex items-center gap-3.5 transition-all ${
-          booking.status === 'arrived' ? 'bg-brand-tint border border-brand/20' :
-          booking.status === 'started' ? 'bg-blue-50 border border-blue-100' :
-          'bg-amber-50 border border-amber-100'
+          booking.status === 'arrived' ? 'bg-brand-tint shadow-[inset_0_0_0_1px_rgb(var(--brand)/0.2)]' :
+          booking.status === 'started' ? 'bg-info-tint shadow-[inset_0_0_0_1px_rgb(var(--info)/0.3)]' :
+          'bg-warning-tint shadow-[inset_0_0_0_1px_rgb(var(--warning)/0.3)]'
         }`}>
-          <div className="w-10 h-10 rounded-xl bg-white/60 shadow-sm flex items-center justify-center shrink-0 text-xl">
-            {statusMeta?.icon}
+          <div className="w-10 h-10 rounded-xl bg-white/60 flex items-center justify-center shrink-0">
+            {StatusIcon ? <StatusIcon className="size-5 text-ink" /> : null}
           </div>
           <div>
-            <p className={`font-bold text-[15px] leading-tight ${
-              booking.status === 'arrived' ? 'text-brand' : booking.status === 'started' ? 'text-blue-700' : 'text-amber-800'
+            <p className={`font-semibold text-[15px] leading-tight ${
+              booking.status === 'arrived' ? 'text-brand' : booking.status === 'started' ? 'text-info' : 'text-warning'
             }`}>
               {booking.status === 'en_route' && `Partner on the way • ETA ${eta || '—'} min`}
               {booking.status === 'arrived' && 'Partner has arrived!'}
@@ -187,19 +209,20 @@ export default function LiveTracking() {
         {/* Partner Info & Actions */}
         <div className="mx-5 flex items-center gap-3.5 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-brand-tint flex items-center justify-center shrink-0 shadow-inner">
-            <span className="text-2xl font-bold text-brand">{booking.partner_name?.charAt(0) || '?'}</span>
+            <span className="text-2xl font-semibold text-brand">{booking.partner_name?.charAt(0) || '?'}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-base text-ink truncate">{booking.partner_name || 'Your Partner'}</p>
+            <p className="font-semibold text-base text-ink truncate">{booking.partner_name || 'Your Partner'}</p>
             <p className="text-xs font-medium text-ink-secondary mt-0.5">
               {partnerLoc?.speed ? `${partnerLoc.speed} km/h` : 'Honda City • VAM 2314'}
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button className="w-12 h-12 rounded-2xl bg-raised flex items-center justify-center hover:bg-brand-tint transition-colors active:scale-95">
+            <button aria-label="Call your partner" className="w-12 h-12 rounded-2xl bg-raised flex items-center justify-center hover:bg-brand-tint transition-colors active:scale-95">
               <Phone className="h-5 w-5 text-ink-secondary hover:text-brand transition-colors" />
             </button>
             <button onClick={() => navigate(`/chat/${bookingId}`)}
+              aria-label="Message your partner"
               className="w-12 h-12 rounded-2xl bg-ink flex items-center justify-center shadow-e2 active:scale-95 transition-all">
               <MessageSquare className="h-5 w-5 text-ink-inverse" />
             </button>

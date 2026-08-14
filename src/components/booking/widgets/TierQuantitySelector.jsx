@@ -26,7 +26,7 @@ export default function TierQuantitySelector({ question, value, onChange }) {
             </div>
             <div className="flex items-center gap-3">
               {qty > 0 && (
-                <span className="font-bold tabular-nums text-brand">{rm((o.unit_price || 0) * qty)}</span>
+                <span className="font-semibold tabular-nums text-brand">{rm((o.unit_price || 0) * qty)}</span>
               )}
               <Stepper value={qty} onChange={(q) => setQty(o.id, q)} min={0} max={20} step={1} />
             </div>

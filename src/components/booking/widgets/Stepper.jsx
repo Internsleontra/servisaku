@@ -21,7 +21,7 @@ export default function Stepper({ value, onChange, min = 0, max = 99, step = 1, 
       >
         <Minus size={16} />
       </button>
-      <span className="min-w-[3rem] text-center font-bold tabular-nums text-ink">
+      <span className="min-w-[3rem] text-center font-semibold tabular-nums text-ink">
         {fmt(v)}{suffix ? <span className="ml-0.5 text-xs font-medium text-ink-secondary">{suffix}</span> : null}
       </span>
       <button

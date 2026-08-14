@@ -1,5 +1,6 @@
 // FixMate Payment Engine
 import { servisaku } from '@/api/servisakuClient';
+import { Landmark, QrCode, Wallet, CreditCard, Banknote } from 'lucide-react';
 
 export const COMMISSION_RATES = {
   default:       0.20,
@@ -21,12 +22,12 @@ export const COMMISSION_RATES = {
 export const TAX_RATE = 0.08;
 
 export const PAYMENT_METHODS = [
-  { id: 'fpx',      label: 'FPX Online Banking',     icon: '🏦', sub: 'Maybank, CIMB, Public Bank, RHB' },
-  { id: 'duitnow',  label: 'DuitNow QR',             icon: '🇲🇾', sub: 'Scan with any banking app' },
-  { id: 'tng',      label: "Touch 'n Go eWallet",    icon: '💚', sub: 'Instant, cashback enabled' },
-  { id: 'visa',     label: 'Visa / Mastercard',       icon: '💳', sub: 'Credit or Debit card' },
-  { id: 'grabpay',  label: 'GrabPay',                icon: '🟢', sub: 'Pay with Grab credits' },
-  { id: 'cash',     label: 'Cash on Service',         icon: '💵', sub: 'Pay partner at completion' },
+  { id: 'fpx',      label: 'FPX Online Banking',     icon: Landmark, sub: 'Maybank, CIMB, Public Bank, RHB' },
+  { id: 'duitnow',  label: 'DuitNow QR',             icon: QrCode, sub: 'Scan with any banking app' },
+  { id: 'tng',      label: "Touch 'n Go eWallet",    icon: Wallet, sub: 'Instant, cashback enabled' },
+  { id: 'visa',     label: 'Visa / Mastercard',       icon: CreditCard, sub: 'Credit or Debit card' },
+  { id: 'grabpay',  label: 'GrabPay',                icon: Wallet, sub: 'Pay with Grab credits' },
+  { id: 'cash',     label: 'Cash on Service',         icon: Banknote, sub: 'Pay partner at completion' },
 ];
 
 /**

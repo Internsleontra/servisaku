@@ -1,104 +1,93 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, ShoppingCart, ChevronDown, Search, User } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { MapPin, User, ArrowRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { useTranslation } from '@/lib/useTranslation';
+
+/**
+ * Consumer site header — ports WebNav from the design system's consumer website
+ * kit (ui_kits/consumer_web/WebShell.jsx).
+ *
+ * System spec: glass sticky header, 76px tall, 1240px container, 32px gutters,
+ * links at 13px/medium, city indicator, then ghost "Log in" + primary CTA.
+ *
+ * The previous nav carried a cart icon linking to /cart — a route that has never
+ * existed and 404s. There is no cart in the product (booking is single-service),
+ * so the control is removed rather than pointed somewhere arbitrary.
+ */
+const LINKS = [
+  { label: 'Services', to: '/catalog' },
+  { label: 'Instant Help', to: '/catalog/instant-help', accent: true },
+  { label: 'How it works', to: '/how-it-works' },
+  { label: 'Pricing', to: '/promos' },
+  { label: 'Help', to: '/help' },
+];
 
 export default function TopNav() {
   const { user } = useAuth();
-  const { t } = useTranslation();
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
-  const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const submitSearch = (e) => {
-    e.preventDefault();
-    navigate(`/explore${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`);
-  };
+  const { pathname } = useLocation();
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 border-b bg-surface transition-all duration-200',
-        scrolled ? 'border-hairline/60 shadow-sm py-2.5' : 'border-hairline/40 py-3.5',
-      )}
-    >
-      <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 lg:gap-6 lg:px-6">
+    <header className="fixed inset-x-0 top-0 z-50 bg-surface/[0.86] shadow-[inset_0_-1px_0_rgb(var(--hairline))] backdrop-blur-[18px] backdrop-saturate-150">
+      <div className="mx-auto flex h-[76px] w-full max-w-[1240px] items-center gap-6 px-5 md:px-8">
 
-        {/* Logo */}
-        <Link to="/" className="flex shrink-0 items-center">
-          <img src="/img/servisaku-logo.png" alt="ServisAku" className="h-8 w-auto object-contain lg:h-9" />
+        <Link to="/" className="flex shrink-0 items-center" aria-label="ServisAku home">
+          <img
+            src="/img/brand/logo-wordmark.png"
+            alt="ServisAku"
+            className="h-5 w-auto object-contain"
+          />
         </Link>
 
-        {/* Primary nav — Explore, Bookings */}
-        <nav className="hidden items-center gap-6 lg:flex">
-          <Link to="/explore" className="text-[15px] font-semibold text-ink hover:text-brand transition-colors">
-            {t('Explore')}
-          </Link>
-          <Link to="/bookings" className="text-[15px] font-semibold text-ink hover:text-brand transition-colors">
-            {t('Bookings')}
-          </Link>
+        <nav className="hidden items-center gap-[26px] lg:flex">
+          {LINKS.map((l) => {
+            const active = pathname === l.to;
+            return (
+              <Link
+                key={l.label}
+                to={l.to}
+                className={cn(
+                  'inline-flex items-center gap-1.5 text-caption transition-colors hover:text-brand',
+                  active ? 'text-brand' : 'text-ink',
+                )}
+              >
+                {l.accent && <Zap className="size-3.5 text-warning" />}
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Location + Search (UC-style), grows to fill */}
-        <div className="hidden flex-1 items-center gap-3 md:flex">
-          <button
-            type="button"
-            onClick={() => navigate('/explore?loc=Kuala%20Lumpur')}
-            className="flex shrink-0 items-center gap-2 rounded-xl border border-hairline bg-surface px-3 py-2.5 text-ink hover:bg-raised transition-colors"
-          >
-            <MapPin className="h-4 w-4 text-success" />
-            <span className="max-w-[120px] truncate text-sm font-medium">Kuala Lumpur</span>
-            <ChevronDown className="h-4 w-4 text-ink-tertiary" />
-          </button>
-
-          <form onSubmit={submitSearch} className="relative flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-tertiary" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("Search for 'AC service'")}
-              className="w-full rounded-xl border border-hairline bg-surface py-2.5 pl-11 pr-4 text-sm text-ink outline-none placeholder:text-ink-tertiary focus:ring-2 focus:ring-brand/30"
-            />
-          </form>
-        </div>
-
-        {/* Right: cart + account */}
-        <div className="flex shrink-0 items-center gap-2 lg:gap-4">
-          <Link
-            to="/cart"
-            aria-label="Cart"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:bg-raised transition-colors"
-          >
-            <ShoppingCart className="h-5 w-5" />
-          </Link>
+        <div className="ml-auto flex shrink-0 items-center gap-3">
+          <span className="hidden items-center gap-1.5 text-caption font-normal text-ink-secondary md:inline-flex">
+            <MapPin className="size-[15px]" /> Kuala Lumpur
+          </span>
 
           {user ? (
             <Link
               to="/profile"
               aria-label="Account"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:bg-raised transition-colors"
+              className="grid size-11 place-items-center rounded-full bg-raised text-ink transition-colors hover:bg-brand-tint"
             >
               {user.full_name
-                ? <span className="text-sm font-bold text-brand">{user.full_name.charAt(0).toUpperCase()}</span>
-                : <User className="h-5 w-5" />}
+                ? <span className="text-caption font-semibold text-brand">{user.full_name.charAt(0).toUpperCase()}</span>
+                : <User className="size-5" />}
             </Link>
           ) : (
             <Link
               to="/otp-login"
-              aria-label="Log in"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:bg-raised transition-colors"
+              className="hidden h-11 items-center rounded-field px-4 text-caption text-ink transition-colors hover:bg-raised sm:inline-flex"
             >
-              <User className="h-5 w-5" />
+              Log in
             </Link>
           )}
+
+          <button
+            onClick={() => navigate('/catalog')}
+            className="inline-flex h-11 items-center gap-2 rounded-field bg-grad-brand px-5 text-caption font-semibold text-white shadow-brand transition hover:brightness-[0.94] active:scale-[0.97]"
+          >
+            Book a service <ArrowRight className="size-4" />
+          </button>
         </div>
       </div>
     </header>

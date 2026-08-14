@@ -1,65 +1,76 @@
-import { cn } from '@/lib/utils';
 import { Field } from '../fields';
 import { SLOT_GROUPS } from '@/lib/bookingEngine';
 import { isAfterHours, isUrgent } from '../scheduleRules';
+import { Zap, Moon } from 'lucide-react';
+import { TimeSlotPicker } from '@/components/ds';
 
-// Step C — Date & Time. Supports same-day booking; flags after-hours / urgent
-// surcharges so the live quote (and Step F) reflect them before payment.
-export default function StepC({ schedule, setSchedule }) {
+/**
+ * Step C — Date & time.
+ *
+ * Rebuilt on the design system's TimeSlotPicker: a horizontal day strip (active
+ * day carries the brand gradient + brand glow) over a 3-up slot grid (active
+ * slot is a brand-tint fill with a 1.5px inset ring). Replaces the previous
+ * native date input + grouped slot lists.
+ *
+ * Same-day booking is still supported, and after-hours / urgent are still
+ * flagged so the live quote and Step F reflect the surcharge before payment.
+ */
+
+/* Next 14 days as a day strip. Sundays are marked full — the seed treats them
+   as non-operating; adjust when real availability lands. */
+function buildDays(count = 14) {
+  const out = [];
   const today = new Date();
-  const minDate = today.toISOString().slice(0, 10);
-  const set = (k) => (v) => setSchedule((s) => ({ ...s, [k]: v }));
+  for (let i = 0; i < count; i += 1) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    out.push({
+      id: d.toISOString().slice(0, 10),
+      dow: d.toLocaleDateString('en-MY', { weekday: 'short' }),
+      date: d.getDate(),
+      full: d.getDay() === 0,
+    });
+  }
+  return out;
+}
 
+/* Flatten the engine's slot groups into the picker's flat list, preserving
+   order (morning → afternoon → evening). */
+const SLOTS = Object.values(SLOT_GROUPS).flatMap((g) =>
+  g.slots.map((s) => ({ id: s, label: s })),
+);
+
+const DAYS = buildDays();
+
+export default function StepC({ schedule, setSchedule }) {
   const afterHours = isAfterHours(schedule.timeSlot);
   const urgent = isUrgent(schedule.date);
 
   return (
     <div className="flex flex-col gap-6">
-      <Field label="Date" required>
-        <input
-          type="date"
-          min={minDate}
-          value={schedule.date || ''}
-          onChange={(e) => set('date')(e.target.value)}
-          className="w-full rounded-xl border border-hairline bg-surface px-4 py-3 text-ink outline-none focus:ring-1 focus:ring-brand sm:w-64"
+      <Field label="Date & time" required>
+        <TimeSlotPicker
+          days={DAYS}
+          slots={SLOTS}
+          day={schedule.date}
+          slot={schedule.timeSlot}
+          onDayChange={(id) => setSchedule((s) => ({ ...s, date: id }))}
+          onSlotChange={(id) => setSchedule((s) => ({ ...s, timeSlot: id }))}
         />
       </Field>
 
-      <Field label="Time slot" required>
-        <div className="flex flex-col gap-4">
-          {Object.entries(SLOT_GROUPS).map(([group, g]) => (
-            <div key={group}>
-              <div className="mb-2 text-sm font-medium text-ink-secondary">
-                {g.emoji} {g.label} <span className="text-ink-tertiary">· {g.sub}</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {g.slots.map((slot) => {
-                  const on = schedule.timeSlot === slot;
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => set('timeSlot')(slot)}
-                      aria-pressed={on}
-                      className={cn(
-                        'rounded-xl border px-3 py-2 text-sm font-medium transition',
-                        on ? 'border-brand bg-brand-tint text-brand ring-1 ring-brand' : 'border-hairline bg-surface text-ink hover:bg-raised',
-                      )}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Field>
-
       {(afterHours || urgent) && (
-        <div className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-ink">
-          {urgent && <div>⚡ Same-day booking — an urgent surcharge applies.</div>}
-          {afterHours && <div>🌙 After-hours slot — an after-hours surcharge applies.</div>}
+        <div className="flex flex-col gap-1.5 rounded-field bg-warning/5 px-4 py-3 text-caption font-normal text-ink shadow-[inset_0_0_0_1px_rgb(var(--warning)/0.3)]">
+          {urgent && (
+            <div className="flex items-center gap-2">
+              <Zap className="size-4 shrink-0 text-warning" /> Same-day booking — an urgent surcharge applies.
+            </div>
+          )}
+          {afterHours && (
+            <div className="flex items-center gap-2">
+              <Moon className="size-4 shrink-0 text-warning" /> After-hours slot — an after-hours surcharge applies.
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -12,8 +12,8 @@ const TABS = [
 const TABLES = [
   {
     name: 'users',
-    color: 'border-emerald-500',
-    badge: 'bg-emerald-50 text-emerald-700',
+    color: 'border-success',
+    badge: 'bg-success-tint text-success',
     fields: [
       { name: 'id', type: 'UUID PK', note: 'gen_random_uuid()' },
       { name: 'role', type: 'ENUM', note: 'consumer|partner|admin|super_admin' },
@@ -33,8 +33,8 @@ const TABLES = [
   },
   {
     name: 'consumers',
-    color: 'border-blue-500',
-    badge: 'bg-blue-50 text-blue-700',
+    color: 'border-info',
+    badge: 'bg-info-tint text-info',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'user_id', type: 'UUID FK', note: '→ users.id' },
@@ -45,8 +45,8 @@ const TABLES = [
   },
   {
     name: 'partners',
-    color: 'border-violet-500',
-    badge: 'bg-violet-50 text-violet-700',
+    color: 'border-chat',
+    badge: 'bg-chat-tint text-chat',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'user_id', type: 'UUID FK', note: '→ users.id' },
@@ -63,8 +63,8 @@ const TABLES = [
   },
   {
     name: 'bookings',
-    color: 'border-amber-500',
-    badge: 'bg-amber-50 text-amber-700',
+    color: 'border-warning',
+    badge: 'bg-warning-tint text-warning',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'booking_ref', type: 'VARCHAR(12)', note: 'unique, e.g. FM-2026-XXXX' },
@@ -90,8 +90,8 @@ const TABLES = [
   },
   {
     name: 'payments',
-    color: 'border-rose-500',
-    badge: 'bg-rose-50 text-rose-700',
+    color: 'border-danger',
+    badge: 'bg-danger-tint text-danger',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'booking_id', type: 'UUID FK', note: '→ bookings.id' },
@@ -110,8 +110,8 @@ const TABLES = [
   },
   {
     name: 'partner_availability',
-    color: 'border-cyan-500',
-    badge: 'bg-cyan-50 text-cyan-700',
+    color: 'border-info',
+    badge: 'bg-info-tint text-info',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'partner_id', type: 'UUID FK', note: '→ partners.id' },
@@ -126,8 +126,8 @@ const TABLES = [
   },
   {
     name: 'chat_messages',
-    color: 'border-indigo-500',
-    badge: 'bg-indigo-50 text-indigo-700',
+    color: 'border-info',
+    badge: 'bg-info-tint text-info',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'booking_id', type: 'UUID FK', note: '→ bookings.id' },
@@ -142,8 +142,8 @@ const TABLES = [
   },
   {
     name: 'reviews',
-    color: 'border-orange-500',
-    badge: 'bg-orange-50 text-orange-700',
+    color: 'border-warning',
+    badge: 'bg-warning-tint text-warning',
     fields: [
       { name: 'id', type: 'UUID PK', note: '' },
       { name: 'booking_id', type: 'UUID FK', note: '→ bookings.id, unique' },
@@ -164,7 +164,7 @@ const TABLES = [
 
 const API_GROUPS = [
   {
-    group: 'Auth', color: 'text-emerald-600', endpoints: [
+    group: 'Auth', color: 'text-success', endpoints: [
       { method: 'POST', path: '/auth/otp/request', desc: 'Request OTP to +60 number' },
       { method: 'POST', path: '/auth/otp/verify', desc: 'Verify OTP, return JWT + refresh token' },
       { method: 'POST', path: '/auth/token/refresh', desc: 'Rotate refresh token' },
@@ -172,7 +172,7 @@ const API_GROUPS = [
     ],
   },
   {
-    group: 'Consumers', color: 'text-blue-600', endpoints: [
+    group: 'Consumers', color: 'text-info', endpoints: [
       { method: 'GET', path: '/consumers/me', desc: 'Own profile' },
       { method: 'PATCH', path: '/consumers/me', desc: 'Update profile' },
       { method: 'GET', path: '/consumers/me/addresses', desc: 'Address book' },
@@ -180,7 +180,7 @@ const API_GROUPS = [
     ],
   },
   {
-    group: 'Bookings', color: 'text-amber-600', endpoints: [
+    group: 'Bookings', color: 'text-warning', endpoints: [
       { method: 'POST', path: '/bookings', desc: 'Create booking, trigger partner matching' },
       { method: 'GET', path: '/bookings', desc: 'List bookings (filtered by role)' },
       { method: 'GET', path: '/bookings/:id', desc: 'Booking detail' },
@@ -190,7 +190,7 @@ const API_GROUPS = [
     ],
   },
   {
-    group: 'Payments', color: 'text-rose-600', endpoints: [
+    group: 'Payments', color: 'text-danger', endpoints: [
       { method: 'POST', path: '/payments/initiate', desc: 'Create payment intent' },
       { method: 'POST', path: '/payments/webhook', desc: 'Gateway webhook (Stripe/Billplz)' },
       { method: 'POST', path: '/payments/:id/refund', desc: 'Admin-trigger refund' },
@@ -198,7 +198,7 @@ const API_GROUPS = [
     ],
   },
   {
-    group: 'Partners', color: 'text-violet-600', endpoints: [
+    group: 'Partners', color: 'text-chat', endpoints: [
       { method: 'GET', path: '/partners/:id', desc: 'Public partner profile' },
       { method: 'GET', path: '/partners/me/availability', desc: 'Own availability slots' },
       { method: 'PUT', path: '/partners/me/availability', desc: 'Set availability' },
@@ -207,7 +207,7 @@ const API_GROUPS = [
     ],
   },
   {
-    group: 'Chat', color: 'text-indigo-600', endpoints: [
+    group: 'Chat', color: 'text-info', endpoints: [
       { method: 'GET', path: '/chat/:bookingId/messages', desc: 'Load message history' },
       { method: 'POST', path: '/chat/:bookingId/messages', desc: 'Send message' },
       { method: 'WS', path: 'ws://chat/:bookingId', desc: 'Real-time WebSocket channel' },
@@ -306,11 +306,11 @@ const AUTH_STEPS = [
 ];
 
 const REALTIME_ITEMS = [
-  { title: 'Firebase Realtime DB — Tracking', desc: 'Partner location updates every 5s during en_route/arrived. Consumer sees live map. Key: /tracking/{booking_id}', color: 'bg-amber-50 border-amber-200' },
-  { title: 'WebSocket (Socket.IO) — Chat', desc: 'Rooms namespaced by booking_id. Consumer + Partner join room after booking confirmed. Admin can monitor.', color: 'bg-indigo-50 border-indigo-200' },
-  { title: 'Firebase FCM — Push Notifications', desc: 'Triggered on booking status changes, payment confirmations, chat messages. Device token stored on user.', color: 'bg-emerald-50 border-emerald-200' },
-  { title: 'Redis Pub/Sub — Internal Events', desc: 'booking.created → trigger partner matching. payment.confirmed → release escrow. Decoupled services.', color: 'bg-rose-50 border-rose-200' },
-  { title: 'Polling Fallback — Booking Status', desc: 'Clients poll GET /bookings/:id every 10s as fallback when WebSocket unavailable. Status field drives UI.', color: 'bg-violet-50 border-violet-200' },
+  { title: 'Firebase Realtime DB — Tracking', desc: 'Partner location updates every 5s during en_route/arrived. Consumer sees live map. Key: /tracking/{booking_id}', color: 'bg-warning-tint border-warning/30' },
+  { title: 'WebSocket (Socket.IO) — Chat', desc: 'Rooms namespaced by booking_id. Consumer + Partner join room after booking confirmed. Admin can monitor.', color: 'bg-info-tint border-info/30' },
+  { title: 'Firebase FCM — Push Notifications', desc: 'Triggered on booking status changes, payment confirmations, chat messages. Device token stored on user.', color: 'bg-success-tint border-success/30' },
+  { title: 'Redis Pub/Sub — Internal Events', desc: 'booking.created → trigger partner matching. payment.confirmed → release escrow. Decoupled services.', color: 'bg-danger-tint border-danger/30' },
+  { title: 'Polling Fallback — Booking Status', desc: 'Clients poll GET /bookings/:id every 10s as fallback when WebSocket unavailable. Status field drives UI.', color: 'bg-chat-tint border-chat/30' },
 ];
 
 export default function Architecture() {
@@ -318,28 +318,28 @@ export default function Architecture() {
   const [expandedTable, setExpandedTable] = useState('bookings');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-bg">
       {/* Header */}
-      <div className="bg-primary px-6 pt-14 pb-6">
+      <div className="bg-brand px-6 pt-14 pb-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-1">
-            <Server className="h-5 w-5 text-primary-foreground/70" />
-            <span className="text-primary-foreground/70 text-xs font-medium uppercase tracking-wider">FixMate</span>
+            <Server className="h-5 w-5 text-ink-inverse/70" />
+            <span className="text-ink-inverse/70 text-xs font-medium uppercase tracking-wider">FixMate</span>
           </div>
-          <h1 className="text-2xl font-bold text-primary-foreground">Backend Architecture</h1>
-          <p className="text-primary-foreground/60 text-sm mt-1">Production-grade schema, API, and real-time design</p>
+          <h1 className="text-2xl font-semibold text-ink-inverse">Backend Architecture</h1>
+          <p className="text-ink-inverse/60 text-sm mt-1">Production-grade schema, API, and real-time design</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-0 z-10 bg-surface border-b border-border">
+      <div className="sticky top-0 z-10 bg-surface border-b border-hairline">
         <div className="max-w-5xl mx-auto px-4 overflow-x-auto">
           <div className="flex gap-0 min-w-max">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`flex items-center gap-1.5 px-4 py-3.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${tab === id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                className={`flex items-center gap-1.5 px-4 py-3.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${tab === id ? 'border-brand text-brand' : 'border-transparent text-ink-secondary hover:text-ink'}`}
               >
                 <Icon className="h-3.5 w-3.5" /> {label}
               </button>
@@ -353,36 +353,36 @@ export default function Architecture() {
         {/* DB Schema */}
         {tab === 'schema' && (
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground mb-4">Click any table to expand fields. All tables include <code className="bg-muted px-1 rounded text-[10px]">created_at</code>, <code className="bg-muted px-1 rounded text-[10px]">updated_at</code>. UUIDs via <code className="bg-muted px-1 rounded text-[10px]">gen_random_uuid()</code>.</p>
+            <p className="text-xs text-ink-secondary mb-4">Click any table to expand fields. All tables include <code className="bg-raised px-1 rounded text-[10px]">created_at</code>, <code className="bg-raised px-1 rounded text-[10px]">updated_at</code>. UUIDs via <code className="bg-raised px-1 rounded text-[10px]">gen_random_uuid()</code>.</p>
             {TABLES.map(t => (
-              <div key={t.name} className={`border-l-4 ${t.color} bg-card border border-border rounded-2xl overflow-hidden`}>
+              <div key={t.name} className={`border-l-4 ${t.color} bg-surface border border-hairline rounded-2xl overflow-hidden`}>
                 <button
                   onClick={() => setExpandedTable(expandedTable === t.name ? null : t.name)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-raised/30 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.badge}`}>TABLE</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.badge}`}>TABLE</span>
                     <span className="font-mono text-sm font-semibold">{t.name}</span>
-                    <span className="text-xs text-muted-foreground">{t.fields.length} fields</span>
+                    <span className="text-xs text-ink-secondary">{t.fields.length} fields</span>
                   </div>
-                  <span className="text-muted-foreground text-xs">{expandedTable === t.name ? '▲' : '▼'}</span>
+                  <span className="text-ink-secondary text-xs">{expandedTable === t.name ? '▲' : '▼'}</span>
                 </button>
                 {expandedTable === t.name && (
-                  <div className="border-t border-border overflow-x-auto">
+                  <div className="border-t border-hairline overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-muted/50">
-                          <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Column</th>
-                          <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Type</th>
-                          <th className="text-left px-4 py-2 font-semibold text-muted-foreground">Notes</th>
+                        <tr className="bg-raised/50">
+                          <th className="text-left px-4 py-2 font-semibold text-ink-secondary">Column</th>
+                          <th className="text-left px-4 py-2 font-semibold text-ink-secondary">Type</th>
+                          <th className="text-left px-4 py-2 font-semibold text-ink-secondary">Notes</th>
                         </tr>
                       </thead>
                       <tbody>
                         {t.fields.map((f, i) => (
-                          <tr key={i} className="border-t border-border/50">
+                          <tr key={i} className="border-t border-hairline/50">
                             <td className="px-4 py-2 font-mono font-medium">{f.name}</td>
-                            <td className="px-4 py-2"><span className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">{f.type}</span></td>
-                            <td className="px-4 py-2 text-muted-foreground">{f.note}</td>
+                            <td className="px-4 py-2"><span className="bg-raised px-1.5 py-0.5 rounded font-mono text-[10px]">{f.type}</span></td>
+                            <td className="px-4 py-2 text-ink-secondary">{f.note}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -393,8 +393,8 @@ export default function Architecture() {
             ))}
 
             {/* ER Relationships */}
-            <div className="bg-card border border-border rounded-2xl p-5 mt-6">
-              <h3 className="text-sm font-bold mb-4">Entity Relationships</h3>
+            <div className="bg-surface border border-hairline rounded-2xl p-5 mt-6">
+              <h3 className="text-sm font-semibold mb-4">Entity Relationships</h3>
               <div className="space-y-2 text-xs font-mono">
                 {[
                   ['users', '1:1', 'consumers'],
@@ -409,10 +409,10 @@ export default function Architecture() {
                   ['coupons', '1:N', 'bookings'],
                 ].map(([a, rel, b], i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <span className="bg-muted px-2 py-0.5 rounded text-foreground">{a}</span>
-                    <span className="text-muted-foreground">{rel}</span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                    <span className="bg-muted px-2 py-0.5 rounded text-foreground">{b}</span>
+                    <span className="bg-raised px-2 py-0.5 rounded text-ink">{a}</span>
+                    <span className="text-ink-secondary">{rel}</span>
+                    <ArrowRight className="h-3 w-3 text-ink-secondary" />
+                    <span className="bg-raised px-2 py-0.5 rounded text-ink">{b}</span>
                   </div>
                 ))}
               </div>
@@ -423,29 +423,29 @@ export default function Architecture() {
         {/* API Structure */}
         {tab === 'api' && (
           <div className="space-y-5">
-            <div className="bg-accent rounded-2xl p-4 text-xs mb-2">
+            <div className="bg-brand-tint rounded-2xl p-4 text-xs mb-2">
               <p className="font-semibold mb-1">Base URL</p>
               <code className="font-mono">https://api.fixmate.my/v1</code>
-              <p className="text-muted-foreground mt-2">All authenticated routes require: <code>Authorization: Bearer {`{jwt}`}</code></p>
+              <p className="text-ink-secondary mt-2">All authenticated routes require: <code>Authorization: Bearer {`{jwt}`}</code></p>
             </div>
             {API_GROUPS.map(g => (
-              <div key={g.group} className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border bg-muted/30">
-                  <h3 className={`text-xs font-bold uppercase tracking-wider ${g.color}`}>{g.group}</h3>
+              <div key={g.group} className="bg-surface border border-hairline rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-hairline bg-raised/30">
+                  <h3 className={`text-xs font-semibold uppercase tracking-wider ${g.color}`}>{g.group}</h3>
                 </div>
                 <div className="divide-y divide-border/50">
                   {g.endpoints.map((e, i) => (
                     <div key={i} className="flex items-center gap-3 px-4 py-3">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded font-mono min-w-[40px] text-center ${
-                        e.method === 'GET' ? 'bg-emerald-100 text-emerald-700' :
-                        e.method === 'POST' ? 'bg-blue-100 text-blue-700' :
-                        e.method === 'PATCH' ? 'bg-amber-100 text-amber-700' :
-                        e.method === 'PUT' ? 'bg-violet-100 text-violet-700' :
-                        e.method === 'WS' ? 'bg-indigo-100 text-indigo-700' :
-                        'bg-red-100 text-red-700'
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded font-mono min-w-[40px] text-center ${
+                        e.method === 'GET' ? 'bg-success-tint text-success' :
+                        e.method === 'POST' ? 'bg-info-tint text-info' :
+                        e.method === 'PATCH' ? 'bg-warning-tint text-warning' :
+                        e.method === 'PUT' ? 'bg-chat-tint text-chat' :
+                        e.method === 'WS' ? 'bg-info-tint text-info' :
+                        'bg-danger-tint text-danger'
                       }`}>{e.method}</span>
-                      <code className="text-xs font-mono text-foreground flex-1">{e.path}</code>
-                      <span className="text-xs text-muted-foreground text-right">{e.desc}</span>
+                      <code className="text-xs font-mono text-ink flex-1">{e.path}</code>
+                      <span className="text-xs text-ink-secondary text-right">{e.desc}</span>
                     </div>
                   ))}
                 </div>
@@ -463,36 +463,36 @@ export default function Architecture() {
                 { title: 'JWT + Refresh Tokens', desc: 'Access token: 15min. Refresh: 30 days. Stored encrypted in DB.', icon: '🔑' },
                 { title: 'RBAC Guards', desc: 'consumer, partner, admin, super_admin. Decorator-based role checks.', icon: '🛡️' },
               ].map((c, i) => (
-                <div key={i} className="bg-card border border-border rounded-2xl p-4">
+                <div key={i} className="bg-surface border border-hairline rounded-2xl p-4">
                   <span className="text-2xl mb-2 block">{c.icon}</span>
                   <p className="font-semibold text-sm mb-1">{c.title}</p>
-                  <p className="text-xs text-muted-foreground">{c.desc}</p>
+                  <p className="text-xs text-ink-secondary">{c.desc}</p>
                 </div>
               ))}
             </div>
 
-            <h3 className="text-sm font-bold mb-3">Authentication Flow</h3>
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <h3 className="text-sm font-semibold mb-3">Authentication Flow</h3>
+            <div className="bg-surface border border-hairline rounded-2xl overflow-hidden">
               {AUTH_STEPS.map((s, i) => (
-                <div key={i} className="flex items-start gap-4 px-4 py-3 border-b border-border/50 last:border-0">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{s.step}</div>
+                <div key={i} className="flex items-start gap-4 px-4 py-3 border-b border-hairline/50 last:border-0">
+                  <div className="w-6 h-6 rounded-full bg-brand/10 text-brand text-[10px] font-semibold flex items-center justify-center shrink-0 mt-0.5">{s.step}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${s.actor === 'App' ? 'bg-blue-100 text-blue-700' : s.actor === 'Guard' ? 'bg-violet-100 text-violet-700' : 'bg-emerald-100 text-emerald-700'}`}>{s.actor}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${s.actor === 'App' ? 'bg-info-tint text-info' : s.actor === 'Guard' ? 'bg-chat-tint text-chat' : 'bg-success-tint text-success'}`}>{s.actor}</span>
                     </div>
-                    <p className="text-xs font-mono text-foreground">{s.action}</p>
-                    {s.note && <p className="text-[10px] text-muted-foreground mt-0.5">{s.note}</p>}
+                    <p className="text-xs font-mono text-ink">{s.action}</p>
+                    {s.note && <p className="text-[10px] text-ink-secondary mt-0.5">{s.note}</p>}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="bg-card border border-border rounded-2xl p-4 mt-4">
-              <h4 className="text-xs font-bold mb-3">Role Permissions Matrix</h4>
+            <div className="bg-surface border border-hairline rounded-2xl p-4 mt-4">
+              <h4 className="text-xs font-semibold mb-3">Role Permissions Matrix</h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px]">
                   <thead>
-                    <tr className="border-b border-border">
+                    <tr className="border-b border-hairline">
                       <th className="text-left py-2 pr-4 font-semibold">Action</th>
                       <th className="text-center py-2 px-2 font-semibold">Consumer</th>
                       <th className="text-center py-2 px-2 font-semibold">Partner</th>
@@ -510,8 +510,8 @@ export default function Architecture() {
                       ['Manage pricing', '—', '—', '—', '✅'],
                       ['View all bookings', '—', '—', '✅', '✅'],
                     ].map(([action, ...cells], i) => (
-                      <tr key={i} className="border-b border-border/50">
-                        <td className="py-2 pr-4 text-muted-foreground">{action}</td>
+                      <tr key={i} className="border-b border-hairline/50">
+                        <td className="py-2 pr-4 text-ink-secondary">{action}</td>
                         {cells.map((c, j) => <td key={j} className="text-center py-2 px-2">{c}</td>)}
                       </tr>
                     ))}
@@ -525,13 +525,13 @@ export default function Architecture() {
         {/* Folder Structure */}
         {tab === 'folder' && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Server className="h-4 w-4 text-primary" /> Backend (Node.js / NestJS)</h3>
-              <pre className="text-[11px] font-mono text-muted-foreground leading-relaxed overflow-x-auto whitespace-pre">{FOLDER}</pre>
+            <div className="bg-surface border border-hairline rounded-2xl p-5">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Server className="h-4 w-4 text-brand" /> Backend (Node.js / NestJS)</h3>
+              <pre className="text-[11px] font-mono text-ink-secondary leading-relaxed overflow-x-auto whitespace-pre">{FOLDER}</pre>
             </div>
 
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <h3 className="text-sm font-bold mb-3">Infrastructure Stack</h3>
+            <div className="bg-surface border border-hairline rounded-2xl p-5">
+              <h3 className="text-sm font-semibold mb-3">Infrastructure Stack</h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: 'Runtime', value: 'Node.js 20 + NestJS' },
@@ -547,8 +547,8 @@ export default function Architecture() {
                   { label: 'CDN', value: 'Cloudflare' },
                   { label: 'Monitoring', value: 'Sentry + Grafana' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between bg-muted/50 rounded-xl px-3 py-2">
-                    <span className="text-[11px] text-muted-foreground">{item.label}</span>
+                  <div key={i} className="flex items-center justify-between bg-raised/50 rounded-xl px-3 py-2">
+                    <span className="text-[11px] text-ink-secondary">{item.label}</span>
                     <span className="text-[11px] font-semibold">{item.value}</span>
                   </div>
                 ))}
@@ -560,16 +560,16 @@ export default function Architecture() {
         {/* Real-time */}
         {tab === 'realtime' && (
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">FixMate uses a multi-channel real-time strategy to handle tracking, chat, notifications, and internal events.</p>
+            <p className="text-xs text-ink-secondary">FixMate uses a multi-channel real-time strategy to handle tracking, chat, notifications, and internal events.</p>
             {REALTIME_ITEMS.map((item, i) => (
               <div key={i} className={`border rounded-2xl p-5 ${item.color}`}>
-                <h3 className="text-sm font-bold mb-2">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
+                <p className="text-xs text-ink-secondary leading-relaxed">{item.desc}</p>
               </div>
             ))}
 
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Booking Status Event Flow</h3>
+            <div className="bg-surface border border-hairline rounded-2xl p-5">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Zap className="h-4 w-4 text-brand" /> Booking Status Event Flow</h3>
               <div className="space-y-2">
                 {[
                   { from: 'pending', event: 'partner matched', to: 'assigned', channel: 'Redis pub/sub' },
@@ -580,12 +580,12 @@ export default function Architecture() {
                   { from: 'started', event: 'job done', to: 'completed', channel: 'WS + FCM + Escrow release' },
                 ].map((e, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
-                    <span className="bg-muted px-2 py-0.5 rounded font-mono">{e.from}</span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <span className="text-muted-foreground flex-1">{e.event}</span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono">{e.to}</span>
-                    <span className="text-[10px] text-muted-foreground hidden md:block">{e.channel}</span>
+                    <span className="bg-raised px-2 py-0.5 rounded font-mono">{e.from}</span>
+                    <ArrowRight className="h-3 w-3 text-ink-secondary shrink-0" />
+                    <span className="text-ink-secondary flex-1">{e.event}</span>
+                    <ArrowRight className="h-3 w-3 text-ink-secondary shrink-0" />
+                    <span className="bg-brand/10 text-brand px-2 py-0.5 rounded font-mono">{e.to}</span>
+                    <span className="text-[10px] text-ink-secondary hidden md:block">{e.channel}</span>
                   </div>
                 ))}
               </div>

@@ -24,13 +24,18 @@ export default function QuestionRenderer({ question, value, onChange }) {
   if (question.type === 'INFO') {
     return (
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-ink-secondary">{question.label}</label>
+        {/* htmlFor/id pair — this label was unassociated, so assistive tech
+            announced the textarea unnamed. */}
+        <label htmlFor={`q-${question.id}`} className="text-caption font-medium text-ink-secondary">
+          {question.label}
+        </label>
         <textarea
+          id={`q-${question.id}`}
           rows={2}
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Optional — helps the technician prepare"
-          className="rounded-xl border border-hairline bg-surface px-4 py-3 text-ink outline-none focus:ring-1 focus:ring-brand"
+          className="rounded-field bg-surface px-4 py-3 text-ink outline-none shadow-[inset_0_0_0_1px_rgb(var(--hairline))] focus:shadow-[inset_0_0_0_1.5px_rgb(var(--brand))]"
         />
       </div>
     );
@@ -41,11 +46,16 @@ export default function QuestionRenderer({ question, value, onChange }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="font-semibold text-ink">
+      {/* Widgets are groups of controls (radios, steppers, multi-selects) with
+          no single input to target, so the label names a role="group". */}
+      <label id={`q-${question.id}-label`} className="font-semibold text-ink">
         {question.label}
-        {question.required && <span className="ml-1 text-danger">*</span>}
+        {question.required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}
+        {question.required && <span className="sr-only"> (required)</span>}
       </label>
-      <Widget question={question} value={value} onChange={onChange} />
+      <div role="group" aria-labelledby={`q-${question.id}-label`}>
+        <Widget question={question} value={value} onChange={onChange} />
+      </div>
     </div>
   );
 }

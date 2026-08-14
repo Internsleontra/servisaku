@@ -34,10 +34,10 @@ export default function Help() {
       <div className="max-w-4xl mx-auto px-6">
         
         <div className="text-center mb-16">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <HelpCircle className="w-8 h-8 text-blue-500" />
+          <div className="w-16 h-16 bg-info-tint rounded-full flex items-center justify-center mx-auto mb-6">
+            <HelpCircle className="w-8 h-8 text-info" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-semibold text-ink tracking-tight mb-4">
             Help & <span className="text-brand">Support</span>
           </h1>
           <p className="text-lg text-ink-secondary max-w-xl mx-auto font-medium">
@@ -47,29 +47,29 @@ export default function Help() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
           <div className="bg-surface rounded-2xl p-6 border border-hairline/20 shadow-sm flex items-start gap-4">
-            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-success-tint text-success rounded-xl flex items-center justify-center shrink-0">
               <MessageCircle className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-ink mb-1">Live Chat Support</h3>
+              <h3 className="font-semibold text-ink mb-1">Live chat support</h3>
               <p className="text-sm text-ink-secondary mb-3 font-medium">Chat with our customer service team in real-time for immediate help.</p>
-              <button className="text-brand text-sm font-bold hover:underline">Start Chat</button>
+              <button className="text-brand text-sm font-semibold hover:underline">Start chat</button>
             </div>
           </div>
           <div className="bg-surface rounded-2xl p-6 border border-hairline/20 shadow-sm flex items-start gap-4">
-            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-warning-tint text-warning rounded-xl flex items-center justify-center shrink-0">
               <FileText className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-ink mb-1">Detailed Guides</h3>
+              <h3 className="font-semibold text-ink mb-1">Detailed guides</h3>
               <p className="text-sm text-ink-secondary mb-3 font-medium">Read our step-by-step guides on how to use all features of ServisAku.</p>
-              <button className="text-brand text-sm font-bold hover:underline">Browse Articles</button>
+              <button className="text-brand text-sm font-semibold hover:underline">Browse articles</button>
             </div>
           </div>
         </div>
 
         <div>
-          <h2 className="text-2xl font-extrabold text-ink mb-6">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-semibold text-ink mb-6">Frequently asked questions</h2>
           <div className="space-y-4">
             {faqs.map((faq, idx) => (
               <div 
@@ -80,7 +80,7 @@ export default function Help() {
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="w-full px-6 py-5 flex items-center justify-between text-left"
                 >
-                  <span className="font-bold text-ink pr-4">{faq.q}</span>
+                  <span className="font-semibold text-ink pr-4">{faq.q}</span>
                   <ChevronDown className={`w-5 h-5 text-ink-tertiary transition-transform duration-300 ${openFaq === idx ? 'rotate-180 text-brand' : ''}`} />
                 </button>
                 <div 

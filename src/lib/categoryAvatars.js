@@ -16,12 +16,27 @@ export const CATEGORY_AVATAR = {
   'instant-help': '/img/categories/instant-help.webp',
 };
 
-// Soft pastel tile background per seeded accent.
+// Tile background.
+//
+// The design system uses ONE treatment for every category tile — the soft brand
+// gradient (--grad-brand-soft) — not a pastel per category. A rainbow of
+// decorative pastels is exactly what the blue system replaces, and orange in
+// particular is now reserved for Instant Help, warnings and emergencies.
+//
+// Instant Help is the single sanctioned exception: it is category 12, and the
+// system gives it the orange gradient so it reads as a separate lane.
+//
+// The per-accent map is kept only so seeded `accent` values still resolve;
+// every entry now points at the same brand-soft tile.
+const BRAND_SOFT = 'bg-grad-brand-soft';
+
 export const CATEGORY_TINT = {
-  pink: 'bg-pink-50', slate: 'bg-raised', emerald: 'bg-emerald-50', lime: 'bg-lime-50',
-  sky: 'bg-sky-50', orange: 'bg-orange-50', amber: 'bg-amber-50', blue: 'bg-blue-50',
-  stone: 'bg-raised', violet: 'bg-violet-50', teal: 'bg-teal-50', red: 'bg-red-50',
+  pink: BRAND_SOFT, slate: BRAND_SOFT, emerald: BRAND_SOFT, lime: BRAND_SOFT,
+  sky: BRAND_SOFT, orange: BRAND_SOFT, amber: BRAND_SOFT, blue: BRAND_SOFT,
+  stone: BRAND_SOFT, violet: BRAND_SOFT, teal: BRAND_SOFT, red: BRAND_SOFT,
 };
 
 export const avatarFor = (slug) => CATEGORY_AVATAR[slug] || null;
-export const tintFor = (accent) => CATEGORY_TINT[accent] || 'bg-brand-tint';
+
+export const tintFor = (accent, slug) =>
+  slug === 'instant-help' ? 'bg-grad-instant' : (CATEGORY_TINT[accent] || BRAND_SOFT);

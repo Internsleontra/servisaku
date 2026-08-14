@@ -1,129 +1,133 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Settings, Shield, LogOut, ChevronRight, Star, Wrench, Users, Edit3, Bell } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import {
+  MapPin, Bell, Calendar, Receipt, LifeBuoy, ShieldCheck, Wrench,
+  ChevronRight, LoaderCircle, Sparkles,
+} from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
-import { motion } from 'framer-motion';
-import { variants, safeMotion } from '@/lib/design/motion';
+import AccountShell from '@/components/account/AccountShell';
+import { RING } from '@/components/ds';
 import ThemeToggle from '@/components/ThemeToggle';
+
+/**
+ * Account overview.
+ *
+ * Rebuilt on AccountShell. Two defects fixed along the way:
+ *
+ *  1. The old menu linked to /admin and /admin/users — routes that no longer
+ *     exist (admin is a separate product/repo). Those were dead links.
+ *  2. Two entries pointed at "#", and "My Reviews" pointed at /bookings.
+ *     Placeholder destinations are worse than no entry, so they are gone.
+ *
+ * Mock-data surfaces (/wallet, /payments, /membership, /loyalty, /offers,
+ * /wishlist, /reviews) are deliberately NOT surfaced here — see the account
+ * audit in docs/migration-status-report.md.
+ */
+const SHORTCUTS = [
+  { to: '/profile/edit', icon: MapPin, label: 'Profile & addresses', sub: 'Name, city, saved addresses' },
+  { to: '/notification-settings', icon: Bell, label: 'Notifications', sub: 'Push, email and SMS preferences' },
+  { to: '/bookings', icon: Calendar, label: 'My bookings', sub: 'Upcoming and past jobs' },
+  { to: '/refunds', icon: Receipt, label: 'Refunds & disputes', sub: 'Track a request' },
+  { to: '/support', icon: LifeBuoy, label: 'Support', sub: 'Tickets and help centre' },
+  { to: '/legal', icon: ShieldCheck, label: 'Legal & policies', sub: 'Terms, privacy, refund policy' },
+];
 
 export default function Profile() {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  useEffect(() => { servisaku.auth.me().then(setUser); }, []);
+  useEffect(() => { servisaku.auth.me().then(setUser).catch(() => setUser(null)); }, []);
 
-  if (!user) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="w-6 h-6 border-2 border-raised border-t-brand rounded-full animate-spin" />
-    </div>
-  );
+  const { data: bookings } = useQuery({
+    queryKey: ['account-bookings'],
+    queryFn: () => servisaku.entities.Booking.list?.() ?? [],
+    enabled: !!user,
+    staleTime: 60_000,
+  });
 
-  const menuGroups = [
-    {
-      title: 'Account',
-      items: [
-        { icon: Edit3, label: 'Edit Profile', sub: 'Name, phone, preferences', to: '/profile/edit' },
-        { icon: Bell,   label: 'Notifications', sub: 'Push, email, SMS settings', to: '/notifications' },
-        { icon: Shield, label: 'Privacy & Security', sub: 'Password, data, sessions', to: '#' },
-      ],
-    },
-    {
-      title: 'Activity',
-      items: [
-        { icon: Star, label: 'My Reviews', sub: 'Ratings you\'ve submitted', to: '/bookings' },
-        { icon: Settings, label: 'App Settings', sub: 'Language, region', to: '#' },
-      ],
-    },
-  ];
-
-  if (user.role === 'partner') {
-    menuGroups.unshift({
-      title: 'Partner',
-      items: [
-        { icon: Wrench, label: 'Partner Dashboard', sub: 'Jobs, earnings, status', to: '/partner' },
-      ],
-    });
-  }
-  if (user.role === 'admin' || user.role === 'super_admin') {
-    menuGroups.unshift({
-      title: 'Administration',
-      items: [
-        { icon: Settings, label: 'Admin Dashboard', sub: 'Overview & KPIs', to: '/admin' },
-        { icon: Users, label: 'User Management', sub: 'Manage partners & consumers', to: '/admin/users' },
-      ],
-    });
+  if (!user) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center gap-2 text-ink-secondary" role="status">
+        <LoaderCircle className="size-4 animate-spin" />
+        <span className="text-caption">Loading your account…</span>
+      </div>
+    );
   }
 
-  const initials = user.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+  const list = Array.isArray(bookings) ? bookings : [];
+  const active = list.filter((b) => !['completed', 'cancelled'].includes(b.status)).length;
 
   return (
-    <motion.div {...safeMotion(variants.fadeUp)} className="font-inter min-h-screen bg-bg pb-8">
+    <AccountShell
+      user={user}
+      aside={(
+        <div className={`flex flex-col gap-4 rounded-card bg-surface p-5 ${RING}`}>
+          <h2 className="font-display text-h4 font-semibold text-ink">Appearance</h2>
+          <ThemeToggle />
+          <p className="text-xs text-ink-tertiary">
+            ServisAku · Klang Valley, Malaysia
+          </p>
+        </div>
+      )}
+    >
+      {/* At-a-glance */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className={`rounded-card bg-surface p-5 ${RING}`}>
+          <span className="sa-caps text-ink-tertiary">Active bookings</span>
+          <p className="sa-num mt-1 text-h1 font-semibold text-ink">{active}</p>
+        </div>
+        <button
+          onClick={() => navigate('/catalog')}
+          className="flex items-center gap-3 rounded-card bg-grad-brand p-5 text-left text-white shadow-brand transition hover:brightness-[0.94] active:scale-[0.99]"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-sm bg-white/20">
+            <Sparkles className="size-5" />
+          </span>
+          <span className="flex-1">
+            <span className="block font-display text-h4 font-semibold">Book a service</span>
+            <span className="block text-caption font-normal text-white/85">71 services, upfront pricing</span>
+          </span>
+          <ChevronRight className="size-5 shrink-0" />
+        </button>
+      </div>
 
-      {/* Hero header — clean neutral card */}
-      <div className="bg-bg pt-14 lg:pt-6 pb-8 px-5">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-2xl bg-brand-tint flex items-center justify-center ring-4 ring-brand/10 mb-4">
-            <span className="text-2xl font-bold text-brand-ink">{initials}</span>
-          </div>
-          <h2 className="text-xl font-bold text-ink tracking-tight">{user.full_name}</h2>
-          <p className="text-ink-tertiary text-sm mt-1">{user.email}</p>
-          {user.role !== 'consumer' && (
-            <span className="mt-3 inline-flex items-center bg-brand-tint text-brand-ink text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full capitalize">
-              {user.role.replace('_', ' ')}
+      {/* Shortcuts */}
+      <div className={`overflow-hidden rounded-card bg-surface ${RING}`}>
+        {SHORTCUTS.map(({ to, icon: Icon, label, sub }) => (
+          <Link
+            key={to}
+            to={to}
+            className="flex min-h-11 items-center gap-4 px-5 py-4 shadow-[inset_0_-1px_0_rgb(var(--hairline))] transition-colors last:shadow-none hover:bg-raised"
+          >
+            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-grad-brand-soft text-brand-ink">
+              <Icon className="size-[18px]" />
             </span>
-          )}
-        </div>
-      </div>
-
-      {/* Menu groups */}
-      <div className="px-5 space-y-5">
-        {menuGroups.map((group, gi) => (
-          <div key={gi}>
-            <p className="text-[10px] font-bold text-ink-secondary uppercase tracking-widest mb-2 px-1">{group.title}</p>
-            <div className="bg-surface rounded-2xl border border-hairline/10 shadow-e1 overflow-hidden">
-              {group.items.map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={i} to={item.to}
-                    className="flex items-center gap-4 px-5 py-4 border-b border-hairline/10 last:border-0 hover:bg-raised/60 active:bg-raised/80 transition-colors">
-                    <div className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center shrink-0">
-                      <Icon className="h-4 w-4 text-ink/70" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-ink">{item.label}</p>
-                      {item.sub && <p className="text-xs text-ink-secondary mt-0.5">{item.sub}</p>}
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-ink-secondary shrink-0" />
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+            <span className="min-w-0 flex-1">
+              <span className="block text-caption font-semibold text-ink">{label}</span>
+              <span className="block text-xs text-ink-secondary">{sub}</span>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-ink-tertiary" />
+          </Link>
         ))}
-
-        {/* Appearance */}
-        <div>
-          <p className="text-[10px] font-bold text-ink-secondary uppercase tracking-widest mb-2 px-1">Appearance</p>
-          <div className="bg-surface rounded-2xl border border-hairline/10 shadow-e1 p-2">
-             <ThemeToggle />
-          </div>
-        </div>
-
-        {/* Sign out */}
-        <div className="bg-surface rounded-2xl border border-hairline/10 shadow-e1 overflow-hidden">
-          <button
-            onClick={() => servisaku.auth.logout()}
-            className="flex items-center gap-4 px-5 py-4 w-full hover:bg-red-50 active:bg-red-100 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-              <LogOut className="h-4 w-4 text-destructive" />
-            </div>
-            <span className="text-sm font-semibold text-destructive flex-1 text-left">Sign Out</span>
-          </button>
-        </div>
-
-        <p className="text-center text-[10px] text-ink-tertiary pt-2">
-          ServisAku v1.0 &nbsp;·&nbsp; Klang Valley, Malaysia
-        </p>
       </div>
-    </motion.div>
+
+      {/* Partner entry point — only for partner accounts. */}
+      {user.role === 'partner' && (
+        <Link
+          to="/partner"
+          className={`flex min-h-11 items-center gap-4 rounded-card bg-surface px-5 py-4 transition-colors hover:bg-raised ${RING}`}
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-grad-brand-soft text-brand-ink">
+            <Wrench className="size-[18px]" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-caption font-semibold text-ink">Partner dashboard</span>
+            <span className="block text-xs text-ink-secondary">Jobs, earnings, availability</span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-ink-tertiary" />
+        </Link>
+      )}
+    </AccountShell>
   );
 }

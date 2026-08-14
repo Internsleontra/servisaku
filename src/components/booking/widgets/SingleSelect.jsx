@@ -16,16 +16,16 @@ export default function SingleSelect({ question, value, onChange }) {
             onClick={() => onChange(o.id)}
             aria-pressed={selected}
             className={cn(
-              'flex items-center justify-between rounded-xl border px-4 py-3 text-left transition',
+              'flex items-center justify-between rounded-xl px-4 py-3 text-left transition',
               selected
-                ? 'border-brand bg-brand-tint ring-1 ring-brand'
-                : 'border-hairline bg-surface hover:bg-raised',
+                ? 'bg-brand-tint shadow-[inset_0_0_0_1.5px_rgb(var(--brand))]'
+                : 'bg-surface hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]',
             )}
           >
             <span className="flex items-center gap-3">
               <span
                 className={cn(
-                  'h-4 w-4 shrink-0 rounded-full border-2',
+                  'h-4 w-4 shrink-0 rounded-full shadow-[inset_0_0_0_1px_rgb(var(--hairline))]',
                   selected ? 'border-brand bg-brand' : 'border-hairline',
                 )}
               />

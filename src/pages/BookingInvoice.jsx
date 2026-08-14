@@ -3,14 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Send, CheckCircle2, Receipt } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { formatRM } from '@/lib/paymentEngine';
+// Single source for the reference format — a local copy had already drifted
+// (it was missing the '#' the design system specifies).
+import { formatBookingRef } from '@/lib/bookingEngine';
 import { toast } from 'sonner';
+import { Button } from '@/components/ds';
 import moment from 'moment';
-
-// "FM-" was left over from the FixMate naming. Booking references are SA-prefixed;
-// the invoice number (INV-YYYY-NNNNNN) is separate and comes from the server.
-function formatBookingRef(id) {
-  return `SA-${new Date().getFullYear()}-${(id || '').slice(-6).toUpperCase()}`;
-}
 
 export default function BookingInvoice() {
   const { bookingId } = useParams();
@@ -29,7 +27,7 @@ export default function BookingInvoice() {
   }, [bookingId]);
 
   if (!booking) return (
-    <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
+    <div className="flex justify-center pt-32"><div className="w-6 h-6 shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-muted border-t-primary rounded-full animate-spin" /></div>
   );
 
   // Prefer the issued invoice; fall back to the booking for one not yet paid.
@@ -40,49 +38,53 @@ export default function BookingInvoice() {
   const credited = invoice?.refunded_amount || 0;
 
   return (
-    <div className="min-h-screen bg-background font-inter pb-24">
-      {/* Header */}
-      <div className="bg-surface border-b border-border px-5 pt-12 pb-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="bg-bg pb-16">
+      {/* Gradient page header — replaces the sticky mobile bar. */}
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-14">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-[15px]" /> Back
           </button>
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground">Booking Receipt</p>
-            <p className="text-sm font-bold">{formatBookingRef(booking.id)}</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => toast.success('Email sent!')}
-              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-primary/10 transition-colors">
-              <Send className="h-4 w-4 text-muted-foreground" />
-            </button>
-            <button onClick={() => toast.success('PDF download coming soon')}
-              className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <Download className="h-4 w-4 text-white" />
-            </button>
+
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-display-2 text-white">Tax invoice</h1>
+              <p className="sa-num mt-2 text-lead text-white/[0.78]">{formatBookingRef(booking.id)}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="inverse" onClick={() => toast.success('Email sent!')}>
+                <Send className="size-4" /> Email
+              </Button>
+              <Button variant="primary" onClick={() => toast.success('PDF download coming soon')}>
+                <Download className="size-4" /> Download
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-5 pt-5 max-w-lg mx-auto">
-        {/* Invoice Card */}
-        <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
+        {/* Invoice document */}
+        <div className="overflow-hidden rounded-card bg-surface shadow-e2">
 
           {/* Invoice Header */}
-          <div className="bg-primary p-6">
+          <div className="bg-brand p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-white font-bold text-lg">INVOICE</p>
+                <p className="text-white font-semibold text-lg">INVOICE</p>
                 <p className="text-white/60 text-xs">Tax Invoice / Receipt</p>
               </div>
               <div className="text-right">
-                <p className="text-white font-mono text-sm font-bold">{formatBookingRef(booking.id)}</p>
+                <p className="text-white font-mono text-sm font-semibold">{formatBookingRef(booking.id)}</p>
                 <p className="text-white/60 text-xs">{moment(booking.created_date).format('D MMM YYYY')}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
-                <p className="text-white/40 mb-0.5">Bill To</p>
+                <p className="text-white/40 mb-0.5">Bill to</p>
                 <p className="text-white font-semibold">{booking.consumer_name}</p>
                 <p className="text-white/60">{booking.consumer_email}</p>
                 <p className="text-white/60">{booking.city}, Malaysia</p>
@@ -97,72 +99,72 @@ export default function BookingInvoice() {
           </div>
 
           {/* Service Details */}
-          <div className="p-5 border-b border-border">
+          <div className="p-5 border-b border-hairline">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-raised text-ink-secondary">
                 <Receipt className="h-5 w-5" />
               </div>
               <div>
                 <p className="font-semibold">{booking.service_type}</p>
-                <p className="text-xs text-muted-foreground">{booking.package_name} Package</p>
+                <p className="text-xs text-ink-secondary">{booking.package_name} Package</p>
               </div>
             </div>
-            <div className="space-y-1.5 text-xs text-muted-foreground">
+            <div className="space-y-1.5 text-xs text-ink-secondary">
               <div className="flex justify-between">
                 <span>Date of Service</span>
-                <span className="font-medium text-foreground">{moment(booking.date).format('dddd, D MMMM YYYY')}</span>
+                <span className="font-medium text-ink">{moment(booking.date).format('dddd, D MMMM YYYY')}</span>
               </div>
               <div className="flex justify-between">
-                <span>Time Slot</span>
-                <span className="font-medium text-foreground">{booking.time_slot}</span>
+                <span>Time slot</span>
+                <span className="font-medium text-ink">{booking.time_slot}</span>
               </div>
               <div className="flex justify-between">
-                <span>Service Address</span>
-                <span className="font-medium text-foreground text-right max-w-[55%]">{booking.address}</span>
+                <span>Service address</span>
+                <span className="font-medium text-ink text-right max-w-[55%]">{booking.address}</span>
               </div>
               <div className="flex justify-between">
                 <span>Partner</span>
-                <span className="font-medium text-foreground">{booking.partner_name || 'FixMate Partner'}</span>
+                <span className="font-medium text-ink">{booking.partner_name || 'FixMate Partner'}</span>
               </div>
               <div className="flex justify-between">
-                <span>Payment Method</span>
-                <span className="font-medium text-foreground capitalize">{booking.payment_method || 'FPX'}</span>
+                <span>Payment method</span>
+                <span className="font-medium text-ink capitalize">{booking.payment_method || 'FPX'}</span>
               </div>
             </div>
           </div>
 
           {/* Price Breakdown */}
           <div className="p-5">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3">Price Breakdown</p>
+            <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-3">Price breakdown</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{booking.service_type} ({booking.package_name})</span>
+                <span className="text-ink-secondary">{booking.service_type} ({booking.package_name})</span>
                 <span>{formatRM(booking.price || 0)}</span>
               </div>
               {(booking.discount_amount || 0) > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-success">
                   <span>Promo Discount ({booking.coupon_code})</span>
                   <span>-{formatRM(booking.discount_amount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-muted-foreground text-xs">
+              <div className="flex justify-between text-ink-secondary text-xs">
                 <span>Subtotal (before tax)</span>
                 <span>{formatRM(subtotal)}</span>
               </div>
               {/* Rate comes from the issued invoice, so a booking priced under an
                   earlier SST regime still shows the rate it was charged. */}
               {taxPercent !== null && (
-                <div className="flex justify-between text-muted-foreground text-xs">
+                <div className="flex justify-between text-ink-secondary text-xs">
                   <span>SST ({taxPercent}%)</span>
                   <span>{formatRM(taxAmount)}</span>
                 </div>
               )}
-              <div className="border-t border-border pt-3 flex justify-between font-bold text-base">
+              <div className="border-t border-hairline pt-3 flex justify-between font-semibold text-base">
                 <span>{invoice ? 'Total Paid' : 'Total Payable'}</span>
-                <span className="text-primary">{formatRM(total)}</span>
+                <span className="text-brand">{formatRM(total)}</span>
               </div>
               {credited > 0 && (
-                <div className="flex justify-between text-xs text-amber-700">
+                <div className="flex justify-between text-xs text-warning">
                   <span>Credited (refunded)</span>
                   <span>-{formatRM(credited)}</span>
                 </div>
@@ -170,11 +172,11 @@ export default function BookingInvoice() {
             </div>
 
             {/* Payment Status */}
-            <div className="mt-4 flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            <div className="mt-4 flex items-center gap-2 bg-success-tint rounded-field p-3 shadow-[inset_0_0_0_1px_rgb(var(--success)/0.3)]">
+              <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-emerald-700">Payment Received</p>
-                <p className="text-[10px] text-emerald-600">Escrowed — will be released 48h after service completion</p>
+                <p className="text-xs font-semibold text-success">Payment received</p>
+                <p className="text-[10px] text-success">Escrowed — will be released 48h after service completion</p>
               </div>
             </div>
           </div>
@@ -183,8 +185,8 @@ export default function BookingInvoice() {
               hardcoded, since this is the legal face of a tax document. Without
               an invoice this is only a booking summary and must not claim
               otherwise. */}
-          <div className="bg-muted/30 px-5 py-4 border-t border-border">
-            <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+          <div className="bg-raised/30 px-5 py-4 border-t border-hairline">
+            <p className="text-[10px] text-ink-secondary text-center leading-relaxed">
               {invoice ? (
                 <>
                   Tax invoice <span className="font-mono">{invoice.invoice_no}</span> issued by {invoice.supplier_name}.
@@ -206,14 +208,15 @@ export default function BookingInvoice() {
 
         {/* Request Refund Section */}
         {booking.status === 'completed' && (
-          <div className="mt-4 bg-surface rounded-2xl border border-border p-4">
-            <p className="text-sm font-bold mb-1">Need a Refund?</p>
-            <p className="text-xs text-muted-foreground mb-3">If you are unsatisfied with the service, you may request a refund within 48 hours.</p>
-            <button onClick={() => toast.info('Refund request form coming soon')}
-              className="text-xs px-4 py-2.5 border border-border rounded-xl font-medium hover:bg-muted transition-colors">
-              Request Refund
-            </button>
-          </div>
+          <aside className="flex flex-col gap-3 rounded-card bg-surface p-5 shadow-e2 lg:sticky lg:top-[100px]">
+            <h2 className="font-display text-h4 font-semibold text-ink">Need a refund?</h2>
+            <p className="text-caption font-normal text-ink-secondary">
+              If you are unsatisfied with the service, you may request a refund within 48 hours.
+            </p>
+            <Button variant="outline" block onClick={() => navigate(`/refunds?booking=${booking.id}`)}>
+              Request refund
+            </Button>
+          </aside>
         )}
       </div>
     </div>

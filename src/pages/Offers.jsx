@@ -29,7 +29,7 @@ export default function Offers() {
     <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-bold">Offers & coupons</h1>
+        <h1 className="text-xl font-semibold">Offers & coupons</h1>
       </div>
       <div className="px-5 flex gap-2 overflow-x-auto scrollbar-none pb-2">
         {TABS.map(t => (
@@ -38,22 +38,22 @@ export default function Offers() {
         ))}
       </div>
       <div className="px-5 space-y-3 pb-10 pt-2">
-        {!data ? [0, 1, 2].map(i => <div key={i} className="h-28 bg-surface border border-hairline/10 rounded-2xl animate-pulse" />) : list.length ? list.map(c => {
+        {!data ? [0, 1, 2].map(i => <div key={i} className="h-28 bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl animate-pulse" />) : list.length ? list.map(c => {
           const dl = daysLeft(c.expiry); const expired = dl < 0;
           return (
-            <div key={c.id} className="bg-surface border border-hairline/10 rounded-2xl overflow-hidden">
+            <div key={c.id} className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl overflow-hidden">
               <div className={`flex items-center justify-between px-4 py-2.5 ${expired ? 'bg-raised' : 'bg-brand-tint'}`}>
-                <span className={`font-extrabold tracking-wider ${expired ? 'text-ink-secondary' : 'text-brand'}`}>{c.code}</span>
+                <span className={`font-semibold tracking-wider ${expired ? 'text-ink-secondary' : 'text-brand'}`}>{c.code}</span>
                 <span className="text-[11px] text-ink-tertiary">{expired ? 'Expired' : dl <= 7 ? `${dl}d left` : `Until ${c.expiry}`}</span>
               </div>
               <div className="p-4 space-y-1.5">
-                <p className="text-sm font-bold">{c.title}</p>
+                <p className="text-sm font-semibold">{c.title}</p>
                 <p className="text-sm font-semibold text-brand">{c.discount}</p>
                 <p className="text-[11px] text-ink-tertiary">{c.minOrder > 0 ? `Min. spend RM${c.minOrder} · ` : ''}Valid on {c.categories.join(', ')}</p>
                 {!expired && (
                   <div className="flex gap-2 pt-2">
                     <button onClick={() => { navigator.clipboard?.writeText(c.code); toast.success(`${c.code} copied & applied`); }} className="flex-1 h-10 rounded-lg bg-brand text-white text-sm font-semibold">Apply</button>
-                    <button onClick={() => toast.success('Share link copied')} className="w-11 h-10 rounded-lg border border-hairline/20 flex items-center justify-center"><Share2 className="h-4 w-4" /></button>
+                    <button onClick={() => toast.success('Share link copied')} className="w-11 h-10 rounded-lg shadow-[inset_0_0_0_1px_rgb(var(--hairline))] flex items-center justify-center"><Share2 className="h-4 w-4" /></button>
                   </div>
                 )}
               </div>

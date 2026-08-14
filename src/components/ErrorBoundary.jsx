@@ -38,20 +38,20 @@ export default class ErrorBoundary extends Component {
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center font-inter">
-        <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-5">
-          <AlertTriangle className="h-8 w-8 text-red-500" />
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 text-center font-inter">
+        <div className="w-16 h-16 bg-danger-tint rounded-2xl flex items-center justify-center mb-5">
+          <AlertTriangle className="h-8 w-8 text-danger" />
         </div>
-        <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
-        <p className="text-sm text-muted-foreground mb-1 max-w-xs">
+        <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+        <p className="text-sm text-ink-secondary mb-1 max-w-xs">
           An unexpected error occurred. Your data is safe.
         </p>
-        <p className="text-[10px] text-muted-foreground mb-6 font-mono">
+        <p className="text-[10px] text-ink-secondary mb-6 font-mono">
           Ref: {this.state.errorId}
         </p>
         <button
           onClick={this.handleReset}
-          className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-brand/90 transition-colors"
         >
           <RefreshCw className="h-4 w-4" /> Return to Home
         </button>

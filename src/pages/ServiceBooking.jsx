@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, ShieldCheck, Lock, CalendarCheck, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { safeMotion, variants } from '@/lib/design/motion';
 import { servisaku } from '@/api/servisakuClient';
@@ -15,7 +15,7 @@ import StepD from '@/components/booking/steps/StepD';
 import StepE from '@/components/booking/steps/StepE';
 import StepF from '@/components/booking/steps/StepF';
 import { isAfterHours, isUrgent } from '@/components/booking/scheduleRules';
-import { serviceImageFor } from '@/lib/serviceImages';
+import { PriceSummary } from '@/components/ds';
 
 const STEPS = ['Options', 'Property', 'Schedule', 'Address', 'Details', 'Review'];
 
@@ -169,61 +169,113 @@ export default function ServiceBooking() {
     );
   }
 
+  /* Quote lines for the rail. The server owns the arithmetic — this only
+     presents what it returned, so the figure shown is always the figure charged. */
+  const money = (n) => formatMYR(n, { decimals: true });
+  const priceLines = (quote?.breakdown || [])
+    .filter((l) => l.type !== 'TOTAL')
+    .map((l, i) => ({
+      key: i,
+      label: l.label,
+      value: (l.amount < 0 ? '− ' : '') + money(Math.abs(l.amount)),
+      tone: l.amount < 0 ? 'discount' : undefined,
+    }));
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-32 pt-4">
-      {/* Header + progress */}
-      <div>
-        <button onClick={() => (step === 0 ? navigate(-1) : setStep((s) => s - 1))} className="mb-3 flex items-center gap-1 text-sm text-ink-secondary hover:text-ink">
-          <ArrowLeft size={16} /> Back
-        </button>
-        {serviceImageFor(service.slug) && step === 0 && (
-          <img
-            src={serviceImageFor(service.slug)}
-            alt={service.name}
-            className="mb-3 h-40 w-full rounded-2xl object-cover"
-          />
-        )}
-        <h1 className="text-xl font-bold text-ink">{service.name}</h1>
-        <div className="mt-3 flex gap-1.5">
-          {STEPS.map((label, i) => (
-            <div key={label} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-brand' : 'bg-hairline'}`} />
-          ))}
-        </div>
-        <div className="mt-2 text-sm font-medium text-ink-secondary">Step {step + 1} of {STEPS.length} · {STEPS[step]}</div>
-      </div>
+    <div className="bg-bg pb-16">
+      {/* Gradient page header — the system's page-header pattern. */}
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-14">
+          <button
+            onClick={() => (step === 0 ? navigate(-1) : setStep((s) => s - 1))}
+            className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-[15px]" /> {step === 0 ? 'Back' : STEPS[step - 1]}
+          </button>
 
-      {/* Step body — animate between steps */}
-      <div>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={step} {...safeMotion(variants.fadeUp)}>
-            {step === 0 && <StepA service={service} answers={answers} setAnswer={setAnswer} />}
-            {step === 1 && <StepB property={property} setProperty={setProperty} />}
-            {step === 2 && <StepC schedule={schedule} setSchedule={setSchedule} />}
-            {step === 3 && <StepD address={address} setAddress={setAddress} savedCity={savedCity} />}
-            {step === 4 && <StepE extras={extras} setExtras={setExtras} />}
-            {step === 5 && <StepF service={service} quote={quote} quoteError={quoteError} payment={payment} setPayment={setPayment} />}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          <h1 className="text-display-2 text-white">{service.name}</h1>
 
-      {/* Sticky footer: live total + nav */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-hairline bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3">
-          <div>
-            <div className="text-xs text-ink-secondary">Estimated total</div>
-            <div className="text-lg font-bold tabular-nums text-ink">
-              {quote ? formatMYR(quote.total, { decimals: !Number.isInteger(quote.total) }) : '—'}
-            </div>
+          <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4" /> 30-day warranty</span>
+            <span className="inline-flex items-center gap-1.5"><Lock className="size-4" /> Escrow protected</span>
+            <span className="sa-num">Step {step + 1} of {STEPS.length}</span>
           </div>
+
+          <div className="mt-5 flex gap-1.5">
+            {STEPS.map((label, i) => (
+              <div key={label} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-live' : 'bg-white/20'}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Two-column desktop: step body + sticky booking rail. */}
+      <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
+        <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
+          <h2 className="mb-5 font-display text-h3 font-semibold text-ink">{STEPS[step]}</h2>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={step} {...safeMotion(variants.fadeUp)}>
+              {step === 0 && <StepA service={service} answers={answers} setAnswer={setAnswer} />}
+              {step === 1 && <StepB property={property} setProperty={setProperty} />}
+              {step === 2 && <StepC schedule={schedule} setSchedule={setSchedule} />}
+              {step === 3 && <StepD address={address} setAddress={setAddress} savedCity={savedCity} />}
+              {step === 4 && <StepE extras={extras} setExtras={setExtras} />}
+              {step === 5 && <StepF service={service} quote={quote} quoteError={quoteError} payment={payment} setPayment={setPayment} />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Booking rail — sticky on desktop. */}
+        <div className="flex flex-col gap-4 rounded-card bg-surface p-5 shadow-e2 md:p-6 lg:sticky lg:top-[100px]">
+          <span className="sa-num text-[34px] font-medium leading-none text-ink">
+            {quote ? money(quote.total) : '—'}
+          </span>
+
+          {(schedule.date || address.addressLine) && (
+            <div className="flex flex-col gap-2 text-caption font-normal text-ink-secondary">
+              {schedule.date && (
+                <span className="inline-flex items-center gap-2">
+                  <CalendarCheck className="size-[15px] text-brand" />
+                  <span className="sa-num">
+                    {new Date(schedule.date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </span>
+                  {schedule.timeSlot && <span className="sa-num">· {schedule.timeSlot}</span>}
+                </span>
+              )}
+              {address.addressLine && (
+                <span className="inline-flex items-center gap-2">
+                  <MapPin className="size-[15px] shrink-0 text-brand" />
+                  <span className="truncate">{address.addressLine}</span>
+                </span>
+              )}
+            </div>
+          )}
+
+          {quote ? (
+            <PriceSummary
+              lines={priceLines}
+              total={money(quote.total)}
+              note="Held in escrow until you confirm the job is done"
+            />
+          ) : (
+            <p className="text-caption font-normal text-ink-tertiary">
+              {quoteError || 'Complete the required options to see a price.'}
+            </p>
+          )}
+
           {step < STEPS.length - 1 ? (
-            <Button variant="primary" size="lg" disabled={!canAdvance} onClick={() => setStep((s) => s + 1)}>
+            <Button variant="primary" size="lg" className="w-full" disabled={!canAdvance} onClick={() => setStep((s) => s + 1)}>
               Continue <ArrowRight size={18} className="ml-1" />
             </Button>
           ) : (
-            <Button variant="accent" size="lg" loading={submitting} disabled={submitting || !quote} onClick={submit}>
+            <Button variant="primary" size="lg" className="w-full" loading={submitting} disabled={submitting || !quote} onClick={submit}>
               Confirm booking
             </Button>
           )}
+
+          <div className="flex items-center justify-center gap-1.5 text-xs text-ink-tertiary">
+            <ShieldCheck className="size-3.5" /> Free cancellation up to 4 h before
+          </div>
         </div>
       </div>
     </div>

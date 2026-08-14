@@ -36,8 +36,10 @@ export function BottomNav() {
   const role = user?.role === 'super_admin' ? 'admin' : (user?.role || 'consumer');
   const NAV_ITEMS = NAV_BY_ROLE[role] || NAV_BY_ROLE.consumer;
 
+  // Inset top hairline rather than border + shadow — the design system forbids
+  // combining the two on one element. The shadow points upward (--shadow-sheet).
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-t border-hairline pb-safe pt-2 px-4 shadow-float">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl pb-safe pt-2 px-4 shadow-[inset_0_1px_0_rgb(var(--hairline)),0_-8px_40px_rgba(4,4,74,0.16)]">
       <div className="max-w-md mx-auto flex justify-between items-center relative">
         {NAV_ITEMS.map((item) => {
           if (item.isFab) {
@@ -45,6 +47,7 @@ export function BottomNav() {
               <button
                 key="fab"
                 onClick={() => navigate(item.to)}
+                aria-label={item.label}
                 className="relative -top-5 size-14 rounded-full bg-brand text-ink-inverse shadow-e3 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
               >
                 <item.icon className="size-6" />

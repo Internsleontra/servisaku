@@ -29,17 +29,17 @@ export default function Wishlist() {
     <div className="font-inter min-h-screen bg-bg max-w-2xl mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-bold flex-1">Wishlist</h1>
+        <h1 className="text-xl font-semibold flex-1">Wishlist</h1>
         <button onClick={() => setView(v => v === 'grid' ? 'list' : 'grid')} className="text-ink">{view === 'grid' ? <List className="h-5 w-5" /> : <LayoutGrid className="h-5 w-5" />}</button>
       </div>
       {!data ? <div className="px-5 grid grid-cols-2 gap-3">{[0, 1, 2, 3].map(i => <div key={i} className="h-40 bg-surface rounded-2xl animate-pulse" />)}</div> : (
         <div className="px-5 space-y-6 pb-10">
           {data.services.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold text-ink-tertiary mb-2">SAVED SERVICES</p>
+              <p className="text-[11px] font-semibold text-ink-tertiary mb-2">SAVED SERVICES</p>
               <div className={view === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
                 {data.services.map(s => (
-                  <div key={s.slug} className={`bg-surface border border-hairline/10 rounded-2xl overflow-hidden ${view === 'list' ? 'flex' : ''}`}>
+                  <div key={s.slug} className={`bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl overflow-hidden ${view === 'list' ? 'flex' : ''}`}>
                     <div className={`relative bg-brand-tint ${view === 'list' ? 'w-28 shrink-0' : 'h-28'}`}>
                       {serviceImageFor(s.slug) && <img src={serviceImageFor(s.slug)} alt={s.name} className="w-full h-full object-cover" />}
                       <button onClick={() => remove(s.slug)} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center"><Heart className="h-4 w-4 text-white fill-white" /></button>
@@ -48,8 +48,8 @@ export default function Wishlist() {
                       <p className="text-sm font-semibold truncate">{s.name}</p>
                       <p className="text-[10px] text-ink-tertiary">{s.category}</p>
                       <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-sm font-bold text-brand">from {formatMYR(s.price)}</span>
-                        <button onClick={() => navigate(`/book-service/${s.slug}`)} className="text-[11px] font-bold bg-brand text-white rounded-lg px-2.5 py-1">Book</button>
+                        <span className="text-sm font-semibold text-brand">from {formatMYR(s.price)}</span>
+                        <button onClick={() => navigate(`/book-service/${s.slug}`)} className="text-[11px] font-semibold bg-brand text-white rounded-lg px-2.5 py-1">Book</button>
                       </div>
                     </div>
                   </div>
@@ -59,11 +59,11 @@ export default function Wishlist() {
           )}
           {data.partners.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold text-ink-tertiary mb-2">FAVOURITE PROS</p>
-              <div className="bg-surface border border-hairline/10 rounded-2xl divide-y divide-hairline/10">
+              <p className="text-[11px] font-semibold text-ink-tertiary mb-2">FAVOURITE PROS</p>
+              <div className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl divide-y divide-hairline/10">
                 {data.partners.map(p => (
                   <div key={p.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className="w-10 h-10 rounded-full bg-brand-tint flex items-center justify-center font-bold text-brand">{p.name[0]}</div>
+                    <div className="w-10 h-10 rounded-full bg-brand-tint flex items-center justify-center font-semibold text-brand">{p.name[0]}</div>
                     <div className="flex-1"><p className="text-sm font-semibold">{p.name}</p><p className="text-[11px] text-ink-tertiary">⭐ {p.rating} · {p.jobs} jobs</p></div>
                   </div>
                 ))}
@@ -72,17 +72,17 @@ export default function Wishlist() {
           )}
           {data.categories.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold text-ink-tertiary mb-2">SAVED CATEGORIES</p>
+              <p className="text-[11px] font-semibold text-ink-tertiary mb-2">SAVED CATEGORIES</p>
               <div className="flex flex-wrap gap-2">
-                {data.categories.map(c => <button key={c.slug} onClick={() => navigate(`/catalog/${c.slug}`)} className="text-xs font-semibold bg-surface border border-hairline/20 rounded-full px-3.5 py-2">{c.name}</button>)}
+                {data.categories.map(c => <button key={c.slug} onClick={() => navigate(`/catalog/${c.slug}`)} className="text-xs font-semibold bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-full px-3.5 py-2">{c.name}</button>)}
               </div>
             </div>
           )}
           {data.recentlyViewed.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold text-ink-tertiary mb-2">RECENTLY VIEWED</p>
+              <p className="text-[11px] font-semibold text-ink-tertiary mb-2">RECENTLY VIEWED</p>
               <div className="flex flex-wrap gap-2">
-                {data.recentlyViewed.map(r => <button key={r.slug} onClick={() => navigate(`/book-service/${r.slug}`)} className="text-xs font-semibold bg-surface border border-hairline/20 rounded-full px-3.5 py-2">{r.name}</button>)}
+                {data.recentlyViewed.map(r => <button key={r.slug} onClick={() => navigate(`/book-service/${r.slug}`)} className="text-xs font-semibold bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-full px-3.5 py-2">{r.name}</button>)}
               </div>
             </div>
           )}

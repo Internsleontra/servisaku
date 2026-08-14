@@ -37,20 +37,20 @@ export default function Wallet() {
     <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-bold flex-1">Wallet</h1>
+        <h1 className="text-xl font-semibold flex-1">Wallet</h1>
         <button onClick={() => toast.info('Statement export — coming soon')} className="text-brand"><Download className="h-5 w-5" /></button>
       </div>
 
       <div className="px-5 space-y-5 pb-10">
         {/* Balance card */}
         <div className="bg-ink dark:bg-raised text-white rounded-3xl p-6 shadow-e2">
-          <p className="text-xs font-bold text-white/50">WALLET BALANCE</p>
-          {data ? <p className="text-4xl font-extrabold mt-1">{formatMYR(data.summary.balance)}</p> : <div className="h-9 w-36 bg-white/10 rounded-lg mt-2 animate-pulse" />}
+          <p className="text-xs font-semibold text-white/50">WALLET BALANCE</p>
+          {data ? <p className="text-4xl font-semibold mt-1">{formatMYR(data.summary.balance)}</p> : <div className="h-9 w-36 bg-white/10 rounded-lg mt-2 animate-pulse" />}
           <div className="flex flex-wrap gap-2 mt-4">
             {data && [
               ['⭐', `${data.summary.points.toLocaleString()} pts`], ['💵', `${formatMYR(data.summary.cashback)} cashback`],
               ['🎁', `${formatMYR(data.summary.referralEarnings)} referral`], ['🎫', `${formatMYR(data.summary.giftCard)} gift`],
-            ].map(([i, l]) => <span key={l} className="text-xs font-bold bg-white/10 rounded-full px-3 py-1.5">{i} {l}</span>)}
+            ].map(([i, l]) => <span key={l} className="text-xs font-semibold bg-white/10 rounded-full px-3 py-1.5">{i} {l}</span>)}
           </div>
         </div>
 
@@ -66,24 +66,24 @@ export default function Wallet() {
 
         {/* Transactions */}
         <div>
-          <p className="text-[11px] font-bold text-ink-tertiary tracking-wide mb-2">TRANSACTIONS</p>
+          <p className="text-[11px] font-semibold text-ink-tertiary tracking-wide mb-2">TRANSACTIONS</p>
           {!data ? (
-            <div className="space-y-2">{[0, 1, 2, 3].map(i => <div key={i} className="h-14 bg-surface border border-hairline/10 rounded-xl animate-pulse" />)}</div>
+            <div className="space-y-2">{[0, 1, 2, 3].map(i => <div key={i} className="h-14 bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-xl animate-pulse" />)}</div>
           ) : txns.length ? (
             <div className="space-y-2">
               {txns.map(t => {
                 const Icon = ICON[t.type] || Banknote;
                 const positive = t.amount >= 0;
                 return (
-                  <div key={t.id} className="flex items-center gap-3 bg-surface border border-hairline/10 rounded-xl p-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${positive ? 'bg-emerald-50 text-emerald-600' : 'bg-raised text-ink-secondary'}`}><Icon className="h-4 w-4" /></div>
+                  <div key={t.id} className="flex items-center gap-3 bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-xl p-3">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${positive ? 'bg-success-tint text-success' : 'bg-raised text-ink-secondary'}`}><Icon className="h-4 w-4" /></div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{t.description}</p>
                       <p className="text-[11px] text-ink-tertiary">{t.date}{t.bookingRef ? ` · ${t.bookingRef}` : ''}</p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-bold ${positive ? 'text-emerald-600' : 'text-ink'}`}>{positive ? '+' : '−'}{formatMYR(Math.abs(t.amount))}</p>
-                      {t.status !== 'completed' && <span className="text-[9px] font-bold text-amber-600 capitalize">{t.status}</span>}
+                      <p className={`text-sm font-semibold ${positive ? 'text-success' : 'text-ink'}`}>{positive ? '+' : '−'}{formatMYR(Math.abs(t.amount))}</p>
+                      {t.status !== 'completed' && <span className="text-[9px] font-semibold text-warning capitalize">{t.status}</span>}
                     </div>
                   </div>
                 );

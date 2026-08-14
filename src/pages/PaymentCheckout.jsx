@@ -5,7 +5,9 @@ import { servisaku } from '@/api/servisakuClient';
 import { formatRM } from '@/lib/paymentEngine';
 import { generateIdempotencyKey, markPaymentSubmitted, clearPaymentRecord, auditLog } from '@/lib/security';
 import { Button } from '@/components/ui/button';
+import { PriceSummary, RING, RING_BRAND } from '@/components/ds';
 import { toast } from 'sonner';
+import { paymentIconFor } from '@/lib/paymentIcons';
 
 const BANKS = ['Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank', 'Bank Islam', 'OCBC Bank'];
 
@@ -38,7 +40,7 @@ export default function PaymentCheckout() {
   }, []);
 
   if (!booking && bookingId) return (
-    <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
+    <div className="flex justify-center pt-32"><div className="w-6 h-6 shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-muted border-t-primary rounded-full animate-spin" /></div>
   );
 
   // The server charges Booking.price — the amount already includes whatever tax
@@ -98,17 +100,17 @@ export default function PaymentCheckout() {
   };
 
   if (payState === 'success') return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center font-inter">
-      <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-5">
-        <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+    <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 text-center font-inter">
+      <div className="w-24 h-24 bg-success-tint rounded-full flex items-center justify-center mb-5">
+        <CheckCircle2 className="h-12 w-12 text-success" />
       </div>
-      <h2 className="text-2xl font-bold mb-1">Payment Successful</h2>
-      <p className="text-sm text-muted-foreground mb-1">{formatRM(total)} paid via {selected?.label || method}</p>
-      <p className="text-xs text-muted-foreground mb-6">Funds held in escrow until service completion</p>
-      <div className="bg-surface rounded-2xl border border-border p-4 w-full max-w-xs mb-6 text-left space-y-2 text-xs">
-        <div className="flex justify-between"><span className="text-muted-foreground">Amount paid</span><span className="font-bold">{formatRM(total)}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Transaction ID</span><span className="font-mono text-[10px]">TXN{Date.now().toString().slice(-8)}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Escrow release</span><span className="font-medium">48h after completion</span></div>
+      <h2 className="text-2xl font-semibold mb-1">Payment Successful</h2>
+      <p className="text-sm text-ink-secondary mb-1">{formatRM(total)} paid via {selected?.label || method}</p>
+      <p className="text-xs text-ink-secondary mb-6">Funds held in escrow until service completion</p>
+      <div className="bg-surface rounded-2xl border border-hairline p-4 w-full max-w-xs mb-6 text-left space-y-2 text-xs">
+        <div className="flex justify-between"><span className="text-ink-secondary">Amount paid</span><span className="font-semibold">{formatRM(total)}</span></div>
+        <div className="flex justify-between"><span className="text-ink-secondary">Transaction ID</span><span className="font-mono text-[10px]">TXN{Date.now().toString().slice(-8)}</span></div>
+        <div className="flex justify-between"><span className="text-ink-secondary">Escrow release</span><span className="font-medium">48h after completion</span></div>
       </div>
       <Button onClick={() => booking ? navigate(`/booking/${booking.id}`) : navigate('/')} className="w-full max-w-xs rounded-2xl">
         Track Booking
@@ -117,12 +119,12 @@ export default function PaymentCheckout() {
   );
 
   if (payState === 'failed') return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center font-inter">
-      <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-5">
-        <XCircle className="h-12 w-12 text-red-500" />
+    <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 text-center font-inter">
+      <div className="w-24 h-24 bg-danger-tint rounded-full flex items-center justify-center mb-5">
+        <XCircle className="h-12 w-12 text-danger" />
       </div>
-      <h2 className="text-2xl font-bold mb-1">Payment Failed</h2>
-      <p className="text-sm text-muted-foreground mb-6">Your card was not charged. Please try again.</p>
+      <h2 className="text-2xl font-semibold mb-1">Payment Failed</h2>
+      <p className="text-sm text-ink-secondary mb-6">Your card was not charged. Please try again.</p>
       <div className="flex gap-3 w-full max-w-xs">
         <Button onClick={() => setPayState('idle')} className="flex-1 rounded-2xl">
           <RefreshCw className="h-4 w-4 mr-1" /> Retry
@@ -132,130 +134,125 @@ export default function PaymentCheckout() {
     </div>
   );
 
+  const priceLines = [
+    { label: booking?.service_type || 'Service', value: formatRM(total) },
+    ...((booking?.discount_amount || 0) > 0
+      ? [{ label: `Promo ${booking.coupon_code || ''}`.trim(), value: '− ' + formatRM(booking.discount_amount), tone: 'discount' }]
+      : []),
+    ...(taxLine ? [{ label: taxLine.label, value: formatRM(taxLine.amount) }] : []),
+  ];
+
   return (
-    <div className="min-h-screen bg-background font-inter pb-36">
-      <div className="sticky top-0 z-20 bg-surface border-b border-border px-5 pt-12 pb-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="bg-bg pb-16">
+      {/* Gradient page header */}
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-14">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-[15px]" /> Back
           </button>
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground">Secure Checkout</p>
-            <p className="text-sm font-bold">Payment</p>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-            <Lock className="h-3 w-3" /> SSL Secured
+          <h1 className="text-display-2 text-white">Secure checkout</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
+            <span className="inline-flex items-center gap-1.5"><Lock className="size-4" /> SSL secured</span>
+            <span className="inline-flex items-center gap-1.5"><Shield className="size-4" /> Escrow protected</span>
           </div>
         </div>
       </div>
 
-      <div className="px-5 pt-5 space-y-5">
-
-        {/* Order Summary */}
-        <div className="bg-surface rounded-3xl border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] p-4">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3">Order Summary</p>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">{booking?.service_type || 'Service'} ({booking?.package_name || 'Basic'})</span><span>{formatRM(total)}</span></div>
-            {(booking?.discount_amount || 0) > 0 && (
-              <div className="flex justify-between text-emerald-600"><span>Promo ({booking?.coupon_code})</span><span>-{formatRM(booking.discount_amount)}</span></div>
-            )}
-            {/* Tax comes from the server's price snapshot, not a client-side rate —
-                the booking was priced once and the invoice never recalculates. */}
-            {taxLine && (
-              <div className="flex justify-between text-muted-foreground text-xs"><span>{taxLine.label}</span><span>{formatRM(taxLine.amount)}</span></div>
-            )}
-            <div className="border-t border-border pt-2 flex justify-between font-bold">
-              <span>Total Payable</span><span className="text-primary text-lg">{formatRM(total)}</span>
+      {/* Two-column: methods + sticky payment rail */}
+      <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
+        <div className="flex flex-col gap-5">
+          <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
+            <h2 className="mb-4 font-display text-h3 font-semibold text-ink">Payment method</h2>
+            <div className="flex flex-col gap-2">
+              {methods.map((pm) => {
+                const on = method === pm.id;
+                return (
+                  <button
+                    key={pm.id}
+                    onClick={() => pm.available && setMethod(pm.id)}
+                    disabled={!pm.available}
+                    className={`flex w-full items-center gap-3 rounded-field p-3.5 text-left transition ${
+                      on ? 'bg-brand-tint ' + RING_BRAND : 'bg-surface hover:bg-raised ' + RING
+                    } ${pm.available ? '' : 'cursor-not-allowed opacity-45'}`}
+                  >
+                    {(() => { const I = paymentIconFor(pm.id); return <I className="size-5 w-7 shrink-0 text-ink-secondary" />; })()}
+                    <span className="flex-1">
+                      <span className="block text-caption font-semibold text-ink">{pm.label}</span>
+                      <span className="block text-xs text-ink-secondary">
+                        {pm.available ? pm.sub : 'Currently unavailable'}
+                      </span>
+                    </span>
+                    <span className={`grid size-5 shrink-0 place-items-center rounded-full ${on ? 'bg-brand' : RING}`}>
+                      {on && <span className="size-2 rounded-full bg-white" />}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <div className={`mt-3 flex items-start gap-2 rounded-xl p-2.5 text-xs ${isCash ? 'bg-amber-50 text-amber-800' : 'bg-blue-50 text-blue-700'}`}>
-            {isCash ? <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" /> : <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
-            {isCash
-              ? `Pay ${formatRM(total)} directly to your professional when the job is complete. They'll record it in the app and you'll get a receipt.`
-              : 'Funds are held in escrow and released to the partner only after service completion'}
-          </div>
-        </div>
 
-        {/* Payment Methods */}
-        <div>
-          <p className="text-sm font-bold mb-2">Payment Method</p>
-          <div className="space-y-2">
-            {methods.map(pm => (
-              <button key={pm.id} onClick={() => pm.available && setMethod(pm.id)}
-                disabled={!pm.available}
-                className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
-                  method === pm.id ? 'border-primary bg-accent' : 'border-border bg-surface'
-                } ${pm.available ? '' : 'opacity-45 cursor-not-allowed'}`}>
-                <span className="text-xl w-7 text-center">{pm.icon}</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">{pm.label}</p>
-                  {/* Unavailable methods stay visible but explain themselves rather
-                      than silently vanishing from the list. */}
-                  <p className="text-xs text-muted-foreground">{pm.available ? pm.sub : 'Currently unavailable'}</p>
-                </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${method === pm.id ? 'border-primary bg-primary' : 'border-border'}`}>
-                  {method === pm.id && <div className="w-2 h-2 bg-surface rounded-full" />}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* FPX Bank Select */}
-        {method === 'fpx' && (
-          <div>
-            <p className="text-sm font-bold mb-2">Select Bank</p>
-            <div className="grid grid-cols-2 gap-2">
-              {BANKS.map(b => (
-                <button key={b} onClick={() => setSelectedBank(b)}
-                  className={`text-xs py-3 px-3 rounded-xl border-2 font-medium transition-all text-left ${selectedBank === b ? 'border-primary bg-accent text-primary' : 'border-border bg-surface text-muted-foreground'}`}>
-                  {b}
-                </button>
-              ))}
+          {method === 'fpx' && (
+            <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
+              <h2 className="mb-4 font-display text-h3 font-semibold text-ink">Select bank</h2>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {BANKS.map((b) => (
+                  <button
+                    key={b}
+                    onClick={() => setSelectedBank(b)}
+                    className={`rounded-field px-3 py-3 text-left text-caption transition ${
+                      selectedBank === b ? 'bg-brand-tint text-brand-ink ' + RING_BRAND : 'bg-surface text-ink-secondary hover:bg-raised ' + RING
+                    }`}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Card / wallet methods.
-            No card fields here by design: card, Apple Pay and Google Pay are all
-            captured on the gateway's own hosted page. Collecting a card number
-            in this app would put it in PCI scope for no benefit — the previous
-            fields were never sent anywhere. */}
-        {['card', 'applepay', 'googlepay'].includes(method) && (
-          <div className="flex items-start gap-2 bg-surface rounded-2xl border border-border p-4 text-xs text-muted-foreground">
-            <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            You'll be taken to our payment provider's secure page to complete this
-            payment. ServisAku never sees or stores your card details.
-          </div>
-        )}
+          {/* No card fields by design: card and wallets are captured on the
+              gateway's hosted page, so this app stays out of PCI scope. */}
+          {['card', 'applepay', 'googlepay', 'duitnow'].includes(method) && (
+            <div className={`flex items-start gap-2 rounded-card bg-surface p-4 text-caption font-normal text-ink-secondary shadow-e1 ${RING}`}>
+              <Lock className="mt-0.5 size-3.5 shrink-0" />
+              {method === 'duitnow'
+                ? "You'll be redirected to complete the DuitNow transfer from your banking app."
+                : "You'll be taken to our payment provider's secure page. ServisAku never sees or stores your card details."}
+            </div>
+          )}
+        </div>
 
-        {/* DuitNow */}
-        {method === 'duitnow' && (
-          <div className="flex items-start gap-2 bg-surface rounded-2xl border border-border p-4 text-xs text-muted-foreground">
-            <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            You'll be redirected to complete the DuitNow transfer from your banking app.
-          </div>
-        )}
-      </div>
+        {/* Payment rail */}
+        <div className="flex flex-col gap-4 rounded-card bg-surface p-5 shadow-e2 md:p-6 lg:sticky lg:top-[100px]">
+          <PriceSummary
+            lines={priceLines}
+            total={formatRM(total)}
+            note={isCash
+              ? 'Pay your professional directly when the job is complete.'
+              : 'Held in escrow until you confirm the job is done'}
+          />
 
-      {/* Pay Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40">
-        <div className="max-w-lg mx-auto bg-white/95 backdrop-blur-xl border-t border-border px-5 py-4">
           <Button
+            variant="primary"
             onClick={handlePay}
             disabled={processing || !selected?.available || (method === 'fpx' && !selectedBank)}
-            className="w-full h-12 rounded-2xl shadow-[0_8px_40px_rgba(20,83,45,0.18)] text-base font-bold"
+            size="lg"
+            className="w-full rounded-field text-base font-semibold"
           >
             {processing ? (
-              <span className="flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" /> Processing...</span>
+              <span className="flex items-center gap-2"><RefreshCw className="size-4 animate-spin" /> Processing…</span>
             ) : isCash ? (
-              <span className="flex items-center gap-2"><Banknote className="h-4 w-4" /> Confirm Cash Payment</span>
+              <span className="flex items-center gap-2"><Banknote className="size-4" /> Confirm cash payment</span>
             ) : (
-              <span className="flex items-center gap-2"><Lock className="h-4 w-4" /> Pay {formatRM(total)}</span>
+              <span className="flex items-center gap-2"><Lock className="size-4" /> Pay {formatRM(total)}</span>
             )}
           </Button>
-          <p className="text-center text-[10px] text-muted-foreground mt-2">
-            By paying you agree to ServisAku Terms of Service
+
+          <p className="text-center text-xs text-ink-tertiary">
+            By paying you agree to the ServisAku Terms of Service.
           </p>
         </div>
       </div>

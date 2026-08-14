@@ -1,20 +1,26 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import {
-  Sparkles, Scissors, Bug, Wind, Wrench, Zap, Droplet, Hammer,
-  PaintRoller, Drill, Clock, Home, Loader2, ChevronRight,
-} from 'lucide-react';
+import { Loader2, Zap, ArrowRight } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
-import { formatMYR } from '@/lib/utils';
-import { variants } from '@/lib/design/motion';
+import { WebSection } from '@/components/site/WebSection';
+import { CategoryTile, Chip } from '@/components/ds';
+import { CATEGORY_ICON } from '@/lib/categoryIcons';
+import { avatarFor } from '@/lib/categoryAvatars';
 
-// category.icon_key (seeded) → lucide component, with a safe fallback.
-const ICONS = { Sparkles, Scissors, Bug, Wind, Wrench, Zap, Droplet, Hammer, PaintRoller, Drill, Clock, Home };
+/* The Instant Help lane offers TWO services. The design system's landing band
+   shows six, which is aspirational — the seeded catalogue
+   (prisma/data/servisaku-services-config.json) is authoritative and the kit is
+   being corrected to match. Do not re-add the other four. */
+const INSTANT_SERVICES = ['Instant Hourly Handyman', 'Emergency Diagnostic / Call-Out'];
 
-const reduceMotion = typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+/**
+ * Catalogue index.
+ *
+ * Instant Help is a LANE, not a category — the API returns it as a row in
+ * /api/categories, but the design system counts eleven categories and keeps
+ * Instant Help visually and semantically separate. That split is handled here
+ * in the presentation layer; the API and the design system both stay as they are.
+ */
 export default function Catalog() {
   const navigate = useNavigate();
   const { data: categories, isLoading } = useQuery({
@@ -23,56 +29,87 @@ export default function Catalog() {
   });
 
   if (isLoading) {
-    return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="animate-spin text-brand" /></div>;
-  }
-
-  if (!categories?.length) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-12 text-center text-ink-secondary">
-        <p>The live catalogue isn’t available yet.</p>
-        <p className="mt-1 text-sm">Seed the booking engine (<code>npm run db:seed:booking-engine</code>) to populate it.</p>
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="animate-spin text-brand" />
       </div>
     );
   }
 
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-ink md:text-3xl">All services</h1>
-      <p className="mt-1 text-ink-secondary">{categories.length} categories · book any service in a few taps</p>
+  const bookable = (categories || []).filter((c) => c.slug !== 'instant-help');
+  const instant = (categories || []).find((c) => c.slug === 'instant-help');
 
-      <motion.div
-        className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-        initial={reduceMotion ? false : 'initial'}
-        animate={reduceMotion ? false : 'animate'}
-        variants={reduceMotion ? undefined : variants.stagger}
+  if (!bookable.length) {
+    return (
+      <WebSection title="The catalogue isn’t available yet.">
+        <p className="text-lead text-ink-secondary">
+          Seed the booking engine (<code className="sa-num">npm run db:seed:booking-engine</code>)
+          to populate it.
+        </p>
+      </WebSection>
+    );
+  }
+
+  return (
+    <>
+      <WebSection
+        titleAs="h1"
+        eyebrow="The catalogue"
+        title="Eleven categories, seventy-one services."
+        body="Every service has a fixed price, a duration and a warranty before you book."
       >
-        {categories.map((c) => {
-          const Icon = ICONS[c.icon_key] || Home;
-          return (
-            <motion.button
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {bookable.map((c) => (
+            <CategoryTile
               key={c.id}
-              type="button"
-              variants={reduceMotion ? undefined : variants.staggerItem}
-              whileHover={reduceMotion ? undefined : { y: -2 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+              label={c.name}
+              image={avatarFor(c.slug)}
+              icon={CATEGORY_ICON[c.slug]}
+              count={c.service_count ?? undefined}
               onClick={() => navigate(`/catalog/${c.slug}`)}
-              className="group flex items-center gap-4 rounded-2xl border border-hairline bg-surface p-4 text-left transition hover:border-brand/40 hover:shadow-e2"
+            />
+          ))}
+        </div>
+      </WebSection>
+
+      {/* Instant Help — its own lane, the one sanctioned orange surface. */}
+      {instant && (
+        <WebSection tone="card">
+          <div className="grid items-center gap-6 lg:grid-cols-2">
+            <div>
+              <div className="sa-caps mb-2.5 text-warning">Instant Help</div>
+              <h2 className="text-display-3 text-ink">
+                Burst pipe at 11pm?<br />Dispatched in minutes.
+              </h2>
+              <p className="mt-3.5 max-w-[460px] text-lead text-ink-secondary">
+                Two emergency services run on a separate on-demand queue with live ETAs —
+                no slot picking, no waiting for a callback.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {INSTANT_SERVICES.map((t) => (
+                  <Chip key={t} icon={Zap}>{t}</Chip>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate('/catalog/instant-help')}
+              className="flex items-center gap-4 rounded-card bg-grad-instant p-6 text-left text-white shadow-instant transition hover:brightness-[0.96] active:scale-[0.99]"
             >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-                <Icon className="size-5" />
+              <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-white/20">
+                <Zap className="size-6" />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-ink">{c.name}</span>
-                <span className="block text-sm text-ink-secondary">
-                  {c.service_count != null ? `${c.service_count} services` : 'Services'}
-                  {c.price_from > 0 && ` · from ${formatMYR(c.price_from)}`}
+              <span className="flex-1">
+                <span className="block font-display text-h4 font-semibold">Instant Help</span>
+                <span className="block text-caption font-normal text-white/85">
+                  Emergency pros, dispatched in minutes
                 </span>
               </span>
-              <ChevronRight className="size-5 shrink-0 text-ink-tertiary transition group-hover:text-brand" />
-            </motion.button>
-          );
-        })}
-      </motion.div>
-    </div>
+              <ArrowRight className="size-5 shrink-0" />
+            </button>
+          </div>
+        </WebSection>
+      )}
+    </>
   );
 }

@@ -12,7 +12,7 @@ export default function QuantitySelector({ question, value, onChange }) {
       <div className="text-sm text-ink-secondary">{unit > 0 ? `${rm(unit)} each` : 'Quantity'}</div>
       <div className="flex items-center gap-3">
         {unit > 0 && qty > 0 && (
-          <span className="font-bold tabular-nums text-brand">{rm(unit * qty)}</span>
+          <span className="font-semibold tabular-nums text-brand">{rm(unit * qty)}</span>
         )}
         <Stepper
           value={qty}

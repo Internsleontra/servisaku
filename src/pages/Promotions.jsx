@@ -15,9 +15,9 @@ export default function Promotions() {
       title: '20% Off Your First Booking',
       desc: 'New to ServisAku? Enjoy 20% off any home service for your very first booking.',
       valid: 'Valid for new users only. Max discount RM50.',
-      color: 'text-orange-500',
-      bg: 'bg-orange-500',
-      lightBg: 'bg-orange-50'
+      color: 'text-brand',
+      bg: 'bg-brand',
+      lightBg: 'bg-brand-tint'
     },
     {
       id: 'cp2',
@@ -25,9 +25,9 @@ export default function Promotions() {
       title: 'Flat RM50 Off',
       desc: 'Got a big job? Get a flat RM50 discount on any service booking over RM200.',
       valid: 'Min spend RM200 required.',
-      color: 'text-blue-500',
-      bg: 'bg-blue-500',
-      lightBg: 'bg-blue-50'
+      color: 'text-info',
+      bg: 'bg-info',
+      lightBg: 'bg-info-tint'
     }
   ];
 
@@ -52,7 +52,7 @@ export default function Promotions() {
         </div>
         
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-semibold text-ink tracking-tight mb-4">
             Active <span className="text-brand">Promotions</span>
           </h1>
           <p className="text-lg text-ink-secondary max-w-2xl mx-auto font-medium">
@@ -65,7 +65,7 @@ export default function Promotions() {
             <div key={promo.id} className="bg-surface rounded-3xl border border-hairline/20 shadow-sm overflow-hidden flex flex-col">
               <div className={`${promo.lightBg} p-8 flex flex-col items-center text-center relative border-b border-dashed border-hairline/40`}>
                 <Tag className={`w-8 h-8 ${promo.color} mb-4`} />
-                <h3 className="text-2xl font-extrabold text-ink mb-2">{promo.title}</h3>
+                <h3 className="text-2xl font-semibold text-ink mb-2">{promo.title}</h3>
                 <p className="text-ink-secondary text-sm font-medium">{promo.desc}</p>
                 
                 {/* Cutout circles for coupon effect */}
@@ -78,11 +78,11 @@ export default function Promotions() {
                 
                 <div 
                   onClick={() => handleCopy(promo.code, promo.id)}
-                  className="flex items-center gap-4 bg-raised border-2 border-dashed border-hairline hover:border-brand/50 p-4 rounded-xl cursor-pointer group transition-colors w-full max-w-xs justify-between"
+                  className="flex items-center gap-4 bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-dashed border-hairline hover:border-brand/50 p-4 rounded-xl cursor-pointer group transition-colors w-full max-w-xs justify-between"
                 >
-                  <span className="font-mono font-bold text-lg text-ink tracking-widest">{promo.code}</span>
+                  <span className="font-mono font-semibold text-lg text-ink tracking-widest">{promo.code}</span>
                   {copied === promo.id ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <CheckCircle2 className="w-5 h-5 text-success" />
                   ) : (
                     <Copy className="w-5 h-5 text-ink-tertiary group-hover:text-brand transition-colors" />
                   )}
@@ -96,7 +96,7 @@ export default function Promotions() {
         {promos.length === 0 && (
           <div className="text-center py-20 bg-surface rounded-3xl border border-hairline/10 shadow-sm mt-8">
             <Tag className="w-12 h-12 text-ink-tertiary mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-ink mb-2">No active promos</h3>
+            <h3 className="text-xl font-semibold text-ink mb-2">No active promos</h3>
             <p className="text-ink-secondary font-medium">Check back later for new deals and discounts!</p>
           </div>
         )}

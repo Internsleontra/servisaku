@@ -58,7 +58,7 @@ export function useChat(bookingId) {
   const sendPhoto = async (senderEmail, senderName, senderRole, file) => {
     setSending(true);
     const { file_url } = await servisaku.integrations.Core.UploadFile({ file });
-    await sendMessage(senderEmail, senderName, senderRole, '📷 Photo', file_url);
+    await sendMessage(senderEmail, senderName, senderRole, 'Photo', file_url);
     setSending(false);
   };
 

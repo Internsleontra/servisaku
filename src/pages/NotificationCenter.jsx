@@ -5,12 +5,14 @@ import { servisaku } from '@/api/servisakuClient';
 import moment from 'moment';
 
 const TYPE_META = {
-  booking_update: { icon: BookOpen,      color: 'bg-sky-50 text-sky-600',      label: 'Booking' },
-  payment:        { icon: CreditCard,    color: 'bg-emerald-50 text-emerald-600', label: 'Payment' },
-  chat:           { icon: MessageSquare, color: 'bg-violet-50 text-violet-600', label: 'Chat'    },
-  promo:          { icon: Megaphone,     color: 'bg-amber-50 text-amber-600',   label: 'Promo'   },
-  system:         { icon: Settings,      color: 'bg-raised text-ink-secondary',   label: 'System'  },
-  reminder:       { icon: Bell,          color: 'bg-orange-50 text-orange-600', label: 'Reminder'},
+  booking_update: { icon: BookOpen,      color: 'bg-info-tint text-info',      label: 'Booking' },
+  payment:        { icon: CreditCard,    color: 'bg-success-tint text-success', label: 'Payment' },
+  chat:           { icon: MessageSquare, color: 'bg-chat-tint text-chat',       label: 'Chat'    },
+  // Promo is marketing, not an alert — it must not wear the emergency colour.
+  promo:          { icon: Megaphone,     color: 'bg-brand-tint text-brand',     label: 'Promo'   },
+  system:         { icon: Settings,      color: 'bg-raised text-ink-secondary', label: 'System'  },
+  // Reminder stays warning: a time-sensitive nudge is a legitimate warning use.
+  reminder:       { icon: Bell,          color: 'bg-warning-tint text-warning', label: 'Reminder'},
 };
 
 function NotifItem({ n, onRead, onDelete }) {
@@ -19,27 +21,28 @@ function NotifItem({ n, onRead, onDelete }) {
   return (
     <div
       onClick={() => onRead(n)}
-      className={`group flex items-start gap-3.5 px-5 py-4 border-b border-border/30 last:border-0 cursor-pointer
-                  hover:bg-muted/20 active:bg-muted/40 transition-colors ${!n.is_read ? 'bg-accent/10' : ''}`}
+      className={`group flex items-start gap-3.5 px-5 py-4 shadow-[inset_0_-1px_0_rgb(var(--hairline))] last:shadow-none cursor-pointer
+                  hover:bg-raised/20 active:bg-raised/40 transition-colors ${!n.is_read ? 'bg-brand-tint/10' : ''}`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${meta.color}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className={`text-sm leading-snug ${!n.is_read ? 'font-bold' : 'font-medium'}`}>{n.title}</p>
+          <p className={`text-sm leading-snug ${!n.is_read ? 'font-semibold' : 'font-medium'}`}>{n.title}</p>
           <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-            <span className="text-[9.5px] text-muted-foreground">{moment(n.created_date).fromNow()}</span>
-            {!n.is_read && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+            <span className="text-[9.5px] text-ink-secondary">{moment(n.created_date).fromNow()}</span>
+            {!n.is_read && <div className="w-1.5 h-1.5 bg-brand rounded-full" />}
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{n.body}</p>
-        <span className={`inline-block text-[9px] font-bold mt-2 px-2 py-0.5 rounded-full ${meta.color}`}>{meta.label}</span>
+        <p className="text-xs text-ink-secondary mt-1 leading-relaxed line-clamp-2">{n.body}</p>
+        <span className={`inline-block text-[9px] font-semibold mt-2 px-2 py-0.5 rounded-full ${meta.color}`}>{meta.label}</span>
       </div>
       <button
         onClick={e => { e.stopPropagation(); onDelete(n); }}
-        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all shrink-0 mt-0.5">
-        <Trash2 className="h-3 w-3 text-muted-foreground" />
+        aria-label={`Delete notification: ${n.title}`}
+        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-danger-tint transition-all shrink-0 mt-0.5">
+        <Trash2 className="h-3 w-3 text-ink-secondary" />
       </button>
     </div>
   );
@@ -105,44 +108,61 @@ export default function NotificationCenter() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background font-inter" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}>
-
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-2xl border-b border-border/30 px-5 pt-12 pb-3">
-        <div className="flex items-center gap-3 mb-3">
-          <button onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="bg-bg pb-16">
+      {/* Gradient page header — replaces the sticky translucent bar. */}
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-12">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-[15px]" /> Back
           </button>
-          <div className="flex-1">
-            <h1 className="font-bold text-lg tracking-tight">Notifications</h1>
-            {unreadCount > 0 && (
-              <p className="text-xs text-primary font-semibold">{unreadCount} unread</p>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {unreadCount > 0 && (
-              <button onClick={markAllRead}
-                className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center hover:bg-primary/10 transition-colors" title="Mark all read">
-                <CheckCheck className="h-4 w-4 text-primary" />
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-display-2 text-white">Notifications</h1>
+              {unreadCount > 0 && (
+                <p className="sa-num mt-2 text-lead text-live">{unreadCount} unread</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  aria-label="Mark all as read"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-field bg-white/10 px-4 text-caption font-semibold text-white ring-1 ring-inset ring-white/20 transition hover:bg-white/20"
+                >
+                  <CheckCheck className="size-4" /> Mark all read
+                </button>
+              )}
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                aria-label="Filter notifications"
+                aria-pressed={filter !== 'all'}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-field px-4 text-caption font-semibold transition ${
+                  filter !== 'all'
+                    ? 'bg-white text-brand'
+                    : 'bg-white/10 text-white ring-1 ring-inset ring-white/20 hover:bg-white/20'
+                }`}
+              >
+                <Filter className="size-4" /> Filter
               </button>
-            )}
-            <button onClick={() => setShowFilter(!showFilter)}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${filter !== 'all' ? 'bg-primary text-white' : 'bg-muted/60 hover:bg-muted'}`}>
-              <Filter className="h-4 w-4" />
-            </button>
+            </div>
           </div>
         </div>
+      </div>
 
+      <div className="mx-auto w-full max-w-[1240px] px-5 pt-6 md:px-8">
         {/* Search */}
-        <div className="flex items-center gap-2.5 bg-muted/50 border border-border/40 rounded-xl px-3.5 h-10">
-          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <div className="flex min-h-11 items-center gap-2.5 rounded-field bg-surface px-3.5 shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
+          <Search className="h-3.5 w-3.5 text-ink-secondary shrink-0" />
           <input value={search} onChange={e => setSearch(e.target.value)}
+            aria-label="Search notifications"
             placeholder="Search notifications…"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60" />
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-secondary/60" />
           {search && (
             <button onClick={() => setSearch('')} className="shrink-0">
-              <X className="h-3.5 w-3.5 text-muted-foreground" />
+              <X className="h-3.5 w-3.5 text-ink-secondary" />
             </button>
           )}
         </div>
@@ -152,8 +172,8 @@ export default function NotificationCenter() {
           <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-1 scrollbar-none">
             {['all', 'booking_update', 'payment', 'chat', 'promo', 'system', 'reminder'].map(f => (
               <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all shrink-0 ${
-                  filter === f ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                className={`px-3 py-1.5 rounded-full text-[10px] font-semibold whitespace-nowrap transition-all shrink-0 ${
+                  filter === f ? 'bg-brand text-white' : 'bg-raised text-ink-secondary hover:bg-raised/80'
                 }`}>
                 {f === 'all' ? 'All' : TYPE_META[f]?.label || f}
               </button>
@@ -167,25 +187,25 @@ export default function NotificationCenter() {
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-3.5 bg-surface rounded-2xl border border-border/60 p-4 animate-pulse">
-                <div className="w-10 h-10 bg-muted rounded-xl shrink-0" />
+              <div key={i} className="flex gap-3.5 bg-surface rounded-card p-4 animate-pulse shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
+                <div className="w-10 h-10 bg-raised rounded-xl shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3.5 bg-muted rounded-full w-2/3" />
-                  <div className="h-3 bg-muted rounded-full w-full" />
-                  <div className="h-3 bg-muted rounded-full w-1/2" />
+                  <div className="h-3.5 bg-raised rounded-full w-2/3" />
+                  <div className="h-3 bg-raised rounded-full w-full" />
+                  <div className="h-3 bg-raised rounded-full w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-20">
-            <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-5">
-              <Bell className="h-7 w-7 text-muted-foreground" />
+            <div className="w-16 h-16 bg-raised rounded-2xl flex items-center justify-center mb-5">
+              <Bell className="h-7 w-7 text-ink-secondary" />
             </div>
-            <p className="font-bold text-base mb-1.5">
+            <p className="font-semibold text-base mb-1.5">
               {search || filter !== 'all' ? 'No matching notifications' : 'You\'re all caught up!'}
             </p>
-            <p className="text-sm text-muted-foreground max-w-xs">
+            <p className="text-sm text-ink-secondary max-w-xs">
               {search || filter !== 'all' ? 'Try adjusting your search or filter' : 'New notifications will appear here'}
             </p>
           </div>
@@ -193,8 +213,8 @@ export default function NotificationCenter() {
           <div className="space-y-4">
             {Object.entries(groups).map(([date, items]) => (
               <div key={date}>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 mb-2">{date}</p>
-                <div className="bg-surface rounded-2xl border border-border/60 shadow-xs overflow-hidden">
+                <p className="text-[10px] font-semibold text-ink-secondary uppercase tracking-widest px-1 mb-2">{date}</p>
+                <div className="bg-surface rounded-card overflow-hidden shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
                   {items.map(n => <NotifItem key={n.id} n={n} onRead={handleRead} onDelete={handleDelete} />)}
                 </div>
               </div>
@@ -203,7 +223,7 @@ export default function NotificationCenter() {
         )}
 
         {notifications.length > 0 && !loading && (
-          <p className="text-center text-[10px] text-muted-foreground mt-5">
+          <p className="text-center text-[10px] text-ink-secondary mt-5">
             {notifications.length} total · {unreadCount} unread · {notifications.filter(n => n.is_read).length} read
           </p>
         )}

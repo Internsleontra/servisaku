@@ -12,15 +12,15 @@ export default function BookingCard({ booking }) {
     <motion.div whileHover={variants.pressable.whileHover} whileTap={variants.pressable.whileTap}>
       <Link to={`/booking/${booking.id}`}
         className="flex items-center gap-3 bg-surface rounded-xl p-4 shadow-e1 hover:shadow-e2 transition-all duration-200 group">
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-raised text-ink-secondary">
         <Icon className="h-5 w-5" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <p className="font-semibold text-sm text-foreground">{booking.service_type}</p>
+          <p className="font-semibold text-sm text-ink">{booking.service_type}</p>
           <StatusBadge status={booking.status} />
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11px] text-ink-secondary">
           <span className="flex items-center gap-1">
             <CalendarDays className="h-3 w-3" />{moment(booking.date).format('D MMM')}
           </span>
@@ -34,7 +34,7 @@ export default function BookingCard({ booking }) {
           )}
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-brand transition-colors shrink-0" />
+      <ChevronRight className="h-4 w-4 text-ink-secondary group-hover:text-brand transition-colors shrink-0" />
     </Link>
     </motion.div>
   );

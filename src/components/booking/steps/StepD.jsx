@@ -1,4 +1,5 @@
 import { Field, TextField } from '../fields';
+import { MapPin } from 'lucide-react';
 
 // Step D — Address & Contact. Saved-address shortcut + manual entry. A real
 // map picker (react-leaflet) can replace the pin button later.
@@ -13,7 +14,7 @@ export default function StepD({ address, setAddress, savedCity }) {
           onClick={() => set('city')(savedCity)}
           className="self-start rounded-xl border border-hairline bg-raised px-4 py-2 text-sm text-ink hover:bg-surface"
         >
-          📍 Use my saved city ({savedCity})
+          <MapPin className="inline size-4 mr-1" /> Use my saved city ({savedCity})
         </button>
       )}
 

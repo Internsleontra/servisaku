@@ -1,6 +1,7 @@
 import { cn, formatMYR } from '@/lib/utils';
 import { PAYMENT_METHODS } from '@/lib/bookingEngine';
 import { Field } from '../fields';
+import { paymentIconFor } from '@/lib/paymentIcons';
 
 // Step F — Review & Pay. Itemised breakdown from the authoritative quote + payment.
 export default function StepF({ service, quote, quoteError, payment, setPayment }) {
@@ -24,8 +25,8 @@ export default function StepF({ service, quote, quoteError, payment, setPayment 
               </div>
             ))}
             <div className="mt-2 flex items-center justify-between border-t border-hairline pt-3">
-              <span className="font-bold text-ink">Total</span>
-              <span className="text-lg font-bold tabular-nums text-brand">
+              <span className="font-semibold text-ink">Total</span>
+              <span className="text-lg font-semibold tabular-nums text-brand">
                 {formatMYR(quote.total, { decimals: !Number.isInteger(quote.total) })}
               </span>
             </div>
@@ -49,11 +50,11 @@ export default function StepF({ service, quote, quoteError, payment, setPayment 
                 onClick={() => setPayment({ method: m.id })}
                 aria-pressed={on}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition',
-                  on ? 'border-brand bg-brand-tint ring-1 ring-brand' : 'border-hairline bg-surface hover:bg-raised',
+                  'flex items-center gap-3 rounded-xl px-4 py-3 text-left transition',
+                  on ? 'bg-brand-tint shadow-[inset_0_0_0_1.5px_rgb(var(--brand))]' : 'bg-surface hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]',
                 )}
               >
-                <span className="text-xl">{m.icon}</span>
+                {(() => { const I = paymentIconFor(m.id); return <I className="size-5 shrink-0 text-ink-secondary" />; })()}
                 <span>
                   <span className="block text-sm font-medium text-ink">{m.label}</span>
                   <span className="block text-xs text-ink-secondary">{m.sub}</span>

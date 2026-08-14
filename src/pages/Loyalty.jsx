@@ -33,14 +33,14 @@ export default function Loyalty() {
     <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-bold">Loyalty & rewards</h1>
+        <h1 className="text-xl font-semibold">Loyalty & rewards</h1>
       </div>
       {!l ? <div className="px-5"><div className="h-32 bg-surface rounded-3xl animate-pulse" /></div> : (
         <div className="px-5 space-y-4 pb-10">
-          <div className="rounded-3xl p-6 border border-hairline/10" style={{ background: TIER[l.tier].bg }}>
+          <div className="rounded-3xl p-6 shadow-[inset_0_0_0_1px_rgb(var(--hairline))]" style={{ background: TIER[l.tier].bg }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2" style={{ color: TIER[l.tier].fg }}><Medal className="h-5 w-5" /><span className="text-lg font-extrabold">{l.tier}</span></div>
-              <span className="text-lg font-extrabold text-ink">{l.points.toLocaleString()} pts</span>
+              <div className="flex items-center gap-2" style={{ color: TIER[l.tier].fg }}><Medal className="h-5 w-5" /><span className="text-lg font-semibold">{l.tier}</span></div>
+              <span className="text-lg font-semibold text-ink">{l.points.toLocaleString()} pts</span>
             </div>
             {l.nextTier && (
               <div className="mt-3">
@@ -50,34 +50,34 @@ export default function Loyalty() {
             )}
           </div>
 
-          <div className="bg-surface border border-hairline/10 rounded-2xl p-4">
-            <p className="text-[11px] font-bold text-ink-tertiary mb-3">TIER LADDER</p>
+          <div className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl p-4">
+            <p className="text-[11px] font-semibold text-ink-tertiary mb-3">TIER LADDER</p>
             <div className="flex justify-between">
               {TIER_ORDER.map(t => {
                 const reached = TIER_ORDER.indexOf(t) <= TIER_ORDER.indexOf(l.tier);
                 return (
                   <div key={t} className="flex flex-col items-center gap-1" style={{ opacity: reached ? 1 : 0.4 }}>
                     <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: TIER[t].bg }}><Medal className="h-4 w-4" style={{ color: TIER[t].fg }} /></div>
-                    <span className="text-[9px] font-bold text-ink-secondary">{t}</span>
+                    <span className="text-[9px] font-semibold text-ink-secondary">{t}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="bg-surface border border-hairline/10 rounded-2xl divide-y divide-hairline/10">
-            <p className="text-[11px] font-bold text-ink-tertiary px-4 pt-3">REDEEM POINTS</p>
+          <div className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl divide-y divide-hairline/10">
+            <p className="text-[11px] font-semibold text-ink-tertiary px-4 pt-3">REDEEM POINTS</p>
             {l.rewards.map(r => (
               <div key={r.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="flex-1"><p className="text-sm font-semibold">{r.title}</p><p className="text-[11px] text-ink-tertiary">{r.desc}</p></div>
                 <button disabled={l.points < r.points} onClick={() => toast.success(`Redeemed: ${r.title}`)}
-                  className={`text-xs font-bold rounded-lg px-3 py-2 ${l.points >= r.points ? 'bg-brand text-white' : 'bg-raised text-ink-tertiary'}`}>{r.points} pts</button>
+                  className={`text-xs font-semibold rounded-lg px-3 py-2 ${l.points >= r.points ? 'bg-brand text-white' : 'bg-raised text-ink-tertiary'}`}>{r.points} pts</button>
               </div>
             ))}
           </div>
 
-          <div className="bg-surface border border-hairline/10 rounded-2xl p-4">
-            <p className="text-[11px] font-bold text-ink-tertiary mb-3">ACHIEVEMENTS</p>
+          <div className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl p-4">
+            <p className="text-[11px] font-semibold text-ink-tertiary mb-3">ACHIEVEMENTS</p>
             <div className="grid grid-cols-3 gap-3">
               {l.achievements.map(a => (
                 <div key={a.id} className="flex flex-col items-center gap-1" style={{ opacity: a.unlocked ? 1 : 0.35 }}>

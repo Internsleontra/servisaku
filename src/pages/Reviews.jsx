@@ -14,7 +14,7 @@ const MOCK = {
     { bookingId: 'SA-A0C3F1', service: 'Fan Installation', partner: 'Ahmad R.', date: '25 Jun 2026' },
   ],
 };
-const Stars = ({ n, size = 14 }) => <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <Star key={i} className={`h-${size === 14 ? '3.5' : '4'} w-${size === 14 ? '3.5' : '4'} ${i <= n ? 'text-amber-500 fill-amber-500' : 'text-hairline'}`} />)}</div>;
+const Stars = ({ n, size = 14 }) => <div className="flex gap-0.5">{[1, 2, 3, 4, 5].map(i => <Star key={i} className={`h-${size === 14 ? '3.5' : '4'} w-${size === 14 ? '3.5' : '4'} ${i <= n ? 'text-star fill-star' : 'text-hairline'}`} />)}</div>;
 
 export default function Reviews() {
   const navigate = useNavigate();
@@ -28,12 +28,12 @@ export default function Reviews() {
     <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-bold">Reviews</h1>
+        <h1 className="text-xl font-semibold">Reviews</h1>
       </div>
       {!data ? <div className="px-5 space-y-3">{[0, 1, 2].map(i => <div key={i} className="h-24 bg-surface rounded-2xl animate-pulse" />)}</div> : (
         <div className="px-5 space-y-4 pb-10">
-          <div className="bg-surface border border-hairline/10 rounded-2xl p-5 flex flex-col items-center gap-1">
-            <p className="text-3xl font-extrabold">{data.averageGiven.toFixed(1)}</p>
+          <div className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl p-5 flex flex-col items-center gap-1">
+            <p className="text-3xl font-semibold">{data.averageGiven.toFixed(1)}</p>
             <Stars n={Math.round(data.averageGiven)} size={16} />
             <p className="text-xs text-ink-tertiary">Your average rating given</p>
           </div>
@@ -43,7 +43,7 @@ export default function Reviews() {
             ))}
           </div>
           {tab === 'given' ? (data.given.length ? data.given.map(g => (
-            <div key={g.id} className="bg-surface border border-hairline/10 rounded-2xl p-4 space-y-2">
+            <div key={g.id} className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl p-4 space-y-2">
               <div className="flex justify-between items-start">
                 <div><p className="text-sm font-semibold">{g.service}</p><p className="text-[11px] text-ink-tertiary">{g.partner} · {g.date}</p></div>
                 {g.anonymous && <span className="text-[9px] bg-raised text-ink-secondary px-2 py-0.5 rounded-full font-semibold">Anonymous</span>}
@@ -57,7 +57,7 @@ export default function Reviews() {
             </div>
           )) : <div className="text-center py-12 text-ink-secondary text-sm">No reviews yet</div>) : (
             data.pending.length ? data.pending.map(p => (
-              <div key={p.bookingId} className="bg-surface border border-hairline/10 rounded-2xl p-4 space-y-2.5">
+              <div key={p.bookingId} className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl p-4 space-y-2.5">
                 <div><p className="text-sm font-semibold">{p.service}</p><p className="text-[11px] text-ink-tertiary">{p.partner} · {p.date} · {p.bookingId}</p></div>
                 <button onClick={() => navigate(`/review/${p.bookingId}`)} className="w-full h-10 rounded-lg bg-brand text-white text-sm font-semibold">Write a review</button>
               </div>

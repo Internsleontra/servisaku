@@ -339,6 +339,49 @@ export const apiClient = {
   support: {
     list: () => get('/support'),
     create: (payload) => post('/support', payload),
+    get: (id) => get(`/support/${id}`),
+    reply: (id, message) => post(`/support/${id}/messages`, { message }),
+    resolve: (id) => post(`/support/${id}/resolve`, {}),
+    reopen: (id, reason) => post(`/support/${id}/reopen`, { reason }),
+    csat: (id, rating, comment) => post(`/support/${id}/csat`, { rating, comment }),
+    requestCallback: (payload) => post('/support/callbacks', payload),
+  },
+
+  // Refunds. The SERVER decides the amount — `preview` is what the customer is
+  // shown before they commit, and the create call recomputes it independently.
+  // A client-supplied figure is ignored by design (see server/routes/refunds.js).
+  refunds: {
+    list: () => get('/refunds'),
+    get: (id) => get(`/refunds/${id}`),
+    preview: (bookingId, reason) => get(`/refunds/policy?booking_id=${encodeURIComponent(bookingId)}${reason ? `&reason=${encodeURIComponent(reason)}` : ''}`),
+    request: (payload) => post('/refunds', payload),
+    cancel: (id) => post(`/refunds/${id}/cancel`, {}),
+  },
+
+  // Disputes raised against a booking ("Flag Job").
+  disputes: {
+    list: () => get('/disputes'),
+    get: (id) => get(`/disputes/${id}`),
+    create: (payload) => post('/disputes', payload),
+    addEvidence: (id, evidence) => post(`/disputes/${id}/evidence`, evidence),
+  },
+
+  // Property damage claims.
+  damageClaims: {
+    list: () => get('/damage-claims'),
+    get: (id) => get(`/damage-claims/${id}`),
+    create: (payload) => post('/damage-claims', payload),
+    addEvidence: (id, evidence) => post(`/damage-claims/${id}/evidence`, evidence),
+    appeal: (id, reason) => post(`/damage-claims/${id}/appeal`, { reason }),
+  },
+
+  // Versioned legal documents and the evidentiary acceptance log.
+  legal: {
+    documents: () => get('/legal/documents'),
+    document: (slug) => get(`/legal/documents/${slug}`),
+    pending: () => get('/legal/pending'),
+    accept: (payload) => post('/legal/accept', payload),
+    acceptMany: (payload) => post('/legal/accept-many', payload),
   },
 
   // Partner inventory.

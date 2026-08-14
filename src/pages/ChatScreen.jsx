@@ -1,60 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Camera, Info, Phone } from 'lucide-react';
+import {
+  ArrowLeft, Send, Camera, Phone, MessageSquare, ShieldCheck, MapPin,
+  CalendarCheck, LoaderCircle,
+} from 'lucide-react';
+import moment from 'moment';
 import { servisaku } from '@/api/servisakuClient';
 import { useChat } from '@/hooks/useChat';
 import { useRealtimeBooking } from '@/hooks/useRealtimeBooking';
-import moment from 'moment';
+import { ChatBubble, RING } from '@/components/ds';
 
-function MessageBubble({ msg, myEmail }) {
-  const isMe = msg.sender_email === myEmail;
-  const isSystem = msg.message_type === 'system';
-
-  if (isSystem) return (
-    <div className="flex justify-center my-2">
-      <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">{msg.message}</span>
-    </div>
-  );
-
-  return (
-    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`}>
-      {!isMe && (
-        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mr-2 shrink-0 self-end mb-0.5">
-          <span className="text-[10px] font-bold text-primary">{msg.sender_name?.charAt(0) || '?'}</span>
-        </div>
-      )}
-      <div className={`max-w-[72%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
-        {!isMe && (
-          <span className="text-[10px] text-muted-foreground mb-0.5 ml-1">{msg.sender_name}</span>
-        )}
-        {msg.file_url && msg.message_type === 'image' ? (
-          <div className={`rounded-2xl overflow-hidden ${isMe ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
-            <img src={msg.file_url} alt="Photo" className="max-w-full max-h-48 object-cover" />
-          </div>
-        ) : (
-          <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-            isMe
-              ? 'bg-primary text-white rounded-br-sm'
-              : 'bg-surface border border-border text-foreground rounded-bl-sm shadow-sm'
-          } ${msg._optimistic ? 'opacity-70' : ''}`}>
-            {msg.message}
-          </div>
-        )}
-        <div className="flex items-center gap-1 mt-0.5 px-1">
-          <span className="text-[9px] text-muted-foreground">
-            {moment(msg.created_date).format('h:mm A')}
-          </span>
-          {isMe && (
-            <span className="text-[9px] text-muted-foreground">
-              {msg.is_read ? '✓✓' : '✓'}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Chat.
+ *
+ * The design system's web kit has no chat page, so this adapts the mobile app
+ * pattern (ChatBubble thread) onto the web chrome the rest of the site uses:
+ * gradient page header, 1240px container, and a booking-context aside on
+ * desktop. Replaces a `lg:max-w-3xl` centre column with vertical borders.
+ */
 export default function ChatScreen() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
@@ -65,13 +28,8 @@ export default function ChatScreen() {
   const bottomRef = useRef();
   const fileRef = useRef();
 
-  useEffect(() => {
-    servisaku.auth.me().then(setUser);
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { servisaku.auth.me().then(setUser); }, []);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const handleSend = async () => {
     if (!text.trim() || !user) return;
@@ -90,98 +48,177 @@ export default function ChatScreen() {
   };
 
   const otherName = user?.role === 'partner' ? booking?.consumer_name : booking?.partner_name;
+  const initial = otherName?.charAt(0)?.toUpperCase() || '?';
 
   return (
-    <div className="flex flex-col h-screen bg-background font-inter lg:max-w-3xl lg:mx-auto lg:border-x lg:border-border">
+    <div className="flex min-h-screen flex-col bg-bg">
       {/* Header */}
-      <div className="bg-surface border-b border-border px-4 pt-12 lg:pt-4 pb-3 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4" />
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-6 md:px-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-[15px]" /> Back
           </button>
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <span className="text-sm font-bold text-primary">{otherName?.charAt(0) || '?'}</span>
+
+          <div className="flex items-center gap-3.5">
+            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white/15 font-semibold ring-1 ring-inset ring-white/20">
+              {initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate font-display text-h2 font-semibold text-white">
+                {otherName || 'Chat'}
+              </h1>
+              <p className="truncate text-caption font-normal text-white/70">
+                {booking?.service_type || 'Booking conversation'}
+              </p>
+            </div>
+            <a
+              href={booking?.partner_phone ? `tel:${booking.partner_phone}` : undefined}
+              aria-label="Call"
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-inset ring-white/20 transition hover:bg-white/20"
+            >
+              <Phone className="size-4" />
+            </a>
           </div>
-          <div className="flex-1">
-            <p className="font-bold text-sm">{otherName || 'Chat'}</p>
-            <p className="text-[10px] text-muted-foreground">{booking?.service_type}</p>
-          </div>
-          <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-            <Phone className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <button onClick={() => navigate(`/booking/${bookingId}`)}
-            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-            <Info className="h-4 w-4 text-muted-foreground" />
-          </button>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-0">
-        {loading ? (
-          <div className="flex justify-center pt-8">
-            <div className="w-5 h-5 border-2 border-muted border-t-primary rounded-full animate-spin" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="text-center pt-12">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">💬</span>
-            </div>
-            <p className="text-sm font-medium">No messages yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Send a message to get started</p>
-          </div>
-        ) : (
-          <>
-            {/* Date grouping */}
-            {messages.map((msg, i) => {
-              const showDate = i === 0 || moment(msg.created_date).date() !== moment(messages[i-1].created_date).date();
-              return (
-                <div key={msg.id}>
-                  {showDate && (
-                    <div className="flex justify-center my-3">
-                      <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">
+      {/* Thread + booking context */}
+      <div className="mx-auto grid w-full max-w-[1240px] flex-1 items-start gap-6 px-5 py-6 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
+        <div className={`flex min-h-[60vh] flex-col rounded-card bg-surface ${RING}`}>
+          {/* Messages */}
+          <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-4 md:p-5">
+            {loading ? (
+              <div className="flex flex-1 items-center justify-center gap-2 text-ink-secondary" role="status">
+                <LoaderCircle className="size-4 animate-spin" />
+                <span className="text-caption">Loading messages…</span>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center text-center">
+                <span className="grid size-16 place-items-center rounded-full bg-grad-brand-soft text-brand-ink">
+                  <MessageSquare className="size-7" />
+                </span>
+                <p className="mt-3 font-display text-h4 font-semibold text-ink">No messages yet</p>
+                <p className="mt-1 text-caption font-normal text-ink-secondary">
+                  Send a message to get started.
+                </p>
+              </div>
+            ) : (
+              messages.map((msg, i) => {
+                const prev = messages[i - 1];
+                const showDate = i === 0
+                  || moment(msg.created_date).date() !== moment(prev.created_date).date();
+                const isMe = msg.sender_email === user?.email;
+                const isSystem = msg.message_type === 'system';
+
+                return (
+                  <div key={msg.id} className="contents">
+                    {showDate && (
+                      <ChatBubble from="system">
                         {moment(msg.created_date).calendar(null, {
                           sameDay: '[Today]', lastDay: '[Yesterday]',
                           lastWeek: 'dddd', sameElse: 'D MMM YYYY',
                         })}
-                      </span>
-                    </div>
-                  )}
-                  <MessageBubble msg={msg} myEmail={user?.email} />
-                </div>
-              );
-            })}
-          </>
-        )}
-        <div ref={bottomRef} />
-      </div>
+                      </ChatBubble>
+                    )}
 
-      {/* Input */}
-      <div className="bg-surface border-t border-border px-4 py-3 pb-safe">
-        <div className="flex items-end gap-2">
-          <button onClick={() => fileRef.current?.click()}
-            className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 hover:bg-primary/10 transition-colors mb-0.5">
-            <Camera className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-          <div className="flex-1 bg-muted rounded-2xl flex items-center min-h-[44px]">
+                    {isSystem ? (
+                      <ChatBubble from="system">{msg.message}</ChatBubble>
+                    ) : msg.file_url && msg.message_type === 'image' ? (
+                      <div className={isMe ? 'self-end' : 'self-start'}>
+                        <img
+                          src={msg.file_url}
+                          alt={`Photo from ${msg.sender_name || 'partner'}`}
+                          className={`max-h-56 max-w-full rounded-[14px] object-cover ${RING}`}
+                        />
+                      </div>
+                    ) : (
+                      <ChatBubble
+                        from={isMe ? 'me' : 'them'}
+                        time={moment(msg.created_date).format('h:mm A')}
+                        status={isMe ? (msg.is_read ? 'read' : 'sent') : undefined}
+                        pending={msg._optimistic}
+                      >
+                        {!isMe && (
+                          <span className="sa-caps mb-0.5 block text-ink-tertiary">
+                            {msg.sender_name}
+                          </span>
+                        )}
+                        {msg.message}
+                      </ChatBubble>
+                    )}
+                  </div>
+                );
+              })
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Composer */}
+          <div className="flex items-end gap-2 p-4 shadow-[inset_0_1px_0_rgb(var(--hairline))] md:p-5">
+            <button
+              onClick={() => fileRef.current?.click()}
+              aria-label="Attach a photo"
+              className={`grid size-11 shrink-0 place-items-center rounded-field bg-raised text-ink-secondary transition hover:bg-brand-tint hover:text-brand ${RING}`}
+            >
+              <Camera className="size-4" />
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" aria-label="Attach a photo" className="sr-only" onChange={handlePhoto} />
+
             <textarea
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
+              placeholder="Type a message…"
+              aria-label="Message"
               rows={1}
-              className="flex-1 bg-transparent px-4 py-3 text-sm outline-none resize-none max-h-24"
+              className={`max-h-24 min-h-11 flex-1 resize-none rounded-field bg-raised px-4 py-3 text-caption text-ink outline-none placeholder:text-ink-tertiary focus:shadow-[inset_0_0_0_1.5px_rgb(var(--brand))] ${RING}`}
             />
+
+            <button
+              onClick={handleSend}
+              disabled={!text.trim() || sending}
+              aria-label="Send message"
+              className="grid size-11 shrink-0 place-items-center rounded-field bg-brand text-white shadow-brand transition hover:brightness-[0.94] active:scale-[0.97] disabled:opacity-40"
+            >
+              <Send className="size-4" />
+            </button>
           </div>
-          <button
-            onClick={handleSend}
-            disabled={!text.trim() || sending}
-            className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0 mb-0.5 disabled:opacity-50 transition-all hover:scale-105"
-          >
-            <Send className="h-4 w-4 text-white" />
-          </button>
         </div>
+
+        {/* Booking context — desktop aside */}
+        {booking && (
+          <aside className={`hidden flex-col gap-3 rounded-card bg-surface p-5 lg:sticky lg:top-[100px] lg:flex ${RING}`}>
+            <h2 className="font-display text-h4 font-semibold text-ink">Booking</h2>
+            <div className="flex flex-col gap-2 text-caption font-normal text-ink-secondary">
+              <span className="inline-flex items-center gap-2">
+                <CalendarCheck className="size-4 shrink-0 text-brand" />
+                <span className="sa-num">
+                  {booking.date
+                    ? new Date(booking.date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })
+                    : '—'}
+                </span>
+                {booking.time_slot && <span className="sa-num">· {booking.time_slot}</span>}
+              </span>
+              {booking.city && (
+                <span className="inline-flex items-center gap-2">
+                  <MapPin className="size-4 shrink-0 text-brand" /> {booking.city}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="size-4 shrink-0 text-brand" /> Escrow protected
+              </span>
+            </div>
+            <button
+              onClick={() => navigate(`/booking/${bookingId}`)}
+              className={`mt-1 h-11 rounded-field bg-surface text-caption font-semibold text-brand transition hover:bg-brand-tint ${RING}`}
+            >
+              View booking details
+            </button>
+          </aside>
+        )}
       </div>
     </div>
   );

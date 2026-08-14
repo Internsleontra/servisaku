@@ -85,7 +85,7 @@ export function ChatbotWidget({
       >
         <MessageCircle className="h-5 w-5" />
         {chat.ticket && (
-          <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-background bg-amber-500" />
+          <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-background bg-warning" />
         )}
       </button>
     </>

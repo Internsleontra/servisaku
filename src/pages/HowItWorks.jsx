@@ -9,29 +9,29 @@ const stepsData = {
       icon: Search,
       title: "1. Find Your Service",
       desc: "Browse our wide range of services or search for exactly what you need. From cleaning to plumbing, we have experts for everything.",
-      color: "text-blue-500",
-      bg: "bg-blue-100",
+      color: "text-info",
+      bg: "bg-info-tint",
     },
     {
       icon: CalendarCheck,
       title: "2. Book & Pay Securely",
       desc: "Choose a convenient time, provide details, and pay securely online. Your money is held safely in escrow until the job is done.",
-      color: "text-orange-500",
-      bg: "bg-orange-100",
+      color: "text-brand",
+      bg: "bg-brand-tint",
     },
     {
       icon: Home,
       title: "3. Service Delivered",
       desc: "A verified professional arrives at your doorstep to complete the job to our high-quality standards.",
-      color: "text-green-500",
-      bg: "bg-green-100",
+      color: "text-success",
+      bg: "bg-success-tint",
     },
     {
       icon: Star,
       title: "4. Review & Relax",
       desc: "Rate your experience and leave a review. We ensure 100% satisfaction on every booking.",
-      color: "text-amber-500",
-      bg: "bg-amber-100",
+      color: "text-star",
+      bg: "bg-warning-tint",
     }
   ],
   ms: [
@@ -39,29 +39,29 @@ const stepsData = {
       icon: Search,
       title: "1. Cari Perkhidmatan Anda",
       desc: "Layari pelbagai perkhidmatan kami atau cari apa yang anda perlukan. Dari pembersihan hingga paip, kami ada pakar untuk semuanya.",
-      color: "text-blue-500",
-      bg: "bg-blue-100",
+      color: "text-info",
+      bg: "bg-info-tint",
     },
     {
       icon: CalendarCheck,
       title: "2. Tempah & Bayar Dengan Selamat",
       desc: "Pilih masa yang sesuai, berikan butiran, dan bayar secara dalam talian. Wang anda disimpan dengan selamat sehingga kerja selesai.",
-      color: "text-orange-500",
-      bg: "bg-orange-100",
+      color: "text-brand",
+      bg: "bg-brand-tint",
     },
     {
       icon: Home,
       title: "3. Perkhidmatan Dihantar",
       desc: "Profesional yang disahkan tiba di pintu rumah anda untuk menyiapkan kerja mengikut standard berkualiti tinggi kami.",
-      color: "text-green-500",
-      bg: "bg-green-100",
+      color: "text-success",
+      bg: "bg-success-tint",
     },
     {
       icon: Star,
       title: "4. Ulas & Berehat",
       desc: "Nilaikan pengalaman anda dan tinggalkan ulasan. Kami memastikan kepuasan 100% pada setiap tempahan.",
-      color: "text-amber-500",
-      bg: "bg-amber-100",
+      color: "text-star",
+      bg: "bg-warning-tint",
     }
   ],
 };
@@ -106,7 +106,7 @@ export default function HowItWorks() {
       <div className="max-w-5xl mx-auto px-6">
         
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-semibold text-ink tracking-tight mb-4">
             {hero.title} <span className="text-brand">ServisAku</span> {hero.titleEnd}
           </h1>
           <p className="text-lg text-ink-secondary max-w-2xl mx-auto font-medium">
@@ -120,7 +120,7 @@ export default function HowItWorks() {
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${step.bg} ${step.color} mb-2`}>
                 <step.icon className="w-8 h-8" />
               </div>
-              <h3 className="text-2xl font-bold text-ink">{step.title}</h3>
+              <h3 className="text-2xl font-semibold text-ink">{step.title}</h3>
               <p className="text-ink-secondary leading-relaxed font-medium text-base">
                 {step.desc}
               </p>
@@ -130,7 +130,7 @@ export default function HowItWorks() {
 
         <div className="mt-20 bg-brand text-white rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between shadow-e2 relative overflow-hidden">
           <div className="relative z-10 max-w-lg mb-8 md:mb-0">
-            <h2 className="text-3xl font-extrabold mb-4">{cta.heading}</h2>
+            <h2 className="text-3xl font-semibold mb-4">{cta.heading}</h2>
             <p className="text-brand-tint font-medium mb-6">{cta.subtitle}</p>
             <ul className="space-y-3 mb-8">
               {cta.badges.map((item, i) => (
@@ -140,7 +140,7 @@ export default function HowItWorks() {
                 </li>
               ))}
             </ul>
-            <a href="/explore" className="inline-block bg-surface text-brand px-8 py-3.5 rounded-xl font-bold hover:bg-brand-tint transition-colors shadow-sm">
+            <a href="/explore" className="inline-block bg-surface text-brand px-8 py-3.5 rounded-xl font-semibold hover:bg-brand-tint transition-colors shadow-sm">
               {cta.cta}
             </a>
           </div>

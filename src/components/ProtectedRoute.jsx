@@ -12,8 +12,8 @@ export default function ProtectedRoute({ children, roles }) {
 
   if (user === undefined) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center bg-bg">
+        <div className="size-8 animate-spin rounded-full border-4 border-hairline border-t-brand" />
       </div>
     );
   }

@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, MessageSquare, Mail } from 'lucide-react';
+import { Bell, MessageSquare, Mail, Smartphone } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { toast } from 'sonner';
+import AccountShell from '@/components/account/AccountShell';
+import { Button, Chip, RING, RING_BRAND } from '@/components/ds';
+
+/* WhatsApp had no Lucide glyph and was rendering a 💬 emoji — the design system
+   forbids emoji as icons, so it uses the phone glyph. */
+const CHANNEL_ICON = { push: Bell, sms: MessageSquare, email: Mail, whatsapp: Smartphone };
 
 const CATEGORIES = ['Bookings', 'Payments', 'Offers', 'Membership', 'Support', 'Promotions', 'App Updates', 'Security'];
 const CHANNELS = ['push', 'sms', 'email', 'whatsapp'];
@@ -19,9 +25,11 @@ export default function NotificationSettings() {
   const [prefs, setPrefs] = useState(makeDefault());
   const [mute, setMute] = useState('off');
   const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     servisaku.auth.me().then(me => {
+      setUser(me);
       const cp = me.consumerProfile || {};
       if (cp.notifPrefs) setPrefs(p => ({ ...p, ...cp.notifPrefs }));
       if (cp.muteUntil) setMute(cp.muteUntil);
@@ -38,39 +46,48 @@ export default function NotificationSettings() {
   };
 
   return (
-    <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
-      <div className="flex items-center gap-3 px-5 pt-12 pb-3">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-bold">Notification settings</h1>
-      </div>
-      <div className="px-5 space-y-5 pb-10">
-        <div>
-          <p className="text-[11px] font-bold text-ink-tertiary mb-2">MUTE ALL FOR</p>
-          <div className="flex flex-wrap gap-2">
-            {MUTE.map(([k, l]) => <button key={k} onClick={() => setMute(k)} className={`text-xs font-semibold rounded-full px-3 py-2 border ${mute === k ? 'bg-brand text-white border-brand' : 'bg-surface text-ink-secondary border-hairline/20'}`}>{l}</button>)}
-          </div>
-        </div>
-        <div className="bg-surface border border-hairline/10 rounded-2xl divide-y divide-hairline/10">
-          {CATEGORIES.map(cat => (
-            <div key={cat} className="px-4 py-3 space-y-2">
-              <p className="text-sm font-semibold">{cat}</p>
-              <div className="grid grid-cols-4 gap-2">
-                {CHANNELS.map(ch => {
-                  const on = !!prefs[cat]?.[ch];
-                  return (
-                    <button key={ch} onClick={() => toggle(cat, ch)}
-                      className={`flex items-center justify-center gap-1 rounded-lg py-2 text-[10px] font-bold capitalize border ${on ? 'border-brand bg-brand-tint text-brand' : 'border-hairline/20 bg-surface text-ink-tertiary'}`}>
-                      {ch === 'push' ? <Bell className="h-3 w-3" /> : ch === 'sms' ? <MessageSquare className="h-3 w-3" /> : ch === 'email' ? <Mail className="h-3 w-3" /> : '💬'}
-                      {ch === 'whatsapp' ? 'WA' : ch}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+    <AccountShell user={user} title="Notification settings" subtitle="Choose what reaches you, and how">
+      {/* Mute */}
+      <div className={`flex flex-col gap-3 rounded-card bg-surface p-5 ${RING}`}>
+        <h2 className="sa-caps text-ink-tertiary">Mute all for</h2>
+        <div className="flex flex-wrap gap-2">
+          {MUTE.map(([k, l]) => (
+            <Chip key={k} selected={mute === k} onClick={() => setMute(k)}>{l}</Chip>
           ))}
         </div>
-        <button onClick={save} disabled={saving} className="w-full h-12 rounded-xl bg-brand text-white font-semibold">{saving ? 'Saving…' : 'Save settings'}</button>
       </div>
-    </div>
+
+      {/* Per-category channels */}
+      <div className={`overflow-hidden rounded-card bg-surface ${RING}`}>
+        {CATEGORIES.map((cat) => (
+          <div key={cat} className="space-y-2 px-5 py-4 shadow-[inset_0_-1px_0_rgb(var(--hairline))] last:shadow-none">
+            <p className="text-caption font-semibold text-ink">{cat}</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {CHANNELS.map((ch) => {
+                const on = !!prefs[cat]?.[ch];
+                const Icon = CHANNEL_ICON[ch];
+                return (
+                  <button
+                    key={ch}
+                    onClick={() => toggle(cat, ch)}
+                    aria-pressed={on}
+                    className={`flex min-h-11 items-center justify-center gap-1.5 rounded-field text-xs font-semibold capitalize transition ${
+                      on ? `bg-brand-tint text-brand-ink ${RING_BRAND}` : `bg-surface text-ink-tertiary hover:bg-raised ${RING}`
+                    }`}
+                  >
+                    <Icon className="size-3.5" />
+                    {ch === 'whatsapp' ? 'WhatsApp' : ch}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Button onClick={save} loading={saving} size="lg" block>
+        {saving ? 'Saving…' : 'Save settings'}
+      </Button>
+    </AccountShell>
   );
 }

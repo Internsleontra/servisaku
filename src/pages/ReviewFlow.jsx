@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Camera, X, ChevronRight, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Star, Camera, X, ChevronRight, CheckCircle2, ArrowLeft, PartyPopper } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { CONSUMER_REVIEW_TAGS, checkAndCreateTicket } from '@/lib/qualityEngine';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ds';
 import { toast } from 'sonner';
+import { Angry, Frown, Meh, Smile, Laugh } from 'lucide-react';
 
-const EMOJI_MAP = { 1: '😞', 2: '😕', 3: '😐', 4: '😊', 5: '🤩' };
+const FACE_MAP = { 1: Angry, 2: Frown, 3: Meh, 4: Smile, 5: Laugh };
 const LABEL_MAP = { 1: 'Very Poor', 2: 'Poor', 3: 'Okay', 4: 'Good', 5: 'Excellent' };
 
 function StarPicker({ value, onChange, size = 'lg' }) {
@@ -15,9 +16,11 @@ function StarPicker({ value, onChange, size = 'lg' }) {
   return (
     <div className="flex gap-2 justify-center">
       {[1,2,3,4,5].map(i => (
-        <button key={i} onClick={() => onChange(i)}
+        <button key={i} type="button" onClick={() => onChange(i)}
+          aria-label={`${i} star${i > 1 ? 's' : ''}`}
+          aria-pressed={i === value}
           onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(0)}>
-          <Star className={`${sz} transition-all ${i <= (hover || value) ? 'fill-amber-400 text-amber-400 scale-110' : 'text-ink-tertiary'}`} />
+          <Star className={`${sz} transition-all ${i <= (hover || value) ? 'fill-star text-star scale-110' : 'text-ink-tertiary'}`} />
         </button>
       ))}
     </div>
@@ -102,14 +105,14 @@ export default function ReviewFlow() {
 
   if (!booking) return (
     <div className="flex justify-center pt-32">
-      <div className="w-6 h-6 border-2 border-raised border-t-brand rounded-full animate-spin" />
+      <div className="w-6 h-6 shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-raised border-t-brand rounded-full animate-spin" />
     </div>
   );
 
   if (booking.rating) return (
     <div className="min-h-screen bg-bg font-inter flex flex-col items-center justify-center px-5">
-      <CheckCircle2 className="h-16 w-16 text-emerald-500 mb-4" />
-      <h2 className="text-xl font-bold mb-2">Already Reviewed</h2>
+      <CheckCircle2 className="h-16 w-16 text-success mb-4" />
+      <h2 className="text-xl font-semibold mb-2">Already Reviewed</h2>
       <p className="text-ink-secondary text-sm text-center mb-6">You've already submitted a review for this booking.</p>
       <Button onClick={() => navigate(`/booking/${bookingId}`)} className="rounded-xl px-8">Back to Booking</Button>
     </div>
@@ -117,14 +120,16 @@ export default function ReviewFlow() {
 
   if (step === 5) return (
     <div className="min-h-screen bg-bg font-inter flex flex-col items-center justify-center px-5 text-center">
-      <div className="text-6xl mb-4">🎉</div>
-      <h2 className="text-xl font-bold mb-2">Thank you!</h2>
+      <span className="mb-4 grid size-16 place-items-center rounded-full bg-grad-brand-soft text-brand-ink">
+        <PartyPopper className="size-8" />
+      </span>
+      <h2 className="text-xl font-semibold mb-2">Thank you</h2>
       <p className="text-ink-secondary text-sm mb-2">Your review helps improve our service quality.</p>
-      <div className="text-5xl my-4">{EMOJI_MAP[overallRating]}</div>
-      <p className="font-bold text-lg">{LABEL_MAP[overallRating]}</p>
+      {(() => { const F = FACE_MAP[overallRating]; return F ? <F className="mx-auto my-4 size-14 text-brand" /> : null; })()}
+      <p className="font-semibold text-lg">{LABEL_MAP[overallRating]}</p>
       <div className="flex gap-1 justify-center my-3">
         {[1,2,3,4,5].map(i => (
-          <Star key={i} className={`h-6 w-6 ${i <= overallRating ? 'fill-amber-400 text-amber-400' : 'text-ink-tertiary'}`} />
+          <Star key={i} className={`h-6 w-6 ${i <= overallRating ? 'fill-star text-star' : 'text-ink-tertiary'}`} />
         ))}
       </div>
       {selectedTags.length > 0 && (
@@ -142,44 +147,52 @@ export default function ReviewFlow() {
   );
 
   return (
-    <div className="min-h-screen bg-bg font-inter pb-32">
-      {/* Header */}
-      <div className="bg-surface border-b border-hairline/10 px-5 pt-12 pb-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button onClick={() => step > 1 ? setStep(s => s - 1) : navigate(-1)}
-            className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4 text-ink" />
+    <div className="bg-bg pb-16">
+      {/* Gradient page header with step progress. */}
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-12">
+          <button
+            onClick={() => (step > 1 ? setStep((v) => v - 1) : navigate(-1))}
+            className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="size-[15px]" /> Back
           </button>
-          <div className="flex-1">
-            <h1 className="font-bold text-base text-ink">Rate Your Experience</h1>
-            <p className="text-xs text-ink-secondary">{booking.service_type} • {booking.partner_name}</p>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-display-2 text-white">Rate your experience</h1>
+              <p className="mt-2 text-lead text-white/[0.78]">
+                {booking.service_type}{booking.partner_name ? ` · ${booking.partner_name}` : ''}
+              </p>
+            </div>
+            <span className="sa-num text-caption text-white/70">Step {step} of 4</span>
           </div>
-          <span className="text-xs text-ink-secondary">{step}/4</span>
-        </div>
-        {/* Progress */}
-        <div className="flex gap-1 mt-3">
-          {[1,2,3,4].map(i => (
-            <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= step ? 'bg-brand' : 'bg-raised'}`} />
-          ))}
+          <div className="mt-5 flex gap-1.5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-live' : 'bg-white/20'}`} />
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="px-5 pt-8 max-w-lg mx-auto text-ink">
+      {/* Single centred column — a rating wizard is one task, so it stays a
+          focused card rather than a two-column layout. */}
+      <div className="mx-auto -mt-8 w-full max-w-[720px] px-5 md:px-8">
+        <div className="rounded-card bg-surface p-5 shadow-e2 md:p-8">
 
         {/* Step 1: Overall Rating */}
         {step === 1 && (
           <div className="text-center">
             <div className="w-16 h-16 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-brand">{booking.partner_name?.charAt(0)}</span>
+              <span className="text-2xl font-semibold text-brand">{booking.partner_name?.charAt(0)}</span>
             </div>
-            <h2 className="text-xl font-bold mb-1">How was {booking.partner_name?.split(' ')[0]}?</h2>
+            <h2 className="text-xl font-semibold mb-1">How was {booking.partner_name?.split(' ')[0]}?</h2>
             <p className="text-sm text-ink-secondary mb-8">{booking.service_type} on {new Date(booking.date).toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
 
             <StarPicker value={overallRating} onChange={setOverallRating} size="lg" />
 
             {overallRating > 0 && (
               <div className="mt-4 animate-in fade-in duration-300">
-                <span className="text-4xl">{EMOJI_MAP[overallRating]}</span>
+                {(() => { const F = FACE_MAP[overallRating]; return F ? <F className="size-10 text-brand" /> : null; })()}
                 <p className="text-sm font-semibold mt-2">{LABEL_MAP[overallRating]}</p>
               </div>
             )}
@@ -189,7 +202,7 @@ export default function ReviewFlow() {
         {/* Step 2: Sub-Ratings */}
         {step === 2 && (
           <div>
-            <h2 className="text-xl font-bold mb-1 text-center">Rate the details</h2>
+            <h2 className="text-xl font-semibold mb-1 text-center">Rate the details</h2>
             <p className="text-sm text-ink-secondary text-center mb-6">Optional — but very helpful!</p>
             {[
               { label: 'Punctuality', value: punctuality, onChange: setPunctuality },
@@ -207,7 +220,7 @@ export default function ReviewFlow() {
         {/* Step 3: Tags + Photos */}
         {step === 3 && (
           <div>
-            <h2 className="text-xl font-bold mb-1 text-center">What stood out?</h2>
+            <h2 className="text-xl font-semibold mb-1 text-center">What stood out?</h2>
             <p className="text-sm text-ink-secondary text-center mb-6">Select all that apply</p>
             <div className="flex flex-wrap gap-2 justify-center mb-6">
               {CONSUMER_REVIEW_TAGS.map(tag => (
@@ -236,8 +249,8 @@ export default function ReviewFlow() {
                     </button>
                   </div>
                 ))}
-                <label className="w-16 h-16 rounded-xl border-2 border-dashed border-hairline/10 bg-surface flex flex-col items-center justify-center cursor-pointer">
-                  {uploading ? <div className="w-4 h-4 border-2 border-raised border-t-brand rounded-full animate-spin" />
+                <label className="w-16 h-16 rounded-xl shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-dashed border-hairline/10 bg-surface flex flex-col items-center justify-center cursor-pointer">
+                  {uploading ? <div className="w-4 h-4 shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-raised border-t-brand rounded-full animate-spin" />
                     : <Camera className="h-5 w-5 text-ink-secondary" />}
                   <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
                 </label>
@@ -249,7 +262,7 @@ export default function ReviewFlow() {
         {/* Step 4: Comment + Options */}
         {step === 4 && (
           <div>
-            <h2 className="text-xl font-bold mb-1 text-center">Anything to add?</h2>
+            <h2 className="text-xl font-semibold mb-1 text-center">Anything to add?</h2>
             <p className="text-sm text-ink-secondary text-center mb-6">Your written review helps others decide</p>
             <textarea
               value={comment}
@@ -266,7 +279,7 @@ export default function ReviewFlow() {
                 <p className="text-sm font-semibold text-left">Post anonymously</p>
                 <p className="text-xs text-ink-secondary">Your name won't be shown publicly</p>
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isAnon ? 'border-brand bg-brand' : 'border-hairline/10 bg-surface'}`}>
+              <div className={`w-5 h-5 rounded-full shadow-[inset_0_0_0_1px_rgb(var(--hairline))] flex items-center justify-center ${isAnon ? 'border-brand bg-brand' : 'border-hairline/10 bg-surface'}`}>
                 {isAnon && <div className="w-2 h-2 bg-surface rounded-full" />}
               </div>
             </button>
@@ -280,19 +293,20 @@ export default function ReviewFlow() {
           {step < 4 ? (
             <Button
               onClick={() => { if (step === 1 && !overallRating) { toast.error('Please select a rating'); return; } setStep(s => s + 1); }}
-              className="w-full h-12 rounded-2xl text-base font-bold shadow-e2 bg-brand text-ink-inverse hover:bg-brand/90">
+              block size="lg">
               Continue <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button onClick={() => navigate(`/booking/${bookingId}`)} variant="outline" className="flex-1 h-12 rounded-2xl border-hairline/10 text-ink">
+              <Button onClick={() => navigate(`/booking/${bookingId}`)} variant="outline" size="lg" className="flex-1">
                 Skip
               </Button>
-              <Button onClick={handleSubmit} disabled={submitting} className="flex-1 h-12 rounded-2xl text-base font-bold bg-brand text-ink-inverse shadow-e2 hover:bg-brand/90">
-                {submitting ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : 'Submit Review'}
+              <Button onClick={handleSubmit} loading={submitting} size="lg" className="flex-1">
+                Submit review
               </Button>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

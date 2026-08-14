@@ -17,11 +17,11 @@ export default function TierSelect({ question, value, onChange }) {
               'rounded-2xl border p-4 text-left transition active:scale-[0.98]',
               selected
                 ? 'border-brand bg-brand-tint ring-2 ring-brand'
-                : 'border-hairline bg-surface hover:bg-raised',
+                : 'bg-surface hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]',
             )}
           >
             <div className="font-semibold text-ink leading-tight">{o.label}</div>
-            <div className="mt-2 font-bold text-brand tabular-nums">{tierPriceLabel(o)}</div>
+            <div className="mt-2 font-semibold text-brand tabular-nums">{tierPriceLabel(o)}</div>
           </button>
         );
       })}

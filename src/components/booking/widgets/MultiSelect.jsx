@@ -20,14 +20,14 @@ export default function MultiSelect({ question, value, onChange }) {
             onClick={() => toggle(o.id)}
             aria-pressed={on}
             className={cn(
-              'flex items-center justify-between rounded-xl border px-4 py-3 text-left transition',
-              on ? 'border-brand bg-brand-tint ring-1 ring-brand' : 'border-hairline bg-surface hover:bg-raised',
+              'flex items-center justify-between rounded-xl px-4 py-3 text-left transition',
+              on ? 'bg-brand-tint shadow-[inset_0_0_0_1.5px_rgb(var(--brand))]' : 'bg-surface hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]',
             )}
           >
             <span className="flex items-center gap-3">
               <span
                 className={cn(
-                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2',
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md shadow-[inset_0_0_0_1px_rgb(var(--hairline))]',
                   on ? 'border-brand bg-brand text-brand-ink' : 'border-hairline',
                 )}
               >

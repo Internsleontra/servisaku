@@ -1,12 +1,15 @@
 // FixMate Quality Engine — scoring, badges, automated triggers
 import { servisaku } from '@/api/servisakuClient';
+import { Medal } from 'lucide-react';
 
 // ─── Badge Thresholds ──────────────────────────────────────────────────────
 export const BADGE_TIERS = {
-  gold:   { min: 4.7, label: 'Gold',   emoji: '🥇', color: 'text-amber-500',  bg: 'bg-amber-50  border-amber-200' },
-  silver: { min: 4.3, label: 'Silver', emoji: '🥈', color: 'text-slate-500',  bg: 'bg-raised  border-hairline' },
-  bronze: { min: 3.8, label: 'Bronze', emoji: '🥉', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
-  none:   { min: 0,   label: null,     emoji: '',   color: '',                bg: '' },
+  // Tier colours use the rating amber (--star) and the blue ramp. Bronze is
+  // deliberately NOT orange: orange means Instant Help / warning / emergency.
+  gold:   { min: 4.7, label: 'Gold',   icon: Medal, color: 'text-star',       bg: 'bg-star/10 border-star/30' },
+  silver: { min: 4.3, label: 'Silver', icon: Medal, color: 'text-ink-tertiary', bg: 'bg-raised border-hairline' },
+  bronze: { min: 3.8, label: 'Bronze', icon: Medal, color: 'text-brand-ink',  bg: 'bg-brand-tint border-brand/20' },
+  none:   { min: 0,   label: null,     icon: null,   color: '',                bg: '' },
 };
 
 export function getBadge(avgRating) {
@@ -64,7 +67,7 @@ export async function checkAndCreateTicket(review, existingTickets) {
     // Send warning notification
     await servisaku.entities.Notification.create({
       user_email: partner_email,
-      title: severity === 'critical' ? '⚠️ Urgent: Quality Review Required' : 'Quality Alert',
+      title: severity === 'critical' ? 'Urgent: quality review required' : 'Quality alert',
       body: `You received a ${rating}-star review. Our quality team will follow up.`,
       type: 'system', channel: 'in_app',
     });

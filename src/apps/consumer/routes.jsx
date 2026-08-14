@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { lazy } from 'react';
 import ConsumerLayout from './ConsumerLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import FeatureRoute from '@/components/FeatureRoute';
 import PageNotFound from '@/lib/PageNotFound';
 
 const Home = lazy(() => import('@/pages/Home'));
@@ -18,6 +19,12 @@ const LiveTracking = lazy(() => import('@/pages/LiveTracking'));
 const ChatScreen = lazy(() => import('@/pages/ChatScreen'));
 const ReviewFlow = lazy(() => import('@/pages/ReviewFlow'));
 const NotificationCenter = lazy(() => import('@/pages/NotificationCenter'));
+// Consumer surfaces for the refund, claim, dispute, support and legal backends.
+const Refunds = lazy(() => import('@/pages/Refunds'));
+const DamageClaims = lazy(() => import('@/pages/DamageClaims'));
+const Disputes = lazy(() => import('@/pages/Disputes'));
+const SupportTickets = lazy(() => import('@/pages/SupportTickets'));
+const Legal = lazy(() => import('@/pages/Legal'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const ConsumerProfile = lazy(() => import('@/pages/ConsumerProfile'));
 const ProfileSetup = lazy(() => import('@/pages/ProfileSetup'));
@@ -65,13 +72,16 @@ export default function ConsumerRoutes() {
         <Route path="/profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="/otp-login" element={<OTPLogin />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-        <Route path="/payments" element={<ProtectedRoute><PaymentMethods /></ProtectedRoute>} />
-        <Route path="/membership" element={<ProtectedRoute><Membership /></ProtectedRoute>} />
-        <Route path="/loyalty" element={<ProtectedRoute><Loyalty /></ProtectedRoute>} />
-        <Route path="/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
-        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-        <Route path="/reviews" element={<ProtectedRoute><Reviews /></ProtectedRoute>} />
+        {/* Feature-flagged: these render mock data and have no backend yet, so
+            they resolve to 404 unless explicitly enabled. See src/lib/features.js
+            and the Account audit in docs/migration-status-report.md. */}
+        <Route path="/wallet" element={<FeatureRoute flag="wallet"><ProtectedRoute><Wallet /></ProtectedRoute></FeatureRoute>} />
+        <Route path="/payments" element={<FeatureRoute flag="paymentMethods"><ProtectedRoute><PaymentMethods /></ProtectedRoute></FeatureRoute>} />
+        <Route path="/membership" element={<FeatureRoute flag="rewards"><ProtectedRoute><Membership /></ProtectedRoute></FeatureRoute>} />
+        <Route path="/loyalty" element={<FeatureRoute flag="rewards"><ProtectedRoute><Loyalty /></ProtectedRoute></FeatureRoute>} />
+        <Route path="/offers" element={<FeatureRoute flag="rewards"><ProtectedRoute><Offers /></ProtectedRoute></FeatureRoute>} />
+        <Route path="/wishlist" element={<FeatureRoute flag="wishlist"><ProtectedRoute><Wishlist /></ProtectedRoute></FeatureRoute>} />
+        <Route path="/reviews" element={<FeatureRoute flag="myReviews"><ProtectedRoute><Reviews /></ProtectedRoute></FeatureRoute>} />
         <Route path="/notification-settings" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
 
         {/* Marketing / info */}
@@ -79,8 +89,14 @@ export default function ConsumerRoutes() {
         <Route path="/business" element={<ForBusiness />} />
         <Route path="/promos" element={<Promotions />} />
         <Route path="/help" element={<Help />} />
+        <Route path="/legal" element={<Legal />} />
+        <Route path="/refunds" element={<ProtectedRoute><Refunds /></ProtectedRoute>} />
+        <Route path="/damage-claims" element={<ProtectedRoute><DamageClaims /></ProtectedRoute>} />
+        <Route path="/disputes" element={<ProtectedRoute><Disputes /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
         <Route path="/architecture" element={<Architecture />} />
 
+        <Route path="/404" element={<PageNotFound />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

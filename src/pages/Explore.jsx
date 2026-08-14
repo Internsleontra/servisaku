@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-  Search, ArrowRight, LayoutGrid, List, MapPin, ShieldCheck, SlidersHorizontal, Star,
+  Search, ArrowRight, LayoutGrid, List, MapPin, ShieldCheck, Star,
   Sparkles, Wind, Droplet, Droplets, Zap, Paintbrush, PaintRoller, Bug, Scissors,
   Wrench, Hammer, Drill, Clock, Home,
 } from 'lucide-react';
@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { servisaku } from '@/api/servisakuClient';
 import { cn, formatMYR, formatDuration } from '@/lib/utils';
-import { Chip } from '@/components/primitives/Chip';
+import { Chip } from '@/components/ds';
 import CategoryTiles from '@/components/CategoryTiles';
 import { serviceImageFor } from '@/lib/serviceImages';
 import { variants, safeMotion } from '@/lib/design/motion';
@@ -18,10 +18,10 @@ import { useTranslation } from '@/lib/useTranslation';
 // icon_key / accent (seeded) → presentation, + curated images where slugs match.
 const ICONS = { Sparkles, Wind, Droplet, Droplets, Zap, Paintbrush, PaintRoller, Bug, Scissors, Wrench, Hammer, Drill, Clock, Home };
 const TONES = {
-  pink: 'bg-pink-50 text-pink-600', slate: 'bg-raised text-ink-secondary', emerald: 'bg-emerald-50 text-success',
-  lime: 'bg-lime-50 text-lime-600', sky: 'bg-sky-50 text-sky-600', orange: 'bg-orange-50 text-brand',
-  amber: 'bg-amber-50 text-warning', blue: 'bg-blue-50 text-blue-600', stone: 'bg-raised text-ink-secondary',
-  violet: 'bg-violet-50 text-violet-600', teal: 'bg-teal-50 text-teal-600', red: 'bg-red-50 text-danger',
+  pink: 'bg-chat-tint text-chat', slate: 'bg-raised text-ink-secondary', emerald: 'bg-success-tint text-success',
+  lime: 'bg-success-tint text-success', sky: 'bg-info-tint text-info', orange: 'bg-brand-tint text-brand',
+  amber: 'bg-warning-tint text-warning', blue: 'bg-info-tint text-info', stone: 'bg-raised text-ink-secondary',
+  violet: 'bg-chat-tint text-chat', teal: 'bg-success-tint text-success', red: 'bg-danger-tint text-danger',
 };
 const IMAGES = {
   cleaning: '/img/cleaning-new.jpg', 'ac-services': '/img/ac-new.jpg', plumbing: '/img/plumbing-new.jpg',
@@ -123,61 +123,56 @@ export default function Explore() {
   const staggerItem = safeMotion(variants.staggerItem);
 
   return (
-    <div className="font-inter pb-6 bg-[#fbfaf7] min-h-screen dark:bg-bg">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-20 border-b border-hairline/60 bg-[#fbfaf7]/90 px-5 pb-4 pt-7 backdrop-blur-xl lg:px-8 lg:pt-5 dark:bg-bg/90">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t('Explore')}</p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t('Book a home service')}</h1>
-          </div>
-          <button
-            type="button"
-            onClick={() => setViewMode(v => (v === 'list' ? 'grid' : 'list'))}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline/60 bg-surface text-ink-secondary shadow-e1 transition-colors hover:bg-raised"
-            aria-label={viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'}
-          >
-            {viewMode === 'list' ? (
-              <LayoutGrid className="h-4 w-4" />
-            ) : (
-              <List className="h-4 w-4" />
-            )}
-          </button>
-        </div>
+    <div className="bg-bg pb-16">
+      {/* Gradient page header + search. Replaces the sticky cream-hex bar; the
+          two hardcoded cream hex values were the last arbitrary colours here. */}
+      <div className="bg-grad-hero text-white">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-12">
+          <p className="sa-caps text-live">{t('Explore')}</p>
+          <h1 className="text-display-2 mt-2 text-white">{t('Book a home service')}</h1>
 
-        <div className="grid gap-2 lg:grid-cols-[1fr_280px_auto]">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand" />
-            <input
-              type="text"
-              placeholder={lang === 'ms' ? 'Cari pembersihan, AC, paip...' : 'Search cleaning, AC, plumber...'}
-              value={query}
-              onChange={handleQueryChange}
-              className="w-full rounded-lg border border-hairline/60 bg-surface py-3.5 pl-10 pr-4 text-sm font-semibold text-ink shadow-e1 outline-none ring-brand/20 placeholder:text-ink-tertiary focus:ring-2"
-            />
+          <div className="mt-6 grid gap-2 lg:grid-cols-[1fr_280px_auto]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-white/50" />
+              <input
+                type="text"
+                aria-label="Search services"
+                placeholder={lang === 'ms' ? 'Cari pembersihan, AC, paip...' : 'Search cleaning, AC, plumber...'}
+                value={query}
+                onChange={handleQueryChange}
+                className="h-13 w-full rounded-field bg-white/10 pl-11 pr-4 text-md text-white outline-none ring-1 ring-inset ring-white/20 backdrop-blur placeholder:text-white/50 focus:ring-2 focus:ring-live"
+              />
+            </div>
+            <div className="relative">
+              <MapPin className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-white/50" />
+              <input
+                type="text"
+                aria-label="Location"
+                value={location}
+                onChange={handleLocationChange}
+                placeholder="Kuala Lumpur"
+                className="h-13 w-full rounded-field bg-white/10 pl-11 pr-4 text-md text-white outline-none ring-1 ring-inset ring-white/20 backdrop-blur placeholder:text-white/50 focus:ring-2 focus:ring-live"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setViewMode(v => (v === 'list' ? 'grid' : 'list'))}
+              aria-label={viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'}
+              className="hidden h-13 items-center justify-center gap-2 rounded-field bg-white/10 px-5 text-md font-semibold text-white ring-1 ring-inset ring-white/20 transition hover:bg-white/20 lg:flex"
+            >
+              {viewMode === 'list' ? <LayoutGrid className="size-[18px]" /> : <List className="size-[18px]" />}
+              {t('View')}
+            </button>
           </div>
-          <div className="relative">
-            <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-success" />
-            <input
-              type="text"
-              value={location}
-              onChange={handleLocationChange}
-              className="w-full rounded-lg border border-hairline/60 bg-surface py-3.5 pl-10 pr-4 text-sm font-semibold text-ink shadow-e1 outline-none ring-brand/20 placeholder:text-ink-tertiary focus:ring-2"
-              placeholder="Kuala Lumpur"
-            />
-          </div>
-          <button className="hidden h-full items-center justify-center gap-2 rounded-lg border border-hairline/60 bg-surface px-4 text-sm font-bold text-ink-secondary shadow-e1 lg:flex">
-            <SlidersHorizontal className="h-4 w-4" />
-            {t('Filters')}
-          </button>
         </div>
+      </div>
 
-        {/* Category filter chips */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-5 px-5 mt-3">
+      {/* Category chips */}
+      <div className="mx-auto w-full max-w-[1240px] px-5 pt-6 md:px-8">
+        <div className="scrollbar-none -mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:px-0">
           {categoryChips.map(cat => (
             <Chip
               key={cat.match}
-              tone={activeCategory === cat.match ? 'brand' : 'neutral'}
               selected={activeCategory === cat.match}
               onClick={() => setActiveCategory(cat.match)}
               className="shrink-0"
@@ -189,7 +184,7 @@ export default function Explore() {
       </div>
 
       {/* Content */}
-      <div className="px-5 lg:px-8 pt-5">
+      <div className="mx-auto w-full max-w-[1240px] px-5 pt-5 md:px-8">
         {showCategories ? (
           /* ─── "All" → Urban-Company-style category tiles ─── */
           <CategoryTiles categories={liveCategories} onPick={setActiveCategory} />
@@ -228,15 +223,15 @@ export default function Explore() {
                         <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg', s.color)}>
                           <Icon className="h-4 w-4" />
                         </div>
-                        <h3 className="font-bold text-base text-ink">{tField(s, 'name')}</h3>
+                        <h3 className="font-semibold text-base text-ink">{tField(s, 'name')}</h3>
                       </div>
                       <p className="text-sm text-ink-secondary mb-3 line-clamp-2">
                         {tField(s, 'description')}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-brand">{s.price}</span>
+                        <span className="text-sm font-semibold text-brand">{s.price}</span>
                         <div className="flex items-center gap-2">
-                          <span className="hidden items-center gap-1 text-xs font-bold text-success sm:inline-flex">
+                          <span className="hidden items-center gap-1 text-xs font-semibold text-success sm:inline-flex">
                             <ShieldCheck className="h-3.5 w-3.5" />
                             {t('Verified')}
                           </span>
@@ -277,12 +272,12 @@ export default function Explore() {
                       </div>
                     )}
                     <div className="p-4 flex flex-col items-start gap-1.5 flex-1">
-                      <h3 className="font-bold text-base text-ink group-hover:text-brand transition-colors line-clamp-2">{tField(s, 'name')}</h3>
+                      <h3 className="font-semibold text-base text-ink group-hover:text-brand transition-colors line-clamp-2">{tField(s, 'name')}</h3>
                       <p className="text-xs text-ink-secondary mb-1 line-clamp-1">{tField(s, 'description')}</p>
                       <div className="mt-auto flex w-full items-center justify-between pt-3">
-                        <span className="text-sm font-bold text-brand">{s.price}</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-ink-secondary">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        <span className="text-sm font-semibold text-brand">{s.price}</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-secondary">
+                          <Star className="h-3.5 w-3.5 fill-star text-star" />
                           4.8
                         </span>
                       </div>

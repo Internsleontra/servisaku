@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { variants, safeMotion } from '@/lib/design/motion';
-import { ArrowRight, ArrowLeft, Shield, CheckCircle2, Eye, EyeOff, Check, Mail, Phone, User, Home, Lock, KeyRound } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Shield, CheckCircle2, Eye, EyeOff, Check, Mail, Phone, User, Lock, KeyRound } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { ROLE_HOME } from '@/lib/auth';
 import { auditLog } from '@/lib/security';
@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { requestEmailOtp, verifyEmailOtp, createJWT } from '@/lib/appwriteAuth';
+import { House, Wrench } from 'lucide-react';
 
 const STEP = { ROLE: 'role', INPUT: 'input', OTP: 'otp', FORGOT: 'forgot', DONE: 'done' };
 const METHOD = { PASSWORD: 'password', EMAIL_OTP: 'email-otp', PHONE_OTP: 'phone-otp' };
@@ -28,8 +29,8 @@ const COUNTRIES = [
 ];
 
 const ALL_ROLES = {
-  consumer: { id: 'consumer', label: 'Consumer', desc: 'Book home services', emoji: '🏠' },
-  partner: { id: 'partner', label: 'Service Partner', desc: 'Provide services & earn', emoji: '🔧' },
+  consumer: { id: 'consumer', label: 'Consumer', desc: 'Book home services', icon: House },
+  partner: { id: 'partner', label: 'Service Partner', desc: 'Provide services & earn', icon: Wrench },
 };
 
 // Each build only signs people into the roles it actually serves. Admin lives
@@ -91,7 +92,7 @@ export default function OTPLogin() {
     try {
       if (isRegister) {
         await servisaku.auth.register(emailVal, passwordVal, fullName);
-        toast.success('Account created! Welcome to ServisAku 🎉');
+        toast.success('Account created. Welcome to ServisAku.');
       } else {
         await servisaku.auth.loginViaEmailPassword(emailVal, passwordVal);
         toast.success('Logged in successfully!');
@@ -189,23 +190,29 @@ export default function OTPLogin() {
   return (
     <div className="min-h-screen bg-bg flex font-inter">
       {/* Left Side: Branding / Hero */}
-      <div className="hidden lg:flex lg:w-[45%] bg-[#031024] relative overflow-hidden flex-col justify-between p-12 xl:p-16">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#031024] via-[#051c3f] to-[#031024]"></div>
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-grad-night p-12 lg:flex lg:w-[45%] xl:p-16">
+        <div className="absolute inset-0 bg-grad-hero opacity-70"></div>
         <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-brand blur-[120px] opacity-20"></div>
         <div className="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-brand blur-[100px] opacity-10"></div>
 
         <div className="relative z-10">
-          <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="bg-brand text-white p-2.5 rounded-xl shadow-lg shadow-brand/20 group-hover:scale-105 transition-transform">
-               <Home className="h-6 w-6" />
-            </div>
-            <span className="text-3xl font-display font-bold text-white tracking-tight">Servis<span className="text-brand">Aku</span></span>
+          {/* Official brand mark, not a generic house glyph. The mark is already
+              a finished shape, so it is shown bare rather than boxed in a tile.
+              White variant because this panel sits on the navy hero gradient. */}
+          <Link to="/" className="inline-flex items-center gap-3 group" aria-label="ServisAku home">
+            <img
+              src="/img/brand/logo-mark-white.png"
+              alt=""
+              aria-hidden="true"
+              className="h-11 w-11 shrink-0 object-contain transition-transform group-hover:scale-105"
+            />
+            <span className="font-brand text-3xl font-semibold tracking-tight text-white">Servis<span className="text-brand">Aku</span></span>
           </Link>
         </div>
 
         <div className="relative z-10 mb-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-            <h1 className="text-4xl xl:text-5xl font-display font-bold text-white mb-6 leading-[1.15]">
+            <h1 className="text-4xl xl:text-5xl font-display font-semibold text-white mb-6 leading-[1.15]">
               Trusted Home Services,<br/> <span className="text-brand">At Your Fingertips.</span>
             </h1>
             <p className="text-lg text-white/70 max-w-md mb-10 leading-relaxed">
@@ -219,7 +226,7 @@ export default function OTPLogin() {
                  <Shield className="h-6 w-6 text-brand" />
                </div>
                <div>
-                 <p className="text-sm font-semibold text-white">Verified Pros</p>
+                 <p className="text-sm font-semibold text-white">Verified pros</p>
                  <p className="text-xs text-white/60 mt-0.5">Vetted experts only</p>
                </div>
             </div>
@@ -228,7 +235,7 @@ export default function OTPLogin() {
                  <CheckCircle2 className="h-6 w-6 text-brand" />
                </div>
                <div>
-                 <p className="text-sm font-semibold text-white">Quality Work</p>
+                 <p className="text-sm font-semibold text-white">Quality work</p>
                  <p className="text-xs text-white/60 mt-0.5">Satisfaction guaranteed</p>
                </div>
             </div>
@@ -243,11 +250,15 @@ export default function OTPLogin() {
       {/* Right Side: Form */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-bg">
         <div className="lg:hidden absolute top-6 left-6 z-10">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="bg-brand text-white p-2 rounded-lg shadow-sm">
-               <Home className="h-5 w-5" />
-            </div>
-            <span className="text-2xl font-display font-bold text-ink tracking-tight">Servis<span className="text-brand">Aku</span></span>
+          {/* Same lockup, compact. Colour mark here — this header sits on --bg. */}
+          <Link to="/" className="inline-flex items-center gap-2" aria-label="ServisAku home">
+            <img
+              src="/img/brand/logo-mark.png"
+              alt=""
+              aria-hidden="true"
+              className="h-9 w-9 shrink-0 object-contain"
+            />
+            <span className="font-brand text-2xl font-semibold tracking-tight text-ink">Servis<span className="text-brand">Aku</span></span>
           </Link>
         </div>
 
@@ -259,25 +270,25 @@ export default function OTPLogin() {
               {step === STEP.ROLE && (
                 <div>
                   <div className="mb-10 text-center lg:text-left">
-                    <h2 className="text-3xl font-display font-bold mb-2 text-ink">Welcome back 👋</h2>
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">Welcome back</h2>
                     <p className="text-ink-secondary">Choose how you want to use ServisAku</p>
                   </div>
                   <div className="space-y-4 mb-8">
                     {APP_ROLES.map(r => (
                       <button key={r.id} onClick={() => setRole(r.id)}
-                        className={`w-full flex items-center gap-5 p-5 rounded-2xl border-2 transition-all ${role === r.id ? 'border-brand bg-brand-tint/20 shadow-sm' : 'border-hairline/20 bg-surface hover:border-hairline/60 hover:shadow-sm'}`}>
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${role === r.id ? 'bg-brand/10' : 'bg-raised'}`}>{r.emoji}</div>
+                        className={`w-full flex items-center gap-5 p-5 rounded-2xl shadow-[inset_0_0_0_1px_rgb(var(--hairline))] transition-all ${role === r.id ? 'border-brand bg-brand-tint/20 shadow-sm' : 'border-hairline/20 bg-surface hover:border-hairline/60 hover:shadow-sm'}`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${role === r.id ? 'bg-brand/10' : 'bg-raised'}`}><r.icon className="size-6" /></div>
                         <div className="flex-1 text-left">
                           <p className={`font-semibold text-base ${role === r.id ? 'text-brand-ink' : 'text-ink'}`}>{r.label}</p>
                           <p className="text-sm text-ink-secondary mt-0.5">{r.desc}</p>
                         </div>
-                        <div className={`ml-auto shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${role === r.id ? 'bg-brand border-brand' : 'border-2 border-hairline/30'}`}>
+                        <div className={`ml-auto shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${role === r.id ? 'bg-brand border-brand' : 'shadow-[inset_0_0_0_1px_rgb(var(--hairline))]'}`}>
                           {role === r.id && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
                         </div>
                       </button>
                     ))}
                   </div>
-                  <Button onClick={() => setStep(STEP.INPUT)} className="w-full h-14 rounded-2xl bg-[#031024] text-white hover:bg-[#031024]/90 shadow-xl shadow-[#031024]/10 font-semibold text-lg">
+                  <Button onClick={() => setStep(STEP.INPUT)} variant="primary" size="lg" className="w-full">
                     Continue <ArrowRight className="h-5 w-5 ml-2" />
                   </Button>
                 </div>
@@ -293,7 +304,7 @@ export default function OTPLogin() {
                   )}
 
                   <div className="mb-6">
-                    <h2 className="text-3xl font-display font-bold mb-2 text-ink">
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">
                       {isRegister ? 'Create an account' : 'Sign in to your account'}
                     </h2>
                     <p className="text-ink-secondary">
@@ -316,7 +327,7 @@ export default function OTPLogin() {
                     <div className="space-y-4">
                       {isRegister && (
                         <div className="space-y-1.5">
-                          <label className="text-sm font-medium text-ink pl-1">Full Name</label>
+                          <label className="text-sm font-medium text-ink pl-1">Full name</label>
                           <div className="relative">
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
                             <input type="text" placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)}
@@ -325,10 +336,10 @@ export default function OTPLogin() {
                         </div>
                       )}
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Email Address</label>
+                        <label className="text-sm font-medium text-ink pl-1">Email address</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input ref={emailRef} type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)}
+                          <input ref={emailRef} type="email" placeholder="you@example.com" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all" autoFocus />
                         </div>
                       </div>
@@ -336,10 +347,11 @@ export default function OTPLogin() {
                         <label className="text-sm font-medium text-ink pl-1">Password</label>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input ref={passwordRef} type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+                          <input ref={passwordRef} type={showPassword ? 'text' : 'password'} placeholder="••••••••" aria-label="Password" value={password} onChange={e => setPassword(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-12 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                             onKeyDown={e => e.key === 'Enter' && handleEmailAuth()} />
-                          <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-secondary hover:text-ink transition-colors">
+                          <button onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-secondary hover:text-ink transition-colors">
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                           </button>
                         </div>
@@ -352,7 +364,7 @@ export default function OTPLogin() {
                         </div>
                       )}
                       <Button onClick={handleEmailAuth} disabled={loading}
-                        className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 mt-4 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
+                        variant="primary" size="lg" className="w-full mt-4">
                         {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                       <div className="text-center pt-4">
@@ -362,16 +374,16 @@ export default function OTPLogin() {
                         </button>
                       </div>
                       {!isRegister && (
-                        <div className="mt-8 bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
-                          <div className="font-semibold mb-2 flex items-center gap-1.5"><Shield className="h-3.5 w-3.5"/>Demo Credentials</div>
+                        <div className="mt-8 bg-info-tint/50 border border-info/30 rounded-xl p-4 text-xs text-info">
+                          <div className="font-semibold mb-2 flex items-center gap-1.5"><Shield className="h-3.5 w-3.5"/>Demo credentials</div>
                           <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
                             {APP_TARGET === 'partner' ? (
                               <>
-                                <div>Partner: <span className="font-medium text-blue-900">ali@servisaku.my</span><br/>Pass: partner123</div>
-                                <div>Admin: <span className="font-medium text-blue-900">admin@servisaku.my</span><br/>Pass: admin123</div>
+                                <div>Partner: <span className="font-medium text-info">ali@servisaku.my</span><br/>Pass: partner123</div>
+                                <div>Admin: <span className="font-medium text-info">admin@servisaku.my</span><br/>Pass: admin123</div>
                               </>
                             ) : (
-                              <div className="col-span-2">User: <span className="font-medium text-blue-900">user@servisaku.my</span> / user123</div>
+                              <div className="col-span-2">User: <span className="font-medium text-info">user@servisaku.my</span> / user123</div>
                             )}
                           </div>
                         </div>
@@ -383,10 +395,10 @@ export default function OTPLogin() {
                   {method === METHOD.EMAIL_OTP && (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Email Address</label>
+                        <label className="text-sm font-medium text-ink pl-1">Email address</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input ref={emailRef} type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)}
+                          <input ref={emailRef} type="email" placeholder="you@example.com" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                             onKeyDown={e => e.key === 'Enter' && sendOtp('email')} autoFocus />
                         </div>
@@ -396,7 +408,7 @@ export default function OTPLogin() {
                         <p>We'll email you a 6-digit one-time code to sign in. No password needed.</p>
                       </div>
                       <Button onClick={() => sendOtp('email')} disabled={loading}
-                        className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
+                        variant="primary" size="lg" className="w-full">
                         {loading ? 'Sending...' : 'Email me a code'} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
@@ -422,7 +434,7 @@ export default function OTPLogin() {
                         <p>We'll text you a 6-digit one-time code via SMS to verify it's you.</p>
                       </div>
                       <Button onClick={() => sendOtp('phone')} disabled={loading}
-                        className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
+                        variant="primary" size="lg" className="w-full">
                         {loading ? 'Sending...' : 'Text me a code'} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
@@ -437,19 +449,19 @@ export default function OTPLogin() {
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
                   <div className="mb-8">
-                    <h2 className="text-3xl font-display font-bold mb-2 text-ink">Enter verification code</h2>
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">Enter verification code</h2>
                     <p className="text-ink-secondary">We've sent a 6-digit code to <span className="font-semibold text-ink">{otpTarget}</span></p>
                   </div>
                   {devCode && (
-                    <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-center text-xs text-blue-800">
-                      Dev mode (no SMS provider): your code is <span className="font-mono text-base font-bold tracking-widest text-blue-900">{devCode}</span>
+                    <div className="mb-6 rounded-xl border border-info/30 bg-info-tint/60 p-3 text-center text-xs text-info">
+                      Dev mode (no SMS provider): your code is <span className="font-mono text-base font-semibold tracking-widest text-info">{devCode}</span>
                     </div>
                   )}
                   <div className="relative mb-6">
                     <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
                     <input type="text" inputMode="numeric" placeholder="••••••" value={otpCode}
                       onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className="w-full bg-raised rounded-xl pl-12 pr-4 py-5 text-3xl tracking-[0.5em] text-center font-bold outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
+                      className="w-full bg-raised rounded-xl pl-12 pr-4 py-5 text-3xl tracking-[0.5em] text-center font-semibold outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                       maxLength={6} autoFocus onKeyDown={e => e.key === 'Enter' && verifyOtpCode()} />
                   </div>
                   <div className="text-center mb-8">
@@ -457,7 +469,7 @@ export default function OTPLogin() {
                       ? <p className="text-sm text-ink-secondary">Resend code in <span className="font-medium text-ink">{countdown}s</span></p>
                       : <button onClick={() => sendOtp(otpChannel)} disabled={loading} className="text-sm font-semibold text-brand hover:underline disabled:opacity-50">Resend code</button>}
                   </div>
-                  <Button onClick={verifyOtpCode} disabled={otpCode.length < 6 || loading} className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
+                  <Button onClick={verifyOtpCode} disabled={otpCode.length < 6 || loading} variant="primary" size="lg" className="w-full">
                     {loading ? 'Verifying...' : 'Verify & Continue'} <ArrowRight className="h-5 w-5 ml-2" />
                   </Button>
                 </div>
@@ -470,35 +482,35 @@ export default function OTPLogin() {
                     <ArrowLeft className="h-4 w-4" /> Back to sign in
                   </button>
                   <div className="mb-8">
-                    <h2 className="text-3xl font-display font-bold mb-2 text-ink">Reset your password</h2>
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">Reset your password</h2>
                     <p className="text-ink-secondary">Enter your email and we'll send you a link to set a new password.</p>
                   </div>
                   {resetSent ? (
                     <div className="space-y-4">
-                      <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-800 flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                      <div className="bg-success-tint border border-success/30 rounded-xl p-4 text-sm text-success flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
                         <p>If an account exists for <span className="font-semibold">{email}</span>, a reset link has been sent. The link expires in 30 minutes.</p>
                       </div>
                       {resetSent.devLink && (
-                        <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 text-xs text-blue-800 break-all">
+                        <div className="bg-info-tint/60 border border-info/30 rounded-xl p-4 text-xs text-info break-all">
                           <div className="font-semibold mb-1">Dev mode (SMTP not configured) — open this link:</div>
                           <a href={resetSent.devLink} className="underline font-medium">{resetSent.devLink}</a>
                         </div>
                       )}
-                      <Button onClick={() => setStep(STEP.INPUT)} className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 font-semibold text-base">Back to sign in</Button>
+                      <Button onClick={() => setStep(STEP.INPUT)} variant="primary" size="lg" className="w-full">Back to sign in</Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Email Address</label>
+                        <label className="text-sm font-medium text-ink pl-1">Email address</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)}
+                          <input type="email" placeholder="you@example.com" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                             onKeyDown={e => e.key === 'Enter' && handleForgotPassword()} autoFocus />
                         </div>
                       </div>
-                      <Button onClick={handleForgotPassword} disabled={loading || !email} className="w-full h-14 rounded-xl bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/20 font-semibold text-base transition-all">
+                      <Button onClick={handleForgotPassword} disabled={loading || !email} variant="primary" size="lg" className="w-full">
                         {loading ? 'Sending...' : 'Send reset link'} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
@@ -510,10 +522,10 @@ export default function OTPLogin() {
               {step === STEP.DONE && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6">
-                    <CheckCircle2 className="h-12 w-12 text-green-500" />
+                    className="w-24 h-24 bg-success-tint rounded-full flex items-center justify-center mb-6">
+                    <CheckCircle2 className="h-12 w-12 text-success" />
                   </motion.div>
-                  <h2 className="text-2xl font-display font-bold text-ink">Successfully Verified!</h2>
+                  <h2 className="text-2xl font-display font-semibold text-ink">Successfully Verified!</h2>
                   <p className="text-ink-secondary mt-2">Redirecting to your dashboard...</p>
                 </div>
               )}

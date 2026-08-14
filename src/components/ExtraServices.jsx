@@ -4,9 +4,9 @@ import { formatMYR } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const STATUS_PILL = {
-  pending: 'bg-amber-50 text-amber-600',
-  approved: 'bg-emerald-50 text-emerald-600',
-  rejected: 'bg-rose-50 text-rose-600',
+  pending: 'bg-warning-tint text-warning',
+  approved: 'bg-success-tint text-success',
+  rejected: 'bg-danger-tint text-danger',
 };
 
 // Shared extra-services panel.
@@ -38,7 +38,7 @@ export function ExtraServices({ extras = [], mode, editable = false, onAdd, onDe
             <p className="truncate text-xs font-semibold text-ink">
               {e.label}{e.qty > 1 && <span className="text-ink-tertiary"> × {e.qty}</span>}
             </p>
-            <p className="text-[11px] font-bold text-brand">{formatMYR(e.total)}</p>
+            <p className="text-[11px] font-semibold text-brand">{formatMYR(e.total)}</p>
           </div>
           {mode === 'consumer' && e.status === 'pending' ? (
             <div className="flex shrink-0 gap-1.5">
@@ -47,12 +47,12 @@ export function ExtraServices({ extras = [], mode, editable = false, onAdd, onDe
                 <X className="h-4 w-4" />
               </button>
               <button disabled={busy} onClick={() => onDecide(e.id, 'approved')}
-                className="flex h-8 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50">
+                className="flex h-8 items-center gap-1 rounded-lg bg-success px-3 text-xs font-semibold text-white transition-colors hover:bg-success disabled:opacity-50">
                 <Check className="h-3.5 w-3.5" /> Approve
               </button>
             </div>
           ) : (
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${STATUS_PILL[e.status] || STATUS_PILL.pending}`}>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS_PILL[e.status] || STATUS_PILL.pending}`}>
               {e.status}
             </span>
           )}
