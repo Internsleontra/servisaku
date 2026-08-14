@@ -1,69 +1,225 @@
-/* src/styles/tokens.css */
+/* ============================================================================
+   ServisAku — canonical design tokens
+   ============================================================================
+   SINGLE SOURCE OF TRUTH for colour. Derived from the ServisAku Design System
+   (.claude/skills/servisaku-design/tokens/colors.css).
+
+   This file replaced the previous orange token set and absorbed the dead
+   src/lib/design/tokens.js (which declared a third, green brand and had zero
+   importers). Do not reintroduce a JS mirror — read these variables instead.
+
+   LAYERS — each derived from the one above.
+     L0  primitives as bare sRGB channels     --sa-blue-rgb: 0 0 238
+     L1  primitive public values              --sa-blue: rgb(var(--sa-blue-rgb))
+     L2  semantic roles                       --surface-brand: var(--sa-blue)
+     L3  Tailwind alpha bridge                --brand: var(--sa-blue-rgb)
+
+   Channels live at L0 because Tailwind's <alpha-value> needs bare channels to
+   serve the ~300 alpha modifiers in the codebase (hairline/10, brand/90, …).
+   tailwind.config.js consumes L3 as rgb(var(--token) / <alpha-value>).
+============================================================================ */
+
 @layer base {
   :root {
-    --bg: 0 0% 100%;              /* #FFFFFF */
-    --surface: 0 0% 100%;         /* #FFFFFF */
-    --surface-raised: 210 40% 98%;/* #F8FAFC */
-    
-    --ink-primary: 215 60% 15%;   /* Deep Navy Blue */
-    --ink-secondary: 215 25% 45%; /* Navy Tinted Gray */
-    --ink-tertiary: 215 15% 60%;  /* Lighter Navy Gray */
-    --ink-inverse: 0 0% 100%;     /* #FFFFFF */
-    
-    --hairline: 214 32% 91%;      /* #E2E8F0 */
+    /* ── L0: primitives — brand blues (given) ───────────────────────────── */
+    --sa-neon-rgb:        0 231 255;    /* #00E7FF */
+    --sa-sky-rgb:         0 164 255;    /* #00A4FF */
+    --sa-blue-rgb:        0 0 238;      /* #0000EE  ← the one solid brand colour */
+    --sa-blue-deep-rgb:   0 0 179;      /* #0000B3 */
+    --sa-royal-rgb:       0 6 117;      /* #000675 */
+    --sa-navy-rgb:        4 4 74;       /* #04044A */
+    --sa-navy-ink-rgb:    2 2 43;       /* #02022B */
 
-    --brand: 24 95% 53%;          /* #f97316 (Orange) */
-    --brand-tint: 24 100% 97%;    /* #fff7ed */
-    --brand-ink: 24 95% 30%;      
-    
-    --accent: 24 95% 53%;         /* Match brand for primary actions */
-    --accent-tint: 24 100% 97%;
-    
-    --success: 150 59% 30%;       /* #1F7A4D */
-    --success-tint: 150 60% 95%;
-    
-    --warning: 35 91% 37%;        /* #B45309 */
-    --warning-tint: 40 100% 95%;
-    
-    --danger: 3 79% 40%;          /* #B42318 */
-    --danger-tint: 5 100% 96%;
-    
-    --info: 213 64% 33%;          /* #1E4F8A */
-    --info-tint: 214 100% 96%;
+    /* ── L0: primitives — blue tints ────────────────────────────────────── */
+    --sa-blue-050-rgb:    238 242 255;  /* #EEF2FF */
+    --sa-blue-100-rgb:    220 228 255;  /* #DCE4FF */
+    --sa-blue-200-rgb:    185 199 255;  /* #B9C7FF */
+    --sa-sky-050-rgb:     230 246 255;  /* #E6F6FF */
+    --sa-sky-100-rgb:     204 237 255;  /* #CCEDFF */
+    --sa-neon-050-rgb:    230 253 255;  /* #E6FDFF */
+    --sa-pale-blue-rgb:   209 205 255;  /* #D1CDFF */
+    --sa-periwinkle-rgb:  140 140 247;  /* #8C8CF7 */
+
+    /* ── L0: primitives — neutrals (given) ──────────────────────────────── */
+    --sa-graphite-rgb:    32 32 48;     /* #202030 */
+    --sa-slate-rgb:       94 94 106;    /* #5E5E6A */
+    --sa-stone-rgb:       139 139 139;  /* #8B8B8B */
+    --sa-silver-rgb:      199 199 206;  /* #C7C7CE */
+    --sa-mist-rgb:        239 239 239;  /* #EFEFEF */
+    --sa-paper-rgb:       247 248 251;  /* #F7F8FB */
+    --sa-white-rgb:       255 255 255;  /* #FFFFFF */
+    --sa-body-rgb:        28 28 51;     /* #1C1C33 */
+
+    /* ── L0: primitives — accent + derived semantics ────────────────────── */
+    --sa-orange-rgb:      247 92 3;     /* #F75C03 — Instant Help + warning ONLY */
+    --sa-orange-050-rgb:  255 241 232;  /* #FFF1E8 */
+    --sa-amber-rgb:       255 176 32;   /* #FFB020 */
+    /* success/danger are authored in oklch in the design system (the only two
+       invented colours). sRGB below are approximations for the alpha bridge and
+       need design sign-off; the oklch values at L1 stay authoritative. */
+    --sa-green-rgb:       0 168 122;    /* ≈ oklch(0.68 0.15 162) — APPROX */
+    --sa-green-050-rgb:   226 247 239;  /* ≈ oklch(0.96 0.03 162) — APPROX */
+    --sa-red-rgb:         216 43 34;    /* ≈ oklch(0.58 0.21 22)  — APPROX */
+    --sa-red-050-rgb:     253 234 231;  /* ≈ oklch(0.96 0.03 22)  — APPROX */
+
+    /* ── L1: primitive public values ────────────────────────────────────── */
+    --sa-neon:       rgb(var(--sa-neon-rgb));
+    --sa-sky:        rgb(var(--sa-sky-rgb));
+    --sa-blue:       rgb(var(--sa-blue-rgb));
+    --sa-blue-deep:  rgb(var(--sa-blue-deep-rgb));
+    --sa-royal:      rgb(var(--sa-royal-rgb));
+    --sa-navy:       rgb(var(--sa-navy-rgb));
+    --sa-navy-ink:   rgb(var(--sa-navy-ink-rgb));
+    --sa-blue-050:   rgb(var(--sa-blue-050-rgb));
+    --sa-pale-blue:  rgb(var(--sa-pale-blue-rgb));
+    --sa-periwinkle: rgb(var(--sa-periwinkle-rgb));
+    --sa-paper:      rgb(var(--sa-paper-rgb));
+    --sa-mist:       rgb(var(--sa-mist-rgb));
+    --sa-white:      rgb(var(--sa-white-rgb));
+    --sa-slate:      rgb(var(--sa-slate-rgb));
+    --sa-stone:      rgb(var(--sa-stone-rgb));
+    --sa-silver:     rgb(var(--sa-silver-rgb));
+    --sa-orange:     rgb(var(--sa-orange-rgb));
+    --sa-amber:      rgb(var(--sa-amber-rgb));
+    --sa-green:      oklch(0.68 0.15 162);   /* authoritative */
+    --sa-red:        oklch(0.58 0.21 22);    /* authoritative */
+
+    /* ── L2: semantic roles ─────────────────────────────────────────────── */
+    --text-strong:      var(--sa-navy-ink);
+    --text-body:        rgb(var(--sa-body-rgb));
+    --text-muted:       var(--sa-slate);
+    --text-subtle:      var(--sa-stone);
+    --text-on-brand:    var(--sa-white);
+    --text-brand:       var(--sa-blue);
+    --text-link:        var(--sa-blue);
+    --text-link-hover:  var(--sa-blue-deep);
+
+    --surface-page:           var(--sa-paper);
+    --surface-card:           var(--sa-white);
+    --surface-sunken:         var(--sa-mist);
+    --surface-brand:          var(--sa-blue);
+    --surface-brand-soft:     var(--sa-blue-050);
+    --surface-inverse:        var(--sa-navy);
+    --surface-inverse-raised: #0A0A5E;
+    --surface-overlay:        rgb(var(--sa-navy-ink-rgb) / 0.55);
+    --surface-glass:          rgb(var(--sa-white-rgb) / 0.10);
+
+    --border-subtle:  #E4E6F0;
+    --border-default: #D2D5E4;
+    --border-strong:  var(--sa-silver);
+    --border-brand:   var(--sa-blue);
+    --border-inverse: rgb(var(--sa-white-rgb) / 0.16);
+    --focus-ring:     0 0 0 3px rgb(var(--sa-blue-rgb) / 0.28);
+
+    --status-live:   var(--sa-neon);
+    --brand-hover:   var(--sa-blue-deep);
+    --brand-active:  #000090;
+    --instant-help:  var(--sa-orange);
+
+    /* ── L3: Tailwind alpha bridge ──────────────────────────────────────────
+       Bare channels only — consumed as rgb(var(--x) / <alpha-value>).
+       Names are unchanged from the previous token set so existing utilities
+       (bg-brand, text-ink, border-hairline/10, …) keep working. */
+    --bg:             var(--sa-paper-rgb);
+    --surface:        var(--sa-white-rgb);
+    --surface-raised: var(--sa-mist-rgb);
+    --hairline:       228 230 240;            /* #E4E6F0 */
+
+    --ink-primary:    var(--sa-navy-ink-rgb);
+    --ink-secondary:  var(--sa-slate-rgb);
+    --ink-tertiary:   var(--sa-stone-rgb);
+    --ink-inverse:    var(--sa-white-rgb);
+
+    --brand:          var(--sa-blue-rgb);
+    --brand-tint:     var(--sa-blue-050-rgb);
+    --brand-ink:      var(--sa-royal-rgb);
+
+    /* accent is now ORANGE and means Instant Help / warning — it is no longer
+       a synonym for brand. Call sites using accent as a primary action colour
+       are wrong and get fixed in migration Phase 3. */
+    --accent:         var(--sa-orange-rgb);
+    --accent-tint:    var(--sa-orange-050-rgb);
+
+    --success:        var(--sa-green-rgb);
+    --success-tint:   var(--sa-green-050-rgb);
+    --warning:        var(--sa-orange-rgb);
+    --warning-tint:   var(--sa-orange-050-rgb);
+    --danger:         var(--sa-red-rgb);
+    --danger-tint:    var(--sa-red-050-rgb);
+    --info:           var(--sa-sky-rgb);
+    --info-tint:      var(--sa-sky-050-rgb);
+    --live:           var(--sa-neon-rgb);
+
+    /* Star ratings only. Distinct from --warning: the design system keeps
+       --sa-amber (#FFB020) separate from Instant Help orange (#F75C03), and a
+       4.9 ★ must not read as a warning. */
+    --star:           var(--sa-amber-rgb);
+
+    /* Chat / conversational surfaces. Replaces the old violet: --sa-periwinkle
+       (#8C8CF7) is in the design system palette and keeps chat visually
+       distinct from booking (info/sky) and promo (brand) without leaving the
+       blue family or reaching for a colour the system does not define. */
+    --chat:           var(--sa-periwinkle-rgb);
+    --chat-tint:      var(--sa-blue-050-rgb);
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     DARK THEME — INTERIM, NOT DESIGN-APPROVED
+     ─────────────────────────────────────────────────────────────────────────
+     The ServisAku Design System ships LIGHT-ONLY. Its navy surfaces are dark
+     bands inside a light page, not a theme, so there is no sanctioned dark
+     palette to adopt.
+
+     This block preserves the dark theme that already existed here — same token
+     structure, same intent ("brand stays vivid; tint becomes a dark surface,
+     ink a light tint") — retuned from orange onto the blue brand so dark mode
+     does not regress during migration. Values are engineering approximations.
+
+     ACTION REQUIRED: commission a real dark palette from the design team, or
+     decide to drop the theme. Until then treat these as provisional.
+     See docs/design-system-migration.md §5 Q1.
+  ══════════════════════════════════════════════════════════════════════════ */
   .dark {
-    /* Surfaces — layered elevation (bg < surface < raised) */
-    --bg: 222 24% 8%;             /* app background */
-    --surface: 222 20% 12%;       /* cards / panels */
-    --surface-raised: 220 18% 16%;/* raised chips / hovered rows */
+    --bg:             10 10 30;      /* #0A0A1E — navy-tinted, never neutral black */
+    --surface:        16 16 51;      /* #101033 */
+    --surface-raised: 22 22 63;      /* #16163F */
+    --hairline:       38 38 82;      /* #262652 */
 
-    --ink-primary: 210 20% 98%;   /* near-white primary text */
-    --ink-secondary: 216 15% 72%; /* muted text */
-    --ink-tertiary: 215 14% 52%;  /* faint text */
-    --ink-inverse: 222 24% 8%;    /* text on light/brand fills */
+    --ink-primary:    245 246 255;   /* #F5F6FF */
+    --ink-secondary:  169 171 199;   /* #A9ABC7 */
+    --ink-tertiary:   116 118 154;   /* #74769A */
+    --ink-inverse:    10 10 30;      /* text on light/brand fills */
 
-    --hairline: 220 14% 22%;      /* borders / dividers */
+    /* #0000EE is too dark to read on a dark surface — lift it, keep it vivid. */
+    --brand:          59 77 255;     /* #3B4DFF */
+    --brand-tint:     20 20 60;      /* #14143C */
+    --brand-ink:      169 180 255;   /* #A9B4FF */
 
-    /* Brand stays vivid; tint becomes a dark warm surface, ink a light warm */
-    --brand: 24 95% 56%;
-    --brand-tint: 24 45% 15%;
-    --brand-ink: 24 90% 72%;
+    --accent:         255 122 51;    /* #FF7A33 — Instant Help / warning */
+    --accent-tint:    58 29 10;      /* #3A1D0A */
 
-    --accent: 24 95% 56%;
-    --accent-tint: 24 45% 15%;
+    --success:        47 211 155;    /* #2FD39B */
+    --success-tint:   12 42 34;      /* #0C2A22 */
+    --warning:        255 176 32;    /* #FFB020 */
+    --warning-tint:   51 36 10;      /* #33240A */
+    --danger:         255 107 94;    /* #FF6B5E */
+    --danger-tint:    55 16 14;      /* #37100E */
+    --info:           79 195 255;    /* #4FC3FF */
+    --info-tint:      10 39 64;      /* #0A2740 */
+    --live:           var(--sa-neon-rgb);
 
-    /* Status colours — brightened for contrast on dark; tints darkened */
-    --success: 150 55% 55%;
-    --success-tint: 150 40% 13%;
-
-    --warning: 40 90% 60%;
-    --warning-tint: 38 55% 14%;
-
-    --danger: 3 82% 64%;
-    --danger-tint: 3 50% 15%;
-
-    --info: 213 80% 66%;
-    --info-tint: 213 45% 16%;
+    /* L2 semantics follow the dark bridge so semantic consumers stay correct. */
+    --surface-page:   rgb(var(--bg));
+    --surface-card:   rgb(var(--surface));
+    --surface-sunken: rgb(var(--surface-raised));
+    --text-strong:    rgb(var(--ink-primary));
+    --text-body:      rgb(var(--ink-primary));
+    --text-muted:     rgb(var(--ink-secondary));
+    --text-subtle:    rgb(var(--ink-tertiary));
+    --text-brand:     rgb(var(--brand-ink));
+    --text-link:      rgb(var(--brand-ink));
+    --border-subtle:  rgb(var(--hairline));
+    --border-default: rgb(var(--hairline));
+    --focus-ring:     0 0 0 3px rgb(var(--brand) / 0.45);
   }
 }

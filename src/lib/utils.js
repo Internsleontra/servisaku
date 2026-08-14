@@ -29,11 +29,19 @@ const myrFormatterDecimal = new Intl.NumberFormat('en-MY', {
   maximumFractionDigits: 2,
 });
 
-/** Format a number as Malaysian Ringgit. */
+/**
+ * Format a number as Malaysian Ringgit.
+ *
+ * Design system rule: `RM` + NON-BREAKING space + amount. Two decimals for a
+ * payable total (`RM 274.00`), none when browsing (`RM 249`). Intl's en-MY
+ * output is "RM274.00" with no separator, so the space is inserted here — and
+ * it must be non-breaking, or a price wraps across lines mid-figure.
+ */
 export function formatMYR(amount, { decimals = false, prefix = '' } = {}) {
   if (amount == null || Number.isNaN(Number(amount))) return '—';
   const fmt = decimals ? myrFormatterDecimal : myrFormatter;
-  return `${prefix}${fmt.format(Number(amount))}`;
+  const out = fmt.format(Number(amount)).replace(/^RM\s*/, `RM `);
+  return `${prefix}${out}`;
 }
 
 /** Format a duration range in minutes → "1.5h–2h" / "45m". */

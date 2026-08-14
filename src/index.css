@@ -1,11 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&display=swap');
+/* ServisAku Design System type: Outfit leads (team decision, 2026-08-06);
+   Gilroy ships in .claude/skills/servisaku-design/assets/fonts/ and sits behind
+   it in the stack. IBM Plex Mono covers tabular numerals only.
+   Phase 2 applies the type scale and the 600 weight ceiling. */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @import './styles/tokens.css';
 @import './styles/typography.css';
-/* Unlayered dark-mode tint remap — wins over Tailwind's utilities layer
-   regardless of source order (unlayered beats any @layer). */
-@import './styles/dark-tints.css';
+/* dark-tints.css was deleted in migration Phase 3. It existed to remap ~260 raw
+   Tailwind colour utilities (bg-emerald-50, text-red-600, …) for dark mode
+   because those utilities bypassed the token system. Every live surface now
+   uses semantic tokens, which are already dark-aware, so the remap is dead.
+   Only the unrouted admin pages still carry raw utilities. */
 
 @tailwind base;
 @tailwind components;
