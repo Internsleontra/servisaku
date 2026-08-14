@@ -26,7 +26,7 @@ const CATEGORIES = [
   { id: 'other', label: 'Other' },
 ];
 
-const STATUS_PILL = { open: 'bg-amber-50 text-amber-700', resolved: 'bg-emerald-50 text-emerald-700' };
+const STATUS_PILL = { open: 'bg-warning-tint text-warning', resolved: 'bg-success-tint text-success' };
 
 function Card({ children, className = '' }) {
   return <div className={`bg-surface rounded-2xl border border-hairline/10 shadow-e1 p-4 ${className}`}>{children}</div>;
@@ -61,7 +61,7 @@ export default function PartnerSupport() {
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
             <ArrowLeft className="h-4 w-4 text-white" />
           </button>
-          <div><p className="text-white/60 text-xs">Support</p><h1 className="text-xl font-bold text-white">How can we help?</h1></div>
+          <div><p className="text-white/60 text-xs">Support</p><h1 className="text-xl font-semibold text-white">How can we help?</h1></div>
         </div>
       </div>
 
@@ -73,19 +73,19 @@ export default function PartnerSupport() {
             <span className="text-[11px] font-semibold text-ink">Call support</span>
           </a>
           <button onClick={() => navigate('/notifications')} className="flex flex-col items-center gap-2 rounded-2xl border border-hairline/10 bg-surface p-4 shadow-e1 hover:shadow-e2 transition-all">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600"><MessageSquare className="h-5 w-5" /></div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-info-tint text-info"><MessageSquare className="h-5 w-5" /></div>
             <span className="text-[11px] font-semibold text-ink">Live chat</span>
           </button>
-          <a href={`tel:${EMERGENCY_PHONE}`} className="flex flex-col items-center gap-2 rounded-2xl border border-red-200 bg-red-50 p-4 shadow-e1 hover:shadow-e2 transition-all">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600"><AlertTriangle className="h-5 w-5" /></div>
-            <span className="text-[11px] font-semibold text-red-700">Emergency</span>
+          <a href={`tel:${EMERGENCY_PHONE}`} className="flex flex-col items-center gap-2 rounded-2xl border border-danger/30 bg-danger-tint p-4 shadow-e1 hover:shadow-e2 transition-all">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger-tint text-danger"><AlertTriangle className="h-5 w-5" /></div>
+            <span className="text-[11px] font-semibold text-danger">Emergency</span>
           </a>
         </div>
 
         {/* Raise ticket */}
         <div className="space-y-3">
           <SectionHeader title="Tickets" action={
-            <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1 text-xs font-bold text-brand"><Plus className="h-3.5 w-3.5" /> Raise ticket</button>
+            <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-brand"><Plus className="h-3.5 w-3.5" /> Raise ticket</button>
           } />
           {showForm && (
             <Card className="space-y-3">
@@ -113,7 +113,7 @@ export default function PartnerSupport() {
                   <p className="text-sm font-semibold text-ink truncate">{t.subject}</p>
                   <p className="text-[11px] text-ink-secondary">{CATEGORIES.find((c) => c.id === t.category)?.label} · {moment(t.created_date).format('D MMM')}</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${STATUS_PILL[t.status] || 'bg-raised text-ink-secondary'}`}>{t.status}</span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS_PILL[t.status] || 'bg-raised text-ink-secondary'}`}>{t.status}</span>
               </div>
             </Card>
           ))}

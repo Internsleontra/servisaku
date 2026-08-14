@@ -92,11 +92,11 @@ function ActionRow({ icon: Icon, label, desc, onClick, danger, last, value }) {
   );
 }
 const STATUS = {
-  verified: 'bg-emerald-50 text-emerald-600', pending: 'bg-amber-50 text-amber-600',
-  missing: 'bg-raised text-ink-secondary', clear: 'bg-emerald-50 text-emerald-600',
+  verified: 'bg-success-tint text-success', pending: 'bg-warning-tint text-warning',
+  missing: 'bg-raised text-ink-secondary', clear: 'bg-success-tint text-success',
 };
 const StatusChip = ({ status }) => (
-  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${STATUS[status] || STATUS.missing}`}>{status}</span>
+  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${STATUS[status] || STATUS.missing}`}>{status}</span>
 );
 
 function Section({ id, icon: Icon, title, desc, children }) {
@@ -104,7 +104,7 @@ function Section({ id, icon: Icon, title, desc, children }) {
     <section id={id} className="scroll-mt-24 rounded-2xl border border-hairline bg-surface p-5 shadow-e1 lg:p-6">
       <div className="mb-1 flex items-center gap-2.5">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-tint text-brand"><Icon className="h-4 w-4" /></span>
-        <h2 className="text-base font-bold text-ink">{title}</h2>
+        <h2 className="text-base font-semibold text-ink">{title}</h2>
       </div>
       {desc && <p className="mb-3 text-xs text-ink-secondary">{desc}</p>}
       <div className={desc ? '' : 'mt-3'}>{children}</div>
@@ -201,7 +201,7 @@ export default function PartnerSettings() {
     <div className="font-inter min-h-screen bg-bg px-5 py-6 text-ink lg:px-8 lg:py-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-6">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink lg:text-[28px]">Settings</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink lg:text-[28px]">Settings</h1>
           <p className="mt-0.5 text-sm text-ink-secondary">Manage your profile, business, payments and preferences.</p>
         </header>
 
@@ -225,11 +225,11 @@ export default function PartnerSettings() {
             <Section id="profile" icon={User} title="Profile">
               <div className="mb-4 flex items-center gap-4">
                 <div className="relative">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-tint text-2xl font-bold text-brand">{initial}</span>
-                  <button className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-brand text-white"><Camera className="h-3.5 w-3.5" /></button>
+                  <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-tint text-2xl font-semibold text-brand">{initial}</span>
+                  <button className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-surface bg-brand text-white"><Camera className="h-3.5 w-3.5" /></button>
                 </div>
                 <div>
-                  <p className="font-bold text-ink">{profile.full_name || 'Your name'}</p>
+                  <p className="font-semibold text-ink">{profile.full_name || 'Your name'}</p>
                   <p className="text-xs text-ink-secondary">Partner ID · {user?.id || 'partner-0000'}</p>
                 </div>
               </div>
@@ -327,7 +327,7 @@ export default function PartnerSettings() {
               <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {PERF.map(([label, value]) => (
                   <div key={label} className="rounded-xl border border-hairline p-3 text-center">
-                    <p className="text-lg font-extrabold text-ink">{value}</p>
+                    <p className="text-lg font-semibold text-ink">{value}</p>
                     <p className="mt-0.5 text-[11px] font-medium text-ink-secondary">{label}</p>
                   </div>
                 ))}
@@ -373,7 +373,7 @@ export default function PartnerSettings() {
               <SelectRow label="Font size" value={s.font_size} onChange={(v) => set('font_size', v)} options={[{ value: 'small', label: 'Small' }, { value: 'default', label: 'Default' }, { value: 'large', label: 'Large' }]} />
               <ToggleRow label="Sound" value={s.pref_sound} onChange={(v) => set('pref_sound', v)} />
               <ToggleRow label="Vibration" value={s.pref_vibration} onChange={(v) => set('pref_vibration', v)} />
-              <p className="pt-4 pb-2 text-xs font-bold uppercase tracking-wide text-ink-tertiary">Permissions</p>
+              <p className="pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Permissions</p>
               {PERMS.map(([k, label, desc], i) => (
                 <ToggleRow key={k} label={label} desc={desc} value={s[k]} onChange={(v) => set(k, v)} last={i === PERMS.length - 1} />
               ))}

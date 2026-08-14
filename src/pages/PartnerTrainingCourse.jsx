@@ -54,9 +54,9 @@ export default function PartnerTrainingCourse() {
           <ArrowLeft className="h-4 w-4 text-white" />
         </button>
         <p className="text-white/60 text-xs">{course.category} · {course.duration_min} min</p>
-        <h1 className="text-xl font-bold text-white mt-0.5">{course.title}</h1>
+        <h1 className="text-xl font-semibold text-white mt-0.5">{course.title}</h1>
         {done && (
-          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/25 px-3 py-1 text-xs font-bold text-white">
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success/25 px-3 py-1 text-xs font-semibold text-white">
             <Award className="h-3.5 w-3.5" /> Completed{course.score != null ? ` · ${course.score}%` : ''}
           </span>
         )}
@@ -76,7 +76,7 @@ export default function PartnerTrainingCourse() {
         {/* Quiz */}
         {course.has_quiz && (
           <Card className="space-y-4">
-            <p className="text-sm font-bold text-ink">Assessment <span className="font-normal text-ink-secondary">· pass mark 70%</span></p>
+            <p className="text-sm font-semibold text-ink">Assessment <span className="font-normal text-ink-secondary">· pass mark 70%</span></p>
             {course.quiz.map((q, qi) => (
               <div key={qi}>
                 <p className="mb-2 text-sm font-medium text-ink">{qi + 1}. {q.q}</p>
@@ -102,18 +102,18 @@ export default function PartnerTrainingCourse() {
 
         {/* Result */}
         {result && !result.passed && (
-          <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+          <div className="flex items-center gap-2 rounded-xl bg-danger-tint border border-danger/30 px-4 py-3 text-sm text-danger">
             <XCircle className="h-4 w-4 shrink-0" /> Scored {result.score}%. Review the material and try again.
           </div>
         )}
 
         {done ? (
-          <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-700">
+          <div className="flex items-center gap-2 rounded-xl bg-success-tint border border-success/30 px-4 py-3 text-sm font-medium text-success">
             <CheckCircle2 className="h-4 w-4 shrink-0" /> You’ve completed this course.
           </div>
         ) : (
           <Button onClick={submit} disabled={submitting || !allAnswered}
-            className="w-full h-12 rounded-2xl bg-brand text-white font-bold hover:bg-brand/90">
+            className="w-full h-12 rounded-2xl bg-brand text-white font-semibold hover:bg-brand/90">
             {submitting ? 'Submitting…' : course.has_quiz ? 'Submit assessment' : 'Mark as complete'}
           </Button>
         )}

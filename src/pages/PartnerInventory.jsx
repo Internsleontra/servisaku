@@ -73,9 +73,9 @@ export default function PartnerInventory() {
             <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
               <ArrowLeft className="h-4 w-4 text-white" />
             </button>
-            <div><p className="text-white/60 text-xs">Inventory</p><h1 className="text-xl font-bold text-white">Your stock</h1></div>
+            <div><p className="text-white/60 text-xs">Inventory</p><h1 className="text-xl font-semibold text-white">Your stock</h1></div>
           </div>
-          <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-sm font-bold text-brand">
+          <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-sm font-semibold text-brand">
             <Plus className="h-4 w-4" /> Add
           </button>
         </div>
@@ -83,9 +83,9 @@ export default function PartnerInventory() {
 
       <div className="px-5 lg:px-8 max-w-2xl mx-auto pt-5 space-y-5">
         {lowStock.length > 0 && (
-          <div className="flex items-center gap-3 rounded-2xl border border-amber-200/60 bg-amber-50 p-4">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-            <p className="text-xs font-medium text-amber-800">{lowStock.length} item{lowStock.length > 1 ? 's' : ''} low on stock — {lowStock.map((i) => i.name).join(', ')}</p>
+          <div className="flex items-center gap-3 rounded-2xl border border-warning/30 bg-warning-tint p-4">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warning" />
+            <p className="text-xs font-medium text-warning">{lowStock.length} item{lowStock.length > 1 ? 's' : ''} low on stock — {lowStock.map((i) => i.name).join(', ')}</p>
           </div>
         )}
 
@@ -127,16 +127,16 @@ export default function PartnerInventory() {
               <SectionHeader title={t.label} />
               {group.map((i) => (
                 <Card key={i.id} className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${i.low_stock ? 'bg-amber-50 text-amber-600' : 'bg-brand-tint text-brand'}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${i.low_stock ? 'bg-warning-tint text-warning' : 'bg-brand-tint text-brand'}`}>
                     <t.icon className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-ink truncate">{i.name}</p>
-                    <p className="text-[11px] text-ink-secondary">{i.low_stock ? <span className="font-semibold text-amber-600">Low stock</span> : `Min ${i.low_stock_threshold}${i.unit ? ' ' + i.unit : ''}`}</p>
+                    <p className="text-[11px] text-ink-secondary">{i.low_stock ? <span className="font-semibold text-warning">Low stock</span> : `Min ${i.low_stock_threshold}${i.unit ? ' ' + i.unit : ''}`}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => adjust(i, -1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-hairline/20 text-ink-secondary hover:bg-raised"><Minus className="h-4 w-4" /></button>
-                    <span className="w-10 text-center text-sm font-bold text-ink">{i.qty}<span className="text-[10px] font-normal text-ink-tertiary">{i.unit ? ` ${i.unit}` : ''}</span></span>
+                    <span className="w-10 text-center text-sm font-semibold text-ink">{i.qty}<span className="text-[10px] font-normal text-ink-tertiary">{i.unit ? ` ${i.unit}` : ''}</span></span>
                     <button onClick={() => adjust(i, 1)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-hairline/20 text-ink-secondary hover:bg-raised"><Plus className="h-4 w-4" /></button>
                     <button onClick={() => remove(i)} className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-tertiary hover:text-danger"><Trash2 className="h-4 w-4" /></button>
                   </div>

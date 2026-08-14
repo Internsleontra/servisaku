@@ -15,7 +15,7 @@ function Stars({ rating, size = 'h-3.5 w-3.5' }) {
   return (
     <span className="inline-flex">
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} className={`${size} ${i <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-hairline/40'}`} />
+        <Star key={i} className={`${size} ${i <= Math.round(rating) ? 'fill-star text-star' : 'text-hairline/40'}`} />
       ))}
     </span>
   );
@@ -71,11 +71,11 @@ export default function PartnerReviews() {
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
             <ArrowLeft className="h-4 w-4 text-white" />
           </button>
-          <div><p className="text-white/60 text-xs">Reviews</p><h1 className="text-xl font-bold text-white">Customer feedback</h1></div>
+          <div><p className="text-white/60 text-xs">Reviews</p><h1 className="text-xl font-semibold text-white">Customer feedback</h1></div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 flex items-center gap-5">
           <div className="text-center">
-            <p className="text-3xl font-bold text-white">{avg.toFixed(1)}</p>
+            <p className="text-3xl font-semibold text-white">{avg.toFixed(1)}</p>
             <Stars rating={avg} size="h-3 w-3" />
             <p className="text-white/50 text-[10px] mt-1">{reviews.length} reviews</p>
           </div>
@@ -84,7 +84,7 @@ export default function PartnerReviews() {
               <div key={d.star} className="flex items-center gap-2">
                 <span className="text-white/60 text-[10px] w-3">{d.star}</span>
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/15">
-                  <div className="h-full bg-amber-400" style={{ width: `${reviews.length ? (d.count / reviews.length) * 100 : 0}%` }} />
+                  <div className="h-full bg-warning" style={{ width: `${reviews.length ? (d.count / reviews.length) * 100 : 0}%` }} />
                 </div>
                 <span className="text-white/50 text-[10px] w-4 text-right">{d.count}</span>
               </div>
@@ -110,7 +110,7 @@ export default function PartnerReviews() {
 
             {r.reply ? (
               <div className="mt-3 rounded-xl bg-raised/60 p-3">
-                <p className="text-[10px] font-bold text-brand mb-0.5">Your reply</p>
+                <p className="text-[10px] font-semibold text-brand mb-0.5">Your reply</p>
                 <p className="text-xs text-ink-secondary">{r.reply}</p>
               </div>
             ) : replyingId === r.id ? (

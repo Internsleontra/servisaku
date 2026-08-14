@@ -30,13 +30,13 @@ export function InvoiceBreakdown({ breakdown = [], total = 0, discount = 0, payo
           </div>
         )}
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-ink">Total</span>
-          <span className="text-sm font-bold text-ink">{formatMYR(total)}</span>
+          <span className="text-sm font-semibold text-ink">Total</span>
+          <span className="text-sm font-semibold text-ink">{formatMYR(total)}</span>
         </div>
         {payout != null && (
           <div className="flex items-center justify-between rounded-xl bg-brand-tint/40 px-3 py-2">
             <span className="text-xs font-semibold text-brand-ink">Your payout</span>
-            <span className="text-sm font-bold text-brand">{formatMYR(payout)}</span>
+            <span className="text-sm font-semibold text-brand">{formatMYR(payout)}</span>
           </div>
         )}
       </div>

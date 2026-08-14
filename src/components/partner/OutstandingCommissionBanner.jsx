@@ -26,8 +26,8 @@ export function OutstandingCommissionBanner() {
   if (!frozen && owed <= (wallet.credit_limit ?? 0)) return null;
 
   const tone = frozen
-    ? 'border-red-200 bg-red-50 text-red-700'
-    : 'border-amber-200 bg-amber-50 text-amber-800';
+    ? 'border-danger/30 bg-danger-tint text-danger'
+    : 'border-warning/30 bg-warning-tint text-warning';
 
   return (
     <Link to="/partner/wallet" className={`flex items-start gap-3 rounded-2xl border p-4 transition-shadow hover:shadow-e1 ${tone}`}>
@@ -35,7 +35,7 @@ export function OutstandingCommissionBanner() {
         ? <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
         : <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold">
+        <p className="text-sm font-semibold">
           {frozen ? 'New jobs are paused' : `${formatRM(owed)} commission outstanding`}
         </p>
         <p className="mt-0.5 text-xs opacity-90">

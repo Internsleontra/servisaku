@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils';
 // Tone → icon chip classes. Full literal strings so Tailwind JIT keeps them.
 const TONES = {
   brand: 'bg-brand-tint text-brand',
-  amber: 'bg-amber-50 text-amber-500',
-  emerald: 'bg-emerald-50 text-emerald-600',
-  sky: 'bg-sky-50 text-sky-600',
-  violet: 'bg-violet-50 text-violet-600',
-  rose: 'bg-rose-50 text-rose-600',
+  amber: 'bg-warning-tint text-star',
+  emerald: 'bg-success-tint text-success',
+  sky: 'bg-info-tint text-info',
+  violet: 'bg-chat-tint text-chat',
+  rose: 'bg-danger-tint text-danger',
   slate: 'bg-raised text-ink-secondary',
 };
 
@@ -32,7 +32,7 @@ export function MetricCard({ icon: Icon, label, value, sub, tone = 'brand', clas
           <Icon className="h-5 w-5" />
         </div>
       )}
-      <p className="text-xl font-bold tracking-tight text-ink">{value}</p>
+      <p className="text-xl font-semibold tracking-tight text-ink">{value}</p>
       <p className="mt-0.5 text-[11px] font-medium text-ink-secondary">{label}</p>
       {sub && <p className="mt-0.5 text-[10px] text-ink-tertiary">{sub}</p>}
     </Comp>

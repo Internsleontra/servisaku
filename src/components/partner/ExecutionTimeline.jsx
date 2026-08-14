@@ -1,4 +1,5 @@
 import { STATUS_META } from '@/lib/bookingEngine';
+import { statusIconFor } from '@/lib/statusIcons';
 import moment from 'moment';
 
 // Renders the server-recorded lifecycle (timestamped status transitions) as a
@@ -16,7 +17,7 @@ export function ExecutionTimeline({ lifecycle = [] }) {
         return (
           <li key={i} className="relative">
             <span className={`absolute -left-[27px] flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${last ? 'bg-brand text-white' : 'bg-raised'}`}>
-              {meta?.icon || '•'}
+              {(() => { const I = statusIconFor(e.status); return I ? <I className="size-3" /> : <span>•</span>; })()}
             </span>
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold text-ink">{meta?.label || e.status}</p>

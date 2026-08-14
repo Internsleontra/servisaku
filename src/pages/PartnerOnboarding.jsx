@@ -153,7 +153,7 @@ function DocUpload({ label, hint, value, onChange, optional }) {
           {hint && <p className="mt-0.5 text-xs text-ink-secondary">{hint}</p>}
         </div>
         {value ? (
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600">
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-success-tint px-2.5 py-1 text-xs font-semibold text-success">
             <Check className="h-3.5 w-3.5" /> Uploaded
           </span>
         ) : (
@@ -325,15 +325,15 @@ export default function PartnerOnboarding() {
   if (submitted) return (
     <div className="min-h-screen bg-bg px-5 py-10 font-inter lg:px-8">
       <div className="mx-auto max-w-lg text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-success-tint text-success">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h1 className="mt-5 font-display text-2xl font-bold text-ink">Application submitted successfully</h1>
+        <h1 className="mt-5 font-display text-2xl font-semibold text-ink">Application submitted successfully</h1>
         <p className="mt-2 text-sm text-ink-secondary">Thanks, {form.full_name?.split(' ')[0] || 'partner'}! We've received your application.</p>
 
         <div className="mt-6 space-y-3 rounded-2xl border border-hairline bg-surface p-5 text-left shadow-e1">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600"><Clock className="h-4 w-4" /></span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-tint text-warning"><Clock className="h-4 w-4" /></span>
             <div><p className="text-sm font-semibold text-ink">Verification in progress</p><p className="text-xs text-ink-secondary">Estimated approval: 24–48 hours</p></div>
           </div>
           <div className="flex items-center gap-3">
@@ -343,17 +343,17 @@ export default function PartnerOnboarding() {
         </div>
 
         <div className="mt-6 rounded-2xl border border-hairline bg-surface p-5 text-left shadow-e1">
-          <p className="text-sm font-bold text-ink">Once approved, you'll be able to:</p>
+          <p className="text-sm font-semibold text-ink">Once approved, you'll be able to:</p>
           <ol className="mt-3 space-y-2.5">
             {['Complete your profile', 'Set your service pricing', 'Watch onboarding & training videos', 'Go online to receive bookings'].map((t, i) => (
               <li key={t} className="flex items-center gap-3 text-sm text-ink-secondary">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-tint text-xs font-bold text-brand">{i + 1}</span>{t}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-tint text-xs font-semibold text-brand">{i + 1}</span>{t}
               </li>
             ))}
           </ol>
         </div>
 
-        <Button onClick={() => navigate('/partner')} className="mt-6 h-12 w-full rounded-2xl bg-brand font-bold text-white hover:bg-brand-ink">
+        <Button onClick={() => navigate('/partner')} className="mt-6 h-12 w-full rounded-2xl bg-brand font-semibold text-white hover:bg-brand-ink">
           Go to dashboard
         </Button>
       </div>
@@ -370,7 +370,7 @@ export default function PartnerOnboarding() {
       <div className="bg-gradient-to-br from-brand-ink via-brand to-brand/80 px-5 pb-6 pt-10 lg:px-8">
         <div className="mx-auto max-w-2xl">
           <p className="text-xs text-white/60">Partner registration</p>
-          <h1 className="mt-0.5 text-xl font-bold text-white">Join ServisAku as a Pro</h1>
+          <h1 className="mt-0.5 text-xl font-semibold text-white">Join ServisAku as a Pro</h1>
           <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
             <div className="h-full rounded-full bg-surface transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
@@ -385,7 +385,7 @@ export default function PartnerOnboarding() {
         {id === 'welcome' && (
           <div className="space-y-5">
             <div>
-              <h2 className="font-display text-2xl font-bold text-ink">Welcome to ServisAku Partner</h2>
+              <h2 className="font-display text-2xl font-semibold text-ink">Welcome to ServisAku Partner</h2>
               <p className="mt-1.5 text-sm text-ink-secondary">Earn on your own schedule serving customers across Malaysia. Registration takes about 10 minutes.</p>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -396,13 +396,13 @@ export default function PartnerOnboarding() {
               ].map((b) => (
                 <div key={b.t} className="rounded-2xl border border-hairline bg-surface p-4 shadow-e1">
                   <b.icon className="h-6 w-6 text-brand" />
-                  <p className="mt-2 text-base font-extrabold text-ink">{b.t}</p>
+                  <p className="mt-2 text-base font-semibold text-ink">{b.t}</p>
                   <p className="text-xs text-ink-secondary">{b.s}</p>
                 </div>
               ))}
             </div>
             <div className="rounded-2xl border border-hairline bg-brand-tint p-4">
-              <p className="text-sm font-bold text-ink">What you'll need</p>
+              <p className="text-sm font-semibold text-ink">What you'll need</p>
               <ul className="mt-2 space-y-1.5 text-sm text-ink-secondary">
                 {['MyKad / Passport & a selfie', 'Bank account for payouts', 'Your skills & service areas'].map((x) => (
                   <li key={x} className="flex items-center gap-2"><Check className="h-4 w-4 text-brand" />{x}</li>
@@ -424,11 +424,11 @@ export default function PartnerOnboarding() {
             </Field>
 
             {form.phone_verified ? (
-              <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-600">
+              <div className="flex items-center gap-2 rounded-xl bg-success-tint p-3 text-sm font-semibold text-success">
                 <CheckCircle2 className="h-5 w-5" /> Phone verified
               </div>
             ) : !otpSent ? (
-              <Button onClick={sendOtp} className="h-12 w-full rounded-2xl bg-brand font-bold text-white hover:bg-brand-ink">Send verification code</Button>
+              <Button onClick={sendOtp} className="h-12 w-full rounded-2xl bg-brand font-semibold text-white hover:bg-brand-ink">Send verification code</Button>
             ) : (
               <div className="space-y-3">
                 <Field label="Enter the 6-digit code">
@@ -438,10 +438,10 @@ export default function PartnerOnboarding() {
                   <button onClick={sendOtp} disabled={countdown > 0} className="text-xs font-semibold text-brand disabled:text-ink-tertiary">
                     {countdown > 0 ? `Resend in ${countdown}s` : 'Resend code'}
                   </button>
-                  <Button onClick={verifyOtp} className="rounded-xl bg-brand px-5 font-bold text-white hover:bg-brand-ink">Verify</Button>
+                  <Button onClick={verifyOtp} className="rounded-xl bg-brand px-5 font-semibold text-white hover:bg-brand-ink">Verify</Button>
                 </div>
                 {devCode
-                  ? <p className="text-xs text-ink-tertiary">Demo mode — no SMS was sent. Your code is <span className="font-mono font-bold text-ink">{devCode}</span>. Set <span className="font-mono">SMS_DEV_MODE=false</span> (with Twilio configured) to send real texts.</p>
+                  ? <p className="text-xs text-ink-tertiary">Demo mode — no SMS was sent. Your code is <span className="font-mono font-semibold text-ink">{devCode}</span>. Set <span className="font-mono">SMS_DEV_MODE=false</span> (with Twilio configured) to send real texts.</p>
                   : <p className="text-xs text-ink-tertiary">Enter the 6-digit code we sent to your phone.</p>}
               </div>
             )}
@@ -485,7 +485,7 @@ export default function PartnerOnboarding() {
               <MapPin className="mr-1.5 h-4 w-4" />{form.gps ? 'GPS location captured ✓' : 'Use my GPS location (optional)'}
             </Button>
             <div>
-              <div className="mb-1 flex items-center justify-between"><p className="text-xs font-medium text-ink-secondary">Service radius</p><span className="text-sm font-bold text-brand">{form.coverage_radius_km} km</span></div>
+              <div className="mb-1 flex items-center justify-between"><p className="text-xs font-medium text-ink-secondary">Service radius</p><span className="text-sm font-semibold text-brand">{form.coverage_radius_km} km</span></div>
               <input type="range" min="5" max="50" step="5" value={form.coverage_radius_km} onChange={(e) => set({ coverage_radius_km: Number(e.target.value) })} className="w-full accent-brand" />
             </div>
           </div>
@@ -514,7 +514,7 @@ export default function PartnerOnboarding() {
         {id === 'experience' && (
           <div className="space-y-4">
             <div>
-              <div className="mb-1 flex items-center justify-between"><p className="text-xs font-medium text-ink-secondary">Years of experience</p><span className="text-sm font-bold text-brand">{form.experience_years} yrs</span></div>
+              <div className="mb-1 flex items-center justify-between"><p className="text-xs font-medium text-ink-secondary">Years of experience</p><span className="text-sm font-semibold text-brand">{form.experience_years} yrs</span></div>
               <input type="range" min="0" max="40" value={form.experience_years} onChange={(e) => set({ experience_years: Number(e.target.value) })} className="w-full accent-brand" />
             </div>
             <Field label="Previous company (optional)"><input value={form.previous_company} onChange={(e) => set({ previous_company: e.target.value })} placeholder="Where you worked before" className={inputCls} /></Field>
@@ -620,7 +620,7 @@ export default function PartnerOnboarding() {
                 ? <img src={form.profile_photo.url} alt="Profile" className="h-full w-full object-cover" />
                 : <Camera className="h-8 w-8 text-ink-tertiary" />}
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-ink">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-ink">
               <Upload className="h-4 w-4" />{form.profile_photo ? 'Change photo' : 'Upload photo'}
               <input type="file" accept="image/*" className="hidden" onChange={uploadProfile} />
             </label>
@@ -653,8 +653,8 @@ export default function PartnerOnboarding() {
             ].map((sec) => (
               <div key={sec.label} className="rounded-2xl border border-hairline bg-surface p-4 shadow-e1">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-bold text-ink">{sec.label}</p>
-                  <button onClick={() => goTo(sec.to)} className="text-xs font-bold text-brand hover:text-brand-ink">Edit</button>
+                  <p className="text-sm font-semibold text-ink">{sec.label}</p>
+                  <button onClick={() => goTo(sec.to)} className="text-xs font-semibold text-brand hover:text-brand-ink">Edit</button>
                 </div>
                 <div className="space-y-1.5">
                   {sec.rows.map(([k, v]) => (
@@ -675,11 +675,11 @@ export default function PartnerOnboarding() {
           style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
           {step > 0 && <Button onClick={back} variant="outline" className="h-12 rounded-2xl px-5"><ArrowLeft className="h-4 w-4" /></Button>}
           {id === 'welcome' ? (
-            <Button onClick={next} className="h-12 flex-1 rounded-2xl bg-brand font-bold text-white hover:bg-brand-ink">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Button>
+            <Button onClick={next} className="h-12 flex-1 rounded-2xl bg-brand font-semibold text-white hover:bg-brand-ink">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Button>
           ) : id === 'review' ? (
-            <Button onClick={submit} disabled={saving} className="h-12 flex-1 rounded-2xl bg-brand font-bold text-white hover:bg-brand-ink">{saving ? 'Submitting…' : 'Submit application'}</Button>
+            <Button onClick={submit} disabled={saving} className="h-12 flex-1 rounded-2xl bg-brand font-semibold text-white hover:bg-brand-ink">{saving ? 'Submitting…' : 'Submit application'}</Button>
           ) : (
-            <Button onClick={next} className="h-12 flex-1 rounded-2xl bg-brand font-bold text-white hover:bg-brand-ink">Continue <ArrowRight className="ml-1 h-4 w-4" /></Button>
+            <Button onClick={next} className="h-12 flex-1 rounded-2xl bg-brand font-semibold text-white hover:bg-brand-ink">Continue <ArrowRight className="ml-1 h-4 w-4" /></Button>
           )}
         </div>
       </div>

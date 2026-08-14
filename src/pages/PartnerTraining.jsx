@@ -32,18 +32,18 @@ export default function PartnerTraining() {
           </button>
           <div>
             <p className="text-white/60 text-xs">Training Center</p>
-            <h1 className="text-xl font-bold text-white">Learn & get certified</h1>
+            <h1 className="text-xl font-semibold text-white">Learn & get certified</h1>
           </div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
           <div className="flex items-center justify-between mb-2">
             <p className="text-white/70 text-xs font-medium">{data.completed} of {data.total} courses completed</p>
-            <span className="text-white font-bold text-sm">{data.progress}%</span>
+            <span className="text-white font-semibold text-sm">{data.progress}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
             <div className="h-full rounded-full bg-surface transition-all" style={{ width: `${data.progress}%` }} />
           </div>
-          <div className={`mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${data.certified ? 'bg-emerald-500/20 text-white' : 'bg-white/10 text-white/80'}`}>
+          <div className={`mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${data.certified ? 'bg-success/20 text-white' : 'bg-white/10 text-white/80'}`}>
             <Award className="h-4 w-4" />
             {data.certified
               ? 'Certified — all mandatory training complete'
@@ -62,18 +62,18 @@ export default function PartnerTraining() {
               return (
                 <Card key={c.id} onClick={() => navigate(`/partner/training/${c.id}`)}>
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${done ? 'bg-emerald-50 text-emerald-600' : 'bg-brand-tint text-brand'}`}>
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${done ? 'bg-success-tint text-success' : 'bg-brand-tint text-brand'}`}>
                       {done ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-ink truncate">{c.title}</p>
-                        {c.mandatory && <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-brand">Required</span>}
+                        {c.mandatory && <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-brand">Required</span>}
                       </div>
                       <p className="mt-0.5 text-[11px] text-ink-secondary line-clamp-1">{c.summary}</p>
                       <div className="mt-1 flex items-center gap-3 text-[10px] text-ink-tertiary">
                         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{c.duration_min} min</span>
-                        {done && c.score != null && <span className="font-semibold text-emerald-600">Scored {c.score}%</span>}
+                        {done && c.score != null && <span className="font-semibold text-success">Scored {c.score}%</span>}
                         {done && c.completed_at && <span>{moment(c.completed_at).format('D MMM')}</span>}
                       </div>
                     </div>

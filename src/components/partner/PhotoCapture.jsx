@@ -23,9 +23,9 @@ export function PhotoCapture({ photos = [], onFiles, uploading = false, editable
         </a>
       ))}
       {editable && (
-        <label className="flex w-20 h-20 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-hairline/40 bg-raised/30 transition-colors hover:border-brand">
+        <label className="flex w-20 h-20 cursor-pointer flex-col items-center justify-center rounded-xl shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-dashed border-hairline/40 bg-raised/30 transition-colors hover:border-brand">
           {uploading
-            ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-raised border-t-brand" />
+            ? <div className="h-4 w-4 animate-spin rounded-full shadow-[inset_0_0_0_1px_rgb(var(--hairline))] border-raised border-t-brand" />
             : <Camera className="h-5 w-5 text-ink-secondary" />}
           <span className="mt-1 text-[9px] text-ink-secondary">Add</span>
           <input
