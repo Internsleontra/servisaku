@@ -3,11 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Navigation, Phone, MessageSquare, CheckCircle2,
   AlertTriangle, Clock, MapPin, ArrowLeft, ClipboardList, Receipt, History, Banknote,
+  LoaderCircle,
 } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { useRealtimeBooking } from '@/hooks/useRealtimeBooking';
 import { startGPSTracking, stopGPSTracking, sendSystemMessage, changeBookingStatus } from '@/lib/realtimeService';
-import { STATUS_META } from '@/lib/bookingEngine';
+import { formatBookingRef } from '@/lib/bookingEngine';
 import { summarizeAnswers, answersFromBreakdown } from '@/lib/bookingAnswers';
 import { AnswerList } from '@/components/partner/AnswerList';
 import { InvoiceBreakdown } from '@/components/partner/InvoiceBreakdown';
@@ -15,20 +16,53 @@ import { SectionHeader } from '@/components/partner/SectionHeader';
 import { PhotoCapture } from '@/components/partner/PhotoCapture';
 import { ExecutionTimeline } from '@/components/partner/ExecutionTimeline';
 import { ExtraServices } from '@/components/ExtraServices';
-import { Button } from '@/components/ui/button';
+import { Button, RING } from '@/components/ds';
+import { JobStatusBadge } from '@/components/partner/job';
+import { MoneyValue, PayoutBreakdown } from '@/components/partner/money';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import moment from 'moment';
 
+/* Status → the one action available from that state. The `next` values mirror
+   STATUS_TRANSITIONS in @/lib/bookingEngine exactly and are NOT redefined here;
+   this map only decides what the button says and which glyph it carries.
+
+   There is deliberately no entry for `pending` or `assigned`: claiming and
+   accepting happen on the dashboard, so those states render no action here. */
 const ACTION_CONFIG = {
-  accepted:  { label: 'Start Travelling', next: 'en_route',  color: 'bg-blue-600 hover:bg-blue-700', icon: Navigation },
-  en_route:  { label: 'Mark Arrived',     next: 'arrived',   color: 'bg-violet-600 hover:bg-violet-700', icon: MapPin },
-  arrived:   { label: 'Start Service',    next: 'started',   color: 'bg-brand hover:bg-brand/90', icon: CheckCircle2 },
-  started:   { label: 'Complete Job',     next: 'completed', color: 'bg-emerald-600 hover:bg-emerald-700', icon: CheckCircle2 },
+  accepted:  { label: 'Start Travelling', next: 'en_route',  icon: Navigation },
+  en_route:  { label: 'Mark Arrived',     next: 'arrived',   icon: MapPin },
+  arrived:   { label: 'Start Service',    next: 'started',   icon: CheckCircle2 },
+  started:   { label: 'Complete Job',     next: 'completed', icon: CheckCircle2 },
 };
 
-// A card shell in the partner design system.
+/* Card shell — inset ring, canonical 20px radius, never border + shadow. */
 function Card({ children, className = '' }) {
-  return <div className={`bg-surface rounded-2xl border border-hairline/10 shadow-e1 p-4 ${className}`}>{children}</div>;
+  return <div className={cn('rounded-card bg-surface p-4', RING, className)}>{children}</div>;
+}
+
+/* Secondary action tinted to its own semantic. Warning/danger tints are the
+   sanctioned uses of those tokens; they are not primary CTAs, so they do not
+   take the brand gradient. */
+function ToneButton({ tone, icon: Icon, children, onClick }) {
+  const tones = {
+    warning: 'bg-warning-tint text-warning',
+    danger: 'bg-danger-tint text-danger',
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex min-h-11 flex-1 items-center justify-center gap-2 rounded-field px-4 text-caption font-semibold transition',
+        'hover:brightness-[0.97] active:scale-[0.97]',
+        'focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]',
+        tones[tone], RING,
+      )}
+    >
+      <Icon className="size-4" aria-hidden="true" /> {children}
+    </button>
+  );
 }
 
 export default function PartnerJobScreen() {
@@ -75,12 +109,17 @@ export default function PartnerJobScreen() {
   }, [service, booking?.answers, booking?.price_breakdown]);
 
   if (loading || !booking) return (
-    <div className="flex justify-center pt-32"><div className="w-6 h-6 border-2 border-raised border-t-brand rounded-full animate-spin" /></div>
+    <div className="flex justify-center pt-32">
+      <LoaderCircle className="size-6 animate-spin text-brand" role="status" aria-label="Loading job" />
+    </div>
   );
 
   const action = ACTION_CONFIG[booking.status];
-  const statusMeta = STATUS_META[booking.status];
-  const payout = booking.partner_payout ?? Math.round((booking.price || 0) * 0.8);
+  // Server values only — the canonical split from the escrow row. The old
+  // `?? Math.round(price * 0.8)` fallback rounded to whole ringgit, so this
+  // screen disagreed with the wallet by up to a ringgit on every job.
+  const payout = booking.partner_payout ?? null;
+  const platformFee = booking.commission_amount ?? null;
   // Partner before/after photos (details.photos). Customer-uploaded images, when
   // that feature lands, live under a distinct key so the two never collide.
   const beforePhotos = booking.photos?.before || [];
@@ -89,6 +128,7 @@ export default function PartnerJobScreen() {
   const completed = booking.status === 'completed';
   const isCashJob = booking.payment_method === 'cash';
   const cashCollected = ['paid', 'escrowed'].includes(booking.payment_status);
+  const blockedOnAfterPhotos = action?.next === 'completed' && afterPhotos.length === 0;
 
   // Record cash taken at the door. The server re-derives the amount from the
   // booking and rejects a mismatch, so this only ever confirms — it never sets
@@ -196,273 +236,359 @@ export default function PartnerJobScreen() {
     toast.success('Alert sent to consumer');
   };
 
+  /* The one primary CTA. Canonical gradient in every state — the status colour
+     is carried by the badge and the timeline, not by the button. */
+  const primaryAction = action && !completed ? (
+    <Button block size="lg" onClick={handleAction}>
+      <action.icon className="size-5" aria-hidden="true" />
+      {action.label}
+    </Button>
+  ) : null;
+
   return (
-    <div className="min-h-screen bg-bg font-inter" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
-      {/* Header */}
-      <div className={`px-5 pt-14 pb-6 text-white ${completed ? 'bg-emerald-600' : 'bg-gradient-to-br from-brand-ink via-brand to-brand/80'}`}>
-        <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => navigate('/partner')} className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4 text-white" />
-          </button>
-          <div className="flex-1">
-            <p className="text-white/60 text-xs">Active Job</p>
-            <h1 className="text-lg font-bold">{booking.service_type}</h1>
+    <div
+      className="min-h-screen bg-bg"
+      style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
+    >
+      {/* ── Header ─────────────────────────────────────────────────────────
+          Canonical --grad-deep, not an ad-hoc from/via/to gradient. State is
+          communicated by the status badge rather than by recolouring the band. */}
+      <div className="bg-grad-deep px-5 pb-6 pt-8 text-white lg:px-8">
+        <div className="mx-auto w-full max-w-[1240px]">
+          <div className="mb-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/partner')}
+              aria-label="Back to dashboard"
+              className="grid size-11 shrink-0 place-items-center rounded-field bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="sa-num text-xs text-white/60">{formatBookingRef(booking.id)}</p>
+              <h1 className="truncate text-h3 text-white">{booking.service_type}</h1>
+            </div>
+            <span className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-caption font-medium">
+              <span className={cn('size-2 rounded-full', gpsActive ? 'animate-pulse bg-live' : 'bg-white/40')} aria-hidden="true" />
+              {gpsActive ? 'GPS Live' : 'GPS Off'}
+            </span>
           </div>
-          <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full">
-            <div className={`w-2 h-2 rounded-full ${gpsActive ? 'bg-green-300 animate-pulse' : 'bg-white/40'}`} />
-            <span className="text-xs font-medium">{gpsActive ? 'GPS Live' : 'GPS Off'}</span>
-          </div>
-        </div>
-        <div className="bg-white/10 rounded-2xl p-3 flex items-center gap-3">
-          <span className="text-2xl">{statusMeta?.icon}</span>
-          <div className="flex-1">
-            <p className="font-bold text-sm">{statusMeta?.label}</p>
-            <p className="text-white/60 text-xs">{moment(booking.date).format('ddd, D MMM')} • {booking.time_slot}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-white/60 text-[10px]">Your payout</p>
-            <p className="font-bold text-base">RM {payout}</p>
+
+          <div className="flex flex-wrap items-center gap-3 rounded-card bg-white/10 p-3">
+            {/* Status comes from the shared badge so the partner vocabulary and
+                the client-side icon map stay in one place. */}
+            <JobStatusBadge status={booking.status} />
+            <div className="min-w-0 flex-1">
+              <p className="sa-num text-xs text-white/70">
+                {moment(booking.date).format('ddd, D MMM')} · {booking.time_slot}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-white/60">Your payout</p>
+              <MoneyValue amount={payout} decimals={false} size="lg" tone="inverse" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-5 pt-5 space-y-4">
-        {/* Customer */}
-        <Card>
-          <p className="text-xs text-ink-secondary font-medium mb-3">Customer</p>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-11 h-11 rounded-2xl bg-brand-tint flex items-center justify-center">
-              <span className="font-bold text-brand">{booking.consumer_name?.charAt(0) || '?'}</span>
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm text-ink">{booking.consumer_name}</p>
-              <p className="text-xs text-ink-secondary">{booking.service_type}</p>
-            </div>
-            <div className="flex gap-2">
-              <a href={`tel:${booking.consumer_phone}`}
-                className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center hover:bg-brand/10 transition-colors">
-                <Phone className="h-4 w-4 text-ink-secondary" />
-              </a>
-              <button onClick={() => navigate(`/chat/${booking.id}`)}
-                className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center">
-                <MessageSquare className="h-4 w-4 text-white" />
-              </button>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 text-xs text-ink-secondary bg-raised/60 rounded-xl p-3">
-            <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 text-brand" />
-            <span>{booking.address}{booking.city ? `, ${booking.city}` : ''}</span>
-          </div>
-          {booking.notes && (
-            <div className="mt-2 text-xs text-ink-secondary bg-amber-50 border border-amber-100 rounded-xl p-3">
-              <strong className="text-amber-700">Customer notes:</strong> {booking.notes}
-            </div>
-          )}
-        </Card>
+      {/* ── Body ───────────────────────────────────────────────────────────
+          Desktop splits the execution surfaces from a sticky payout/action rail;
+          mobile stacks and keeps the bottom action bar. */}
+      <div className="mx-auto w-full max-w-[1240px] px-5 pt-5 lg:px-8">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:items-start">
 
-        {/* Navigate */}
-        <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${booking.address} ${booking.city || ''}`)}`}
-          target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-4 hover:bg-blue-100 transition-colors"
-        >
-          <Navigation className="h-5 w-5 text-blue-600" />
-          <div className="flex-1">
-            <p className="font-semibold text-sm text-blue-700">Navigate to Location</p>
-            <p className="text-xs text-blue-500">Open in Google Maps</p>
-          </div>
-        </a>
+          {/* Main column */}
+          <div className="space-y-4">
+            {/* Customer */}
+            <Card>
+              <p className="mb-3 text-xs font-medium text-ink-secondary">Customer</p>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="grid size-11 shrink-0 place-items-center rounded-field bg-brand-tint">
+                  <span className="font-semibold text-brand">{booking.consumer_name?.charAt(0) || '?'}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-caption font-semibold text-ink">{booking.consumer_name}</p>
+                  <p className="truncate text-xs text-ink-secondary">{booking.service_type}</p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <a
+                    href={`tel:${booking.consumer_phone}`}
+                    aria-label={`Call ${booking.consumer_name || 'customer'}`}
+                    className={cn('grid size-11 place-items-center rounded-field bg-raised text-ink-secondary transition hover:bg-brand-tint',
+                      'focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]')}
+                  >
+                    <Phone className="size-4" aria-hidden="true" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/chat/${booking.id}`)}
+                    aria-label="Message customer"
+                    className={cn('grid size-11 place-items-center rounded-field bg-brand text-white transition hover:brightness-[0.94] active:scale-[0.97]',
+                      'focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]')}
+                  >
+                    <MessageSquare className="size-4" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 rounded-field bg-raised/60 p-3 text-xs text-ink-secondary">
+                <MapPin className="mt-0.5 size-3.5 shrink-0 text-brand" aria-hidden="true" />
+                <span>{booking.address}{booking.city ? `, ${booking.city}` : ''}</span>
+              </div>
+              {booking.notes && (
+                <div className={cn('mt-2 rounded-field bg-warning-tint p-3 text-xs text-ink-secondary', RING)}>
+                  <strong className="text-warning">Customer notes:</strong> {booking.notes}
+                </div>
+              )}
+            </Card>
 
-        {/* Service details — the dynamic workflow answers */}
-        <Card>
-          <SectionHeader title="Service details" sub="What the customer requested — no need to ask again" className="mb-3" />
-          <div className="flex items-center gap-2 mb-3 rounded-xl bg-brand-tint/40 px-3 py-2">
-            <ClipboardList className="h-4 w-4 text-brand shrink-0" />
-            <span className="text-xs font-semibold text-brand-ink">{service?.name || booking.service_type}</span>
-          </div>
-          <AnswerList rows={answerRows} />
-        </Card>
-
-        {/* Customer-uploaded photos */}
-        {customerPhotos.length > 0 && (
-          <Card>
-            <SectionHeader title="Customer photos" sub={`${customerPhotos.length} uploaded`} className="mb-3" />
-            <div className="flex gap-2 flex-wrap">
-              {customerPhotos.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                  className="w-20 h-20 rounded-xl overflow-hidden border border-hairline/20">
-                  <img src={url} className="w-full h-full object-cover" alt={`Customer upload ${i + 1}`} />
-                </a>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {/* Invoice */}
-        <Card>
-          <SectionHeader title="Invoice" action={<Receipt className="h-4 w-4 text-ink-tertiary" />} className="mb-3" />
-          <InvoiceBreakdown
-            breakdown={booking.price_breakdown || []}
-            total={booking.price || 0}
-            discount={booking.discount_amount || 0}
-            payout={payout}
-          />
-          <p className="mt-3 text-[10px] text-ink-tertiary">
-            Payment: {booking.payment_method?.toUpperCase() || '—'} · {booking.payment_status || 'pending'}
-          </p>
-        </Card>
-
-        {/* Extra services — proposed mid-job, customer approves */}
-        {(['arrived', 'started', 'completed'].includes(booking.status) || (booking.extras?.length > 0)) && (
-          <Card>
-            <SectionHeader title="Extra services" sub="Found extra work? Propose it — the customer approves." className="mb-3" />
-            <ExtraServices
-              extras={booking.extras || []}
-              mode="partner"
-              editable={['arrived', 'started'].includes(booking.status)}
-              onAdd={handleAddExtra}
-            />
-          </Card>
-        )}
-
-        {/* Service photos — before / after verification */}
-        {['arrived', 'started', 'completed'].includes(booking.status) && (
-          <Card className="space-y-4">
-            <SectionHeader title="Service photos" sub="Before & after verification (timestamped)" />
-            <div>
-              <p className="mb-2 text-xs font-semibold text-ink">Before</p>
-              <PhotoCapture
-                photos={beforePhotos}
-                uploading={uploadingPhase === 'before'}
-                editable={['arrived', 'started'].includes(booking.status)}
-                onFiles={(files) => captureAndUpload(files, 'before')}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold text-ink">
-                After
-                {booking.status === 'started' && afterPhotos.length === 0 && (
-                  <span className="ml-1 font-normal text-danger">· required to complete</span>
-                )}
-              </p>
-              <PhotoCapture
-                photos={afterPhotos}
-                uploading={uploadingPhase === 'after'}
-                editable={booking.status === 'started'}
-                onFiles={(files) => captureAndUpload(files, 'after')}
-              />
-            </div>
-          </Card>
-        )}
-
-        {/* Execution timeline */}
-        {Array.isArray(booking.lifecycle) && booking.lifecycle.length > 0 && (
-          <Card>
-            <SectionHeader title="Activity timeline" action={<History className="h-4 w-4 text-ink-tertiary" />} className="mb-3" />
-            <ExecutionTimeline lifecycle={booking.lifecycle} />
-          </Card>
-        )}
-
-        {/* Delay + Cannot Access */}
-        {['en_route', 'arrived'].includes(booking.status) && (
-          <div className="flex gap-2">
-            <button onClick={() => setShowDelay(true)}
-              className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors">
-              <Clock className="h-4 w-4" /> Report Delay
-            </button>
-            <button onClick={() => setShowCannotAccess(true)}
-              className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl border border-red-200 bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors">
-              <AlertTriangle className="h-4 w-4" /> Cannot Access
-            </button>
-          </div>
-        )}
-
-        {showDelay && (
-          <Card className="border-amber-200 space-y-3">
-            <p className="text-sm font-bold text-amber-700">Report Delay</p>
-            <select value={delayMinutes} onChange={e => setDelayMinutes(e.target.value)}
-              className="w-full bg-raised rounded-xl px-4 py-3 text-sm outline-none">
-              {['10', '15', '20', '30', '45', '60'].map(m => <option key={m} value={m}>{m} minutes</option>)}
-            </select>
-            <div className="flex gap-2">
-              <Button onClick={handleDelay} className="flex-1 rounded-xl h-10 bg-amber-500 hover:bg-amber-600">Notify Customer</Button>
-              <Button onClick={() => setShowDelay(false)} variant="outline" className="flex-1 rounded-xl h-10">Cancel</Button>
-            </div>
-          </Card>
-        )}
-
-        {showCannotAccess && (
-          <Card className="border-red-200 space-y-3">
-            <p className="text-sm font-bold text-red-700">Cannot Access Property</p>
-            <p className="text-xs text-ink-secondary">This will immediately alert the customer and ServisAku support.</p>
-            <div className="flex gap-2">
-              <Button onClick={handleCannotAccess} variant="destructive" className="flex-1 rounded-xl h-10">Send Alert</Button>
-              <Button onClick={() => setShowCannotAccess(false)} variant="outline" className="flex-1 rounded-xl h-10">Cancel</Button>
-            </div>
-          </Card>
-        )}
-
-        {completed && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center">
-            <span className="text-4xl mb-2 block">🎉</span>
-            <p className="font-bold text-emerald-700 text-lg">Job Completed!</p>
-            <p className="text-xs text-emerald-600 mt-1">
-              {isCashJob
-                ? `Collect RM ${booking.price?.toFixed(2)} from the customer`
-                : `RM ${payout} will be credited within 48 hours`}
-            </p>
-          </div>
-        )}
-
-        {/* Cash collection — the entry point of the cash flow. Only shown on a
-            completed cash job that hasn't been recorded yet. */}
-        {completed && isCashJob && !cashCollected && (
-          <div className="bg-surface border-2 border-amber-300 rounded-2xl p-5">
-            <div className="flex items-start gap-3">
-              <Banknote className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            {/* Navigate */}
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${booking.address} ${booking.city || ''}`)}`}
+              target="_blank" rel="noopener noreferrer"
+              className={cn('flex min-h-11 items-center gap-3 rounded-card bg-info-tint p-4 transition hover:brightness-[0.97]',
+                'focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]', RING)}
+            >
+              <Navigation className="size-5 text-info" aria-hidden="true" />
               <div className="flex-1">
-                <p className="font-bold text-sm text-ink">Record cash payment</p>
-                <p className="text-xs text-ink-secondary mt-1">
-                  Confirm you received <strong>RM {booking.price?.toFixed(2)}</strong> from the
-                  customer. ServisAku's commission will be added to your outstanding
-                  balance and settled {'later'} — see your wallet.
+                <p className="text-caption font-semibold text-info">Navigate to Location</p>
+                <p className="text-xs text-info">Open in Google Maps</p>
+              </div>
+            </a>
+
+            {/* Service details — the dynamic workflow answers */}
+            <Card>
+              <SectionHeader title="Service details" sub="What the customer requested — no need to ask again" className="mb-3" />
+              <div className="mb-3 flex items-center gap-2 rounded-field bg-brand-tint/40 px-3 py-2">
+                <ClipboardList className="size-4 shrink-0 text-brand" aria-hidden="true" />
+                <span className="text-xs font-semibold text-brand-ink">{service?.name || booking.service_type}</span>
+              </div>
+              <AnswerList rows={answerRows} />
+            </Card>
+
+            {/* Customer-uploaded photos */}
+            {customerPhotos.length > 0 && (
+              <Card>
+                <SectionHeader title="Customer photos" sub={`${customerPhotos.length} uploaded`} className="mb-3" />
+                <div className="flex flex-wrap gap-2">
+                  {customerPhotos.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                      className={cn('size-20 overflow-hidden rounded-field', RING,
+                        'focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]')}>
+                      <img src={url} className="size-full object-cover" alt={`Customer upload ${i + 1}`} />
+                    </a>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Extra services — proposed mid-job, customer approves */}
+            {(['arrived', 'started', 'completed'].includes(booking.status) || (booking.extras?.length > 0)) && (
+              <Card>
+                <SectionHeader title="Extra services" sub="Found extra work? Propose it — the customer approves." className="mb-3" />
+                <ExtraServices
+                  extras={booking.extras || []}
+                  mode="partner"
+                  editable={['arrived', 'started'].includes(booking.status)}
+                  onAdd={handleAddExtra}
+                />
+              </Card>
+            )}
+
+            {/* Service photos — before / after verification */}
+            {['arrived', 'started', 'completed'].includes(booking.status) && (
+              <Card className="space-y-4">
+                <SectionHeader title="Service photos" sub="Before & after verification (timestamped)" />
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-ink">Before</p>
+                  <PhotoCapture
+                    photos={beforePhotos}
+                    uploading={uploadingPhase === 'before'}
+                    editable={['arrived', 'started'].includes(booking.status)}
+                    onFiles={(files) => captureAndUpload(files, 'before')}
+                  />
+                </div>
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-ink">
+                    After
+                    {booking.status === 'started' && afterPhotos.length === 0 && (
+                      <span className="ml-1 font-normal text-danger">· required to complete</span>
+                    )}
+                  </p>
+                  <PhotoCapture
+                    photos={afterPhotos}
+                    uploading={uploadingPhase === 'after'}
+                    editable={booking.status === 'started'}
+                    onFiles={(files) => captureAndUpload(files, 'after')}
+                  />
+                </div>
+              </Card>
+            )}
+
+            {/* Execution timeline */}
+            {Array.isArray(booking.lifecycle) && booking.lifecycle.length > 0 && (
+              <Card>
+                <SectionHeader title="Activity timeline" action={<History className="size-4 text-ink-tertiary" aria-hidden="true" />} className="mb-3" />
+                <ExecutionTimeline lifecycle={booking.lifecycle} />
+              </Card>
+            )}
+
+            {/* Delay + Cannot Access */}
+            {['en_route', 'arrived'].includes(booking.status) && (
+              <div className="flex gap-2">
+                <ToneButton tone="warning" icon={Clock} onClick={() => setShowDelay(true)}>Report Delay</ToneButton>
+                <ToneButton tone="danger" icon={AlertTriangle} onClick={() => setShowCannotAccess(true)}>Cannot Access</ToneButton>
+              </div>
+            )}
+
+            {showDelay && (
+              <Card className="space-y-3">
+                <p className="text-caption font-semibold text-warning">Report Delay</p>
+                <label className="sr-only" htmlFor="delay-minutes">Delay in minutes</label>
+                <select
+                  id="delay-minutes"
+                  value={delayMinutes}
+                  onChange={e => setDelayMinutes(e.target.value)}
+                  className={cn('min-h-11 w-full rounded-field bg-raised px-4 text-caption outline-none',
+                    'focus-visible:shadow-[shadow:var(--focus-ring)]')}
+                >
+                  {['10', '15', '20', '30', '45', '60'].map(m => <option key={m} value={m}>{m} minutes</option>)}
+                </select>
+                <div className="flex gap-2">
+                  <Button onClick={handleDelay} className="flex-1">Notify Customer</Button>
+                  <Button onClick={() => setShowDelay(false)} variant="outline" className="flex-1">Cancel</Button>
+                </div>
+              </Card>
+            )}
+
+            {showCannotAccess && (
+              <Card className="space-y-3">
+                <p className="text-caption font-semibold text-danger">Cannot Access Property</p>
+                <p className="text-xs text-ink-secondary">This will immediately alert the customer and ServisAku support.</p>
+                <div className="flex gap-2">
+                  <Button onClick={handleCannotAccess} variant="danger" className="flex-1">Send Alert</Button>
+                  <Button onClick={() => setShowCannotAccess(false)} variant="outline" className="flex-1">Cancel</Button>
+                </div>
+              </Card>
+            )}
+
+            {completed && (
+              <div className={cn('rounded-card bg-success-tint p-6 text-center', RING)}>
+                <CheckCircle2 className="mx-auto mb-2 size-9 text-success" aria-hidden="true" />
+                <p className="text-lead font-semibold text-success">Job Completed</p>
+                <p className="mt-1 text-xs text-success">
+                  {isCashJob
+                    ? <>Collect <MoneyValue amount={booking.price} tone="positive" size="sm" /> from the customer</>
+                    : <><MoneyValue amount={payout} decimals={false} tone="positive" size="sm" /> will be credited within 48 hours</>}
                 </p>
               </div>
-            </div>
-            <Button
-              onClick={handleCollectCash}
-              disabled={collectingCash}
-              className="w-full h-11 rounded-xl mt-4 bg-amber-600 hover:bg-amber-700 text-white font-bold"
-            >
-              {collectingCash ? 'Recording…' : `Confirm RM ${booking.price?.toFixed(2)} received`}
-            </Button>
-          </div>
-        )}
+            )}
 
-        {completed && isCashJob && cashCollected && (
-          <div className="bg-surface border border-hairline/20 rounded-2xl p-4 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-ink">Cash payment recorded</p>
-              <p className="text-xs text-ink-secondary">
-                Commission added to your outstanding balance.{' '}
-                <Link to="/partner/wallet" className="font-semibold text-brand underline">View wallet</Link>
-              </p>
-            </div>
+            {/* Cash collection — the entry point of the cash flow. Only shown on a
+                completed cash job that hasn't been recorded yet. */}
+            {completed && isCashJob && !cashCollected && (
+              <Card className="p-5">
+                <div className="flex items-start gap-3">
+                  <Banknote className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
+                  <div className="flex-1">
+                    <p className="text-caption font-semibold text-ink">Record cash payment</p>
+                    <p className="mt-1 text-xs text-ink-secondary">
+                      Confirm you received <MoneyValue amount={booking.price} size="sm" /> from the
+                      customer. ServisAku&apos;s commission will be added to your outstanding
+                      balance and settled later — see your wallet.
+                    </p>
+                  </div>
+                </div>
+                <Button block loading={collectingCash} disabled={collectingCash} onClick={handleCollectCash} className="mt-4">
+                  {collectingCash ? 'Recording…' : <>Confirm <MoneyValue amount={booking.price} tone="inverse" size="sm" /> received</>}
+                </Button>
+              </Card>
+            )}
+
+            {completed && isCashJob && cashCollected && (
+              <Card className="flex items-center gap-3">
+                <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="text-caption font-semibold text-ink">Cash payment recorded</p>
+                  <p className="text-xs text-ink-secondary">
+                    Commission added to your outstanding balance.{' '}
+                    <Link to="/partner/wallet" className="font-semibold text-brand underline">View wallet</Link>
+                  </p>
+                </div>
+              </Card>
+            )}
           </div>
-        )}
+
+          {/* ── Sticky payout / action rail (desktop) ───────────────────── */}
+          <aside className="hidden lg:block lg:sticky lg:top-5 lg:space-y-4">
+            <PayoutBreakdown
+              gross={booking.price || 0}
+              lines={[{ label: 'Platform commission', amount: platformFee == null ? null : -platformFee }]}
+              net={payout}
+              caption={isCashJob
+                ? 'Cash job — you collect from the customer and the commission is settled from your wallet.'
+                : 'Credited within 48 hours of completion.'}
+            />
+
+            {primaryAction && (
+              <div className={cn('rounded-card bg-surface p-4', RING)}>
+                {primaryAction}
+                {blockedOnAfterPhotos && (
+                  <p className="mt-2 text-center text-xs text-danger">Add an “after” photo to complete</p>
+                )}
+              </div>
+            )}
+
+            <Card>
+              <SectionHeader title="Invoice" action={<Receipt className="size-4 text-ink-tertiary" aria-hidden="true" />} className="mb-3" />
+              <InvoiceBreakdown
+                breakdown={booking.price_breakdown || []}
+                total={booking.price || 0}
+                discount={booking.discount_amount || 0}
+                payout={payout}
+              />
+              <p className="mt-3 text-[10px] text-ink-tertiary">
+                Payment: {booking.payment_method?.toUpperCase() || '—'} · {booking.payment_status || 'pending'}
+              </p>
+            </Card>
+          </aside>
+
+          {/* Invoice + payout on mobile, where there is no rail. */}
+          <div className="space-y-4 lg:hidden">
+            <PayoutBreakdown
+              gross={booking.price || 0}
+              lines={[{ label: 'Platform commission', amount: platformFee == null ? null : -platformFee }]}
+              net={payout}
+              caption={isCashJob
+                ? 'Cash job — you collect from the customer.'
+                : 'Credited within 48 hours of completion.'}
+            />
+            <Card>
+              <SectionHeader title="Invoice" action={<Receipt className="size-4 text-ink-tertiary" aria-hidden="true" />} className="mb-3" />
+              <InvoiceBreakdown
+                breakdown={booking.price_breakdown || []}
+                total={booking.price || 0}
+                discount={booking.discount_amount || 0}
+                payout={payout}
+              />
+              <p className="mt-3 text-[10px] text-ink-tertiary">
+                Payment: {booking.payment_method?.toUpperCase() || '—'} · {booking.payment_status || 'pending'}
+              </p>
+            </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Sticky action */}
-      {action && !completed && (
-        <div className="fixed bottom-0 left-0 right-0 z-40">
-          <div className="max-w-lg mx-auto bg-surface/95 backdrop-blur-xl border-t border-hairline/10 px-5 py-4" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
-            <Button onClick={handleAction}
-              className={`w-full h-12 rounded-2xl text-base font-bold shadow-e2 text-white ${action.color}`}>
-              <action.icon className="h-5 w-5 mr-2" />
-              {action.label}
-              {action.next === 'completed' && afterPhotos.length === 0 && ' · add after photos first'}
-            </Button>
+      {/* Sticky action — mobile only; desktop keeps it in the rail. */}
+      {primaryAction && (
+        <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+          <div
+            className="bg-surface/95 px-5 py-4 backdrop-blur-xl shadow-[inset_0_1px_0_rgb(var(--hairline))]"
+            style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+          >
+            {primaryAction}
+            {blockedOnAfterPhotos && (
+              <p className="mt-2 text-center text-xs text-danger">Add an “after” photo to complete</p>
+            )}
           </div>
         </div>
       )}

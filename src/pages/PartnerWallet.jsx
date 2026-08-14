@@ -1,22 +1,41 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Wallet, Clock, AlertTriangle, ArrowUpRight, ArrowDownRight,
-  Receipt, ShieldAlert, CheckCircle2,
+  Wallet, Clock, AlertTriangle, ArrowUpRight, ArrowDownRight, Landmark,
+  Receipt, ShieldAlert, CheckCircle2, TrendingUp, LoaderCircle, TriangleAlert, Ban,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { servisaku } from '@/api/servisakuClient';
-import { formatRM } from '@/lib/paymentEngine';
-import { MetricCard } from '@/components/partner/MetricCard';
+import { PageHeader } from '@/components/partner/PageHeader';
+import { MoneyValue, MetricStat } from '@/components/partner/money';
 import { SectionHeader } from '@/components/partner/SectionHeader';
-import { Button } from '@/components/ui/button';
+import { Button, RING } from '@/components/ds';
+import { cn } from '@/lib/utils';
 import moment from 'moment';
 
-const EMPTY = {
-  available_balance: 0, pending_balance: 0, outstanding_commission: 0,
-  lifetime_earnings: 0, lifetime_commission: 0, credit_limit: 50,
-  settlement_cycle: 'weekly', is_frozen: false, payouts_suspended: false, currency: 'MYR',
+/* ── Money provenance ───────────────────────────────────────────────────────
+   EVERY figure on this page is returned by the server and rendered verbatim.
+   Nothing is summed, rounded, multiplied or derived here.
+
+     GET /api/payouts/dashboard   the single source for all balances —
+                                  lifetime · pending · withdrawn · withdrawable ·
+                                  outstanding_commission · minimum_payout ·
+                                  next_payout_date · bank_account ·
+                                  payout_blocked_reason · recent_payouts · series
+     GET /api/wallet/ledger       transaction history (WalletLedgerEntry)
+     GET /api/wallet/settlements  cash-commission settlement history
+
+   GET /api/wallet is still called, but ONLY for three wallet-config fields the
+   dashboard does not carry: credit_limit, settlement_cycle and freeze_reason.
+   No money value is read from it, so the two wallet vocabularies never mix on
+   screen — every amount below uses the dashboard's naming.
+--------------------------------------------------------------------------- */
+const EMPTY_SUMMARY = {
+  lifetime: 0, pending: 0, withdrawn: 0, withdrawable: 0, balance: 0,
+  outstanding_commission: 0, minimum_payout: 0, next_payout_date: null,
+  bank_account: null, payout_blocked_reason: null, recent_payouts: [], series: [],
+  payouts_suspended: false, is_frozen: false, currency: 'MYR',
 };
+const EMPTY_CONFIG = { credit_limit: 50, settlement_cycle: 'weekly', freeze_reason: null };
 
 // Ledger entry type → how it reads to a partner. The raw type names are precise
 // but internal; a partner should see plain language.
@@ -37,37 +56,90 @@ const ENTRY_LABEL = {
 };
 
 const SETTLEMENT_TONE = {
-  paid: 'bg-emerald-50 text-emerald-700',
-  pending: 'bg-amber-50 text-amber-700',
-  partially_paid: 'bg-amber-50 text-amber-700',
-  overdue: 'bg-red-50 text-red-600',
-  waived: 'bg-slate-100 text-slate-600',
-  written_off: 'bg-slate-100 text-slate-600',
+  paid: 'bg-success-tint text-success',
+  pending: 'bg-warning-tint text-star',
+  partially_paid: 'bg-warning-tint text-star',
+  overdue: 'bg-danger-tint text-danger',
+  waived: 'bg-raised text-ink-secondary',
+  written_off: 'bg-raised text-ink-secondary',
 };
 
+/* A payout is a withdrawal, not a booking split. `void` is a real outcome and is
+   shown as such — a voided record must never read as money received. */
+const PAYOUT_TONE = {
+  completed: 'bg-success-tint text-success',
+  paid: 'bg-success-tint text-success',
+  processing: 'bg-info-tint text-info',
+  scheduled: 'bg-info-tint text-info',
+  pending: 'bg-warning-tint text-star',
+  failed: 'bg-danger-tint text-danger',
+  cancelled: 'bg-raised text-ink-secondary',
+  void: 'bg-raised text-ink-secondary',
+};
+const VOIDED = ['void', 'cancelled', 'failed'];
+
+const TABS = [
+  { id: 'ledger', label: 'Activity' },
+  { id: 'payouts', label: 'Payouts' },
+  { id: 'settlements', label: 'Settlements' },
+];
+
+function Panel({ children, className }) {
+  return <div className={cn('rounded-card bg-surface p-5', RING, className)}>{children}</div>;
+}
+
+/* Banner — tone carries meaning, never decoration. Orange stays reserved for
+   warnings; a hard stop uses danger. */
+function Banner({ tone = 'warning', icon: Icon, title, children }) {
+  const tones = {
+    warning: 'bg-warning-tint text-warning',
+    danger: 'bg-danger-tint text-danger',
+    info: 'bg-info-tint text-info',
+  };
+  return (
+    <div className={cn('flex items-start gap-3 rounded-card p-4', tones[tone], RING)} role="status">
+      <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+      <div className="flex-1">
+        <p className="text-caption font-semibold">{title}</p>
+        {children && <div className="mt-0.5 text-xs text-ink-secondary">{children}</div>}
+      </div>
+    </div>
+  );
+}
+
 export default function PartnerWallet() {
-  const navigate = useNavigate();
-  const [wallet, setWallet] = useState(EMPTY);
+  const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [config, setConfig] = useState(EMPTY_CONFIG);
   const [entries, setEntries] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [tab, setTab] = useState('ledger');
   const [payingId, setPayingId] = useState(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [w, l, s] = await Promise.all([
+      setLoadError(null);
+      const [d, w, l, s] = await Promise.all([
+        servisaku.wallet.dashboard(),
         servisaku.wallet.detail(),
         servisaku.wallet.ledger({ limit: 50 }),
         servisaku.wallet.settlements(),
       ]);
-      setWallet(w);
-      setEntries(l.items || []);
+      setSummary({ ...EMPTY_SUMMARY, ...d });
+      setConfig({
+        credit_limit: w?.credit_limit ?? EMPTY_CONFIG.credit_limit,
+        settlement_cycle: w?.settlement_cycle ?? EMPTY_CONFIG.settlement_cycle,
+        freeze_reason: w?.freeze_reason ?? null,
+      });
+      setEntries(l?.items || []);
       setSettlements(s || []);
     } catch (err) {
-      // Mirrors PartnerEarnings: a rejection must still clear the spinner, or
-      // the page hangs with no explanation.
+      // A rejection must still clear the spinner, or the page hangs with no
+      // explanation — the failure mode PartnerEarnings had.
       console.error('[PartnerWallet] failed to load:', err);
+      setLoadError(err?.message || 'Could not load your wallet');
       toast.error(err?.message || 'Could not load your wallet');
     } finally {
       setLoading(false);
@@ -77,7 +149,26 @@ export default function PartnerWallet() {
   useEffect(() => { load(); }, [load]);
 
   const unpaid = settlements.filter((s) => ['pending', 'partially_paid', 'overdue'].includes(s.status));
-  const overGrace = wallet.outstanding_commission > wallet.credit_limit;
+  const overGrace = summary.outstanding_commission > config.credit_limit;
+
+  // Every gate below is a server-provided fact, not a client judgement.
+  const blockedReason = summary.payout_blocked_reason;
+  const belowMinimum = summary.withdrawable > 0 && summary.withdrawable < summary.minimum_payout;
+  const canWithdraw = summary.withdrawable > 0 && !blockedReason
+    && !summary.payouts_suspended && !belowMinimum;
+
+  const handleWithdraw = async () => {
+    setWithdrawing(true);
+    try {
+      await servisaku.wallet.withdraw(summary.withdrawable);
+      toast.success('Withdrawal requested — funds arrive in 1–3 business days');
+      await load();
+    } catch (err) {
+      toast.error(err?.message || 'Withdrawal failed');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
 
   const handlePay = async (settlement) => {
     setPayingId(settlement.id);
@@ -106,198 +197,336 @@ export default function PartnerWallet() {
 
   if (loading) return (
     <div className="flex justify-center pt-32">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+      <LoaderCircle className="size-6 animate-spin text-brand" role="status" aria-label="Loading wallet" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-bg font-inter pb-24">
-      <div className="sticky top-0 z-20 border-b border-hairline/20 bg-surface px-5 pb-4 pt-12 lg:pt-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-raised lg:hidden">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <div className="flex-1">
-            <p className="text-xs text-ink-secondary">Your money</p>
-            <p className="text-sm font-bold text-ink">Wallet</p>
+    <div className="px-5 py-6 lg:px-8 lg:py-8">
+      <PageHeader
+        eyebrow="Your money"
+        title="Wallet"
+        subtitle="Balances, payouts and commission settlements."
+        backTo="/partner"
+      />
+
+      {loadError && (
+        <div className={cn('mb-5 flex items-start gap-3 rounded-card bg-danger-tint p-4', RING)} role="alert">
+          <TriangleAlert className="mt-0.5 size-5 shrink-0 text-danger" aria-hidden="true" />
+          <div>
+            <p className="text-caption font-semibold text-danger">Could not load your wallet</p>
+            <p className="mt-0.5 text-xs text-ink-secondary">{loadError}</p>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="mx-auto max-w-3xl space-y-5 px-5 pt-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_340px] lg:items-start">
 
-        {/* Frozen banner — the partner must understand why jobs stopped arriving,
-            rather than discovering it as an empty job feed. */}
-        {wallet.is_frozen && (
-          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
-            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-            <div className="flex-1">
-              <p className="text-sm font-bold text-red-700">New jobs are paused</p>
-              <p className="mt-0.5 text-xs text-red-600">
-                {wallet.freeze_reason || 'Settle your outstanding commission to start receiving jobs again.'}
-                {wallet.payouts_suspended && ' Payouts are also on hold.'}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* ── Main column ───────────────────────────────────────────────── */}
+        <div className="space-y-5">
 
-        {/* Outstanding commission — only shown once it matters (past the grace
-            limit), so a partner owing small change isn't nagged. */}
-        {overGrace && !wallet.is_frozen && (
-          <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-            <div className="flex-1">
-              <p className="text-sm font-bold text-amber-800">
-                {formatRM(wallet.outstanding_commission)} commission outstanding
-              </p>
-              <p className="mt-0.5 text-xs text-amber-700">
-                From cash jobs where you collected the full fare. Settle before the due
-                date to keep receiving new jobs.
-              </p>
-            </div>
-          </div>
-        )}
+          {/* Frozen — the partner must understand why jobs stopped arriving,
+              rather than discovering it as an empty job feed. */}
+          {summary.is_frozen && (
+            <Banner tone="danger" icon={ShieldAlert} title="New jobs are paused">
+              {config.freeze_reason || 'Settle your outstanding commission to start receiving jobs again.'}
+              {summary.payouts_suspended && ' Payouts are also on hold.'}
+            </Banner>
+          )}
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <MetricCard icon={Wallet} tone="emerald" label="Available" value={formatRM(wallet.available_balance)} sub="Withdrawable now" />
-          <MetricCard icon={Clock} tone="amber" label="Pending" value={formatRM(wallet.pending_balance)} sub="Held in escrow" />
-          <MetricCard
-            icon={Receipt}
-            tone={wallet.outstanding_commission > 0 ? 'rose' : 'slate'}
-            label="Commission owed"
-            value={formatRM(wallet.outstanding_commission)}
-            sub={`Grace up to ${formatRM(wallet.credit_limit)}`}
+          {/* Outstanding commission — only once it matters (past the grace
+              limit), so a partner owing small change isn't nagged. */}
+          {overGrace && !summary.is_frozen && (
+            <Banner tone="warning" icon={AlertTriangle} title="Commission outstanding">
+              <MoneyValue amount={summary.outstanding_commission} size="sm" tone="muted" /> from cash
+              jobs where you collected the full fare. Settle before the due date to keep
+              receiving new jobs.
+            </Banner>
+          )}
+
+          {/* Available — the figure a partner opens this page for. */}
+          <MetricStat
+            variant="dark"
+            label="Available to withdraw"
+            amount={summary.withdrawable}
+            icon={Wallet}
+            caption={
+              summary.withdrawable > 0
+                ? 'Released earnings, ready to transfer.'
+                : 'Nothing released yet — earnings appear here once escrow is released.'
+            }
           />
-          <MetricCard icon={ArrowUpRight} tone="brand" label="Lifetime earned" value={formatRM(wallet.lifetime_earnings)} sub={`${wallet.settlement_cycle} settlement`} />
-        </div>
 
-        {/* Settlements needing action come first — this is the actionable part. */}
-        {unpaid.length > 0 && (
-          <div className="space-y-3">
-            <SectionHeader title="Settle your commission" sub="Cash jobs you've collected on" />
-            {unpaid.map((s) => {
-              const due = moment(s.due_date);
-              const isOverdue = due.isBefore(moment(), 'day');
-              return (
-                <div key={s.id} className="rounded-2xl border border-hairline/10 bg-surface p-4 shadow-e1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-mono text-[11px] text-ink-tertiary">{s.reference}</p>
-                      <p className="mt-1 text-lg font-bold text-ink">{formatRM(s.balance_due)}</p>
-                      <p className="mt-0.5 text-[11px] text-ink-secondary">
-                        {moment(s.period_start).format('D MMM')} – {moment(s.period_end).format('D MMM')}
-                        {' · '}
-                        <span className={isOverdue ? 'font-semibold text-red-600' : ''}>
-                          {isOverdue ? `overdue ${due.fromNow(true)}` : `due ${due.format('D MMM')}`}
-                        </span>
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-2 py-1 text-[10px] font-bold capitalize ${SETTLEMENT_TONE[s.status] || SETTLEMENT_TONE.pending}`}>
-                      {s.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      onClick={() => handlePay(s)}
-                      disabled={payingId === s.id}
-                      className="flex-1 rounded-xl"
-                    >
-                      {payingId === s.id ? 'Starting…' : 'Pay online'}
-                    </Button>
-                    {/* Netting against earnings is opt-in, never automatic. */}
-                    <Button
-                      onClick={() => handlePayFromBalance(s)}
-                      disabled={payingId === s.id || wallet.available_balance < s.balance_due}
-                      variant="outline"
-                      className="flex-1 rounded-xl"
-                      title={wallet.available_balance < s.balance_due ? 'Not enough available balance' : undefined}
-                    >
-                      Use balance
-                    </Button>
-                  </div>
+          {/* Pending escrow. Held money is NOT lost money, and there is no
+              release date to promise: automatic release is not enabled, so the
+              copy deliberately says "until released" and nothing more. */}
+          {summary.pending > 0 && (
+            <Panel>
+              <div className="flex items-start gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-field bg-warning-tint text-star">
+                  <Clock className="size-5" aria-hidden="true" />
+                </span>
+                <div className="flex-1">
+                  <p className="text-md font-semibold text-ink">
+                    <MoneyValue amount={summary.pending} /> held in escrow until release
+                  </p>
+                  <p className="mt-1 text-caption text-ink-secondary">
+                    This is your share of jobs customers have already paid for. It moves to
+                    your available balance when the escrow is released, and is not lost.
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            </Panel>
+          )}
 
-        <div className="flex gap-2 border-b border-hairline/20">
-          {[['ledger', 'Activity'], ['settlements', 'Settlements']].map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`px-3 pb-2 text-sm font-semibold transition-colors ${
-                tab === id ? 'border-b-2 border-brand text-ink' : 'text-ink-secondary'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          {/* Payout blocked — a real server-provided state, surfaced not hidden. */}
+          {blockedReason && (
+            <Banner tone="warning" icon={Landmark} title="Payouts are blocked">
+              {blockedReason}
+            </Banner>
+          )}
+          {summary.payouts_suspended && !blockedReason && (
+            <Banner tone="danger" icon={Ban} title="Payouts are on hold">
+              Settle your overdue commission to re-enable withdrawals.
+            </Banner>
+          )}
 
-        {tab === 'ledger' && (
-          entries.length === 0 ? (
-            <p className="py-10 text-center text-sm text-ink-secondary">No wallet activity yet.</p>
-          ) : (
-            <div className="divide-y divide-hairline/10 overflow-hidden rounded-2xl border border-hairline/10 bg-surface">
-              {entries.map((e) => {
-                const isCredit = e.direction === 'credit';
-                // A commission debit *raises* what you owe, so the visual sense of
-                // credit/debit inverts on the outstanding bucket.
-                const isGood = e.bucket === 'outstanding' ? !isCredit : isCredit;
+          {/* Settlements needing action come first — this is the actionable part. */}
+          {unpaid.length > 0 && (
+            <div className="space-y-3">
+              <SectionHeader title="Settle your commission" sub="Cash jobs you've collected on" />
+              {unpaid.map((s) => {
+                const due = moment(s.due_date);
+                const isOverdue = due.isBefore(moment(), 'day');
                 return (
-                  <div key={e.id} className="flex items-center gap-3 p-3.5">
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isGood ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      {isGood ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+                  <Panel key={s.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="sa-num text-[11px] text-ink-tertiary">{s.reference}</p>
+                        <p className="mt-1"><MoneyValue amount={s.balance_due} size="lg" /></p>
+                        <p className="sa-num mt-0.5 text-[11px] text-ink-secondary">
+                          {moment(s.period_start).format('D MMM')} – {moment(s.period_end).format('D MMM')}
+                          {' · '}
+                          <span className={isOverdue ? 'font-semibold text-danger' : ''}>
+                            {isOverdue ? `overdue ${due.fromNow(true)}` : `due ${due.format('D MMM')}`}
+                          </span>
+                        </p>
+                      </div>
+                      <span className={cn('rounded-full px-2 py-1 text-[10px] font-semibold capitalize',
+                        SETTLEMENT_TONE[s.status] || SETTLEMENT_TONE.pending)}>
+                        {s.status.replace('_', ' ')}
+                      </span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-ink">{ENTRY_LABEL[e.type] || e.type}</p>
-                      <p className="truncate text-[11px] text-ink-secondary">{e.description}</p>
-                      <p className="text-[10px] text-ink-tertiary">{moment(e.created_date).format('D MMM YYYY, h:mm a')}</p>
+                    <div className="mt-3 flex gap-2">
+                      <Button onClick={() => handlePay(s)} disabled={payingId === s.id} className="flex-1">
+                        {payingId === s.id ? 'Starting…' : 'Pay online'}
+                      </Button>
+                      {/* Netting against earnings is opt-in, never automatic. */}
+                      <Button
+                        onClick={() => handlePayFromBalance(s)}
+                        disabled={payingId === s.id || summary.withdrawable < s.balance_due}
+                        variant="outline"
+                        className="flex-1"
+                        title={summary.withdrawable < s.balance_due ? 'Not enough available balance' : undefined}
+                      >
+                        Use balance
+                      </Button>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-bold ${isGood ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {isCredit ? '+' : '−'}{formatRM(e.amount)}
-                      </p>
-                      <p className="text-[10px] capitalize text-ink-tertiary">{e.bucket}</p>
-                    </div>
-                  </div>
+                  </Panel>
                 );
               })}
             </div>
-          )
-        )}
+          )}
 
-        {tab === 'settlements' && (
-          settlements.length === 0 ? (
-            <p className="py-10 text-center text-sm text-ink-secondary">No settlements yet.</p>
-          ) : (
-            <div className="divide-y divide-hairline/10 overflow-hidden rounded-2xl border border-hairline/10 bg-surface">
-              {settlements.map((s) => (
-                <div key={s.id} className="flex items-center gap-3 p-3.5">
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${s.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                    {s.status === 'paid' ? <CheckCircle2 className="h-4 w-4" /> : <Receipt className="h-4 w-4" />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-mono text-[11px] text-ink-tertiary">{s.reference}</p>
-                    <p className="text-[11px] text-ink-secondary">
-                      {moment(s.period_start).format('D MMM')} – {moment(s.period_end).format('D MMM YYYY')}
-                    </p>
-                    <p className="text-[10px] text-ink-tertiary">
-                      {formatRM(s.gross_cash_collected)} cash collected
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-ink">{formatRM(s.total_due)}</p>
-                    <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${SETTLEMENT_TONE[s.status] || SETTLEMENT_TONE.pending}`}>
-                      {s.status.replace('_', ' ')}
+          {/* History */}
+          <div className="flex gap-6 shadow-[inset_0_-1px_0_rgb(var(--hairline))]" role="tablist">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  '-mb-px inline-flex min-h-11 items-center text-caption font-semibold transition-colors',
+                  'focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]',
+                  tab === t.id
+                    ? 'shadow-[inset_0_-2px_0_rgb(var(--brand))] text-brand'
+                    : 'text-ink-secondary hover:text-ink',
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'ledger' && (
+            entries.length === 0 ? (
+              <Panel className="py-10 text-center">
+                <p className="text-caption text-ink-secondary">No wallet activity yet.</p>
+              </Panel>
+            ) : (
+              <div className={cn('overflow-hidden rounded-card bg-surface', RING)}>
+                {entries.map((e) => {
+                  const isCredit = e.direction === 'credit';
+                  // A commission debit *raises* what you owe, so the visual sense
+                  // of credit/debit inverts on the outstanding bucket.
+                  const isGood = e.bucket === 'outstanding' ? !isCredit : isCredit;
+                  return (
+                    <div key={e.id} className="flex items-center gap-3 p-3.5 shadow-[inset_0_-1px_0_rgb(var(--hairline))] last:shadow-none">
+                      <span className={cn('grid size-9 shrink-0 place-items-center rounded-field',
+                        isGood ? 'bg-success-tint text-success' : 'bg-danger-tint text-danger')}>
+                        {isGood ? <ArrowUpRight className="size-4" aria-hidden="true" /> : <ArrowDownRight className="size-4" aria-hidden="true" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-caption font-semibold text-ink">{ENTRY_LABEL[e.type] || e.type}</p>
+                        <p className="truncate text-[11px] text-ink-secondary">{e.description}</p>
+                        <p className="sa-num text-[10px] text-ink-tertiary">{moment(e.created_date).format('D MMM YYYY, h:mm a')}</p>
+                      </div>
+                      <div className="text-right">
+                        <MoneyValue
+                          amount={isCredit ? e.amount : -e.amount}
+                          signed
+                          size="sm"
+                          tone={isGood ? 'positive' : 'negative'}
+                        />
+                        <p className="text-[10px] capitalize text-ink-tertiary">{e.bucket}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
+
+          {tab === 'payouts' && (
+            summary.recent_payouts.length === 0 ? (
+              <Panel className="py-10 text-center">
+                <p className="text-caption text-ink-secondary">No withdrawals yet.</p>
+              </Panel>
+            ) : (
+              <div className="space-y-3">
+                {summary.recent_payouts.map((p) => {
+                  const voided = VOIDED.includes(p.status);
+                  return (
+                    <Panel key={p.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          {/* A voided withdrawal never reads as money received. */}
+                          <MoneyValue
+                            amount={p.amount_paid}
+                            size="lg"
+                            tone={voided ? 'muted' : 'default'}
+                            className={voided ? 'line-through' : undefined}
+                          />
+                          <p className="sa-num mt-0.5 text-[11px] text-ink-secondary">
+                            via {p.payout_method || 'Bank Transfer'} · {moment(p.created_date).format('D MMM YYYY')}
+                          </p>
+                        </div>
+                        <span className={cn('shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize',
+                          PAYOUT_TONE[p.status] || PAYOUT_TONE.pending)}>
+                          {p.status}
+                        </span>
+                      </div>
+                      {voided && p.failure_reason && (
+                        <p className="mt-2 text-[11px] leading-snug text-ink-tertiary">{p.failure_reason}</p>
+                      )}
+                    </Panel>
+                  );
+                })}
+              </div>
+            )
+          )}
+
+          {tab === 'settlements' && (
+            settlements.length === 0 ? (
+              <Panel className="py-10 text-center">
+                <p className="text-caption text-ink-secondary">No settlements yet.</p>
+              </Panel>
+            ) : (
+              <div className={cn('overflow-hidden rounded-card bg-surface', RING)}>
+                {settlements.map((s) => (
+                  <div key={s.id} className="flex items-center gap-3 p-3.5 shadow-[inset_0_-1px_0_rgb(var(--hairline))] last:shadow-none">
+                    <span className={cn('grid size-9 shrink-0 place-items-center rounded-field',
+                      s.status === 'paid' ? 'bg-success-tint text-success' : 'bg-warning-tint text-star')}>
+                      {s.status === 'paid' ? <CheckCircle2 className="size-4" aria-hidden="true" /> : <Receipt className="size-4" aria-hidden="true" />}
                     </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="sa-num text-[11px] text-ink-tertiary">{s.reference}</p>
+                      <p className="sa-num text-[11px] text-ink-secondary">
+                        {moment(s.period_start).format('D MMM')} – {moment(s.period_end).format('D MMM YYYY')}
+                      </p>
+                      <p className="text-[10px] text-ink-tertiary">
+                        <MoneyValue amount={s.gross_cash_collected} size="sm" tone="muted" /> cash collected
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <MoneyValue amount={s.total_due} size="sm" />
+                      <span className={cn('mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize',
+                        SETTLEMENT_TONE[s.status] || SETTLEMENT_TONE.pending)}>
+                        {s.status.replace('_', ' ')}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
+                ))}
+              </div>
+            )
+          )}
+        </div>
+
+        {/* ── Rail ──────────────────────────────────────────────────────── */}
+        <aside className="space-y-5 lg:sticky lg:top-5">
+          <Panel>
+            <SectionHeader title="Withdraw" className="mb-3" />
+            <p className="text-caption text-ink-secondary">
+              Available now: <MoneyValue amount={summary.withdrawable} size="sm" />
+            </p>
+            {summary.minimum_payout > 0 && (
+              <p className="mt-1 text-xs text-ink-tertiary">
+                Minimum withdrawal <MoneyValue amount={summary.minimum_payout} size="sm" tone="muted" />
+              </p>
+            )}
+            <Button block className="mt-4" onClick={handleWithdraw} loading={withdrawing} disabled={!canWithdraw || withdrawing}>
+              {withdrawing ? 'Requesting…' : 'Withdraw to bank'}
+            </Button>
+            {/* Say exactly why the button is off — never let it look broken. */}
+            {!canWithdraw && (
+              <p className="mt-2 text-xs text-ink-tertiary">
+                {blockedReason
+                  || (summary.payouts_suspended && 'Payouts are on hold until your overdue commission is settled.')
+                  || (belowMinimum && 'Your balance is below the minimum withdrawal amount.')
+                  || 'Nothing available to withdraw yet.'}
+              </p>
+            )}
+            {summary.next_payout_date && (
+              <p className="sa-num mt-2 text-xs text-ink-tertiary">
+                Next payout run {moment(summary.next_payout_date).format('D MMM YYYY')}
+              </p>
+            )}
+          </Panel>
+
+          <div className="grid grid-cols-2 gap-3">
+            <MetricStat label="Lifetime earned" amount={summary.lifetime} icon={TrendingUp} caption={`${config.settlement_cycle} settlement`} />
+            <MetricStat label="Withdrawn" amount={summary.withdrawn} icon={Landmark} caption="Paid out to you" />
+            <MetricStat label="Held in escrow" amount={summary.pending} icon={Clock} caption="Not yet released" />
+            <MetricStat
+              label="Commission owed"
+              amount={summary.outstanding_commission}
+              icon={Receipt}
+              caption={`Grace up to RM ${config.credit_limit}`}
+            />
+          </div>
+
+          {summary.bank_account && (
+            <Panel>
+              <SectionHeader title="Payout account" className="mb-3" />
+              <p className="text-caption font-semibold text-ink">{summary.bank_account.bank_name}</p>
+              <p className="sa-num text-xs text-ink-secondary">
+                •••• {summary.bank_account.account_last4 || summary.bank_account.account_number}
+              </p>
+            </Panel>
+          )}
+        </aside>
       </div>
     </div>
   );
