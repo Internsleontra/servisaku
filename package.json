@@ -3,7 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20 <25"
+  },
   "scripts": {
+    "start": "node server/index.js",
     "dev": "vite --mode consumer",
     "dev:consumer": "vite --mode consumer",
     "dev:partner": "vite --mode partner",

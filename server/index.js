@@ -43,9 +43,26 @@ import { startSettlementWorker } from './lib/wallet/settlement.js';
 import { startPayoutWorker } from './lib/payouts/schedule.js';
 import { startEscrowReleaseWorker } from './lib/escrow/schedule.js';
 import { startUnassignedExpiryWorker } from './lib/bookings/expirySchedule.js';
+// Graceful shutdown: stop workers, close Socket.IO, drain HTTP, release Prisma.
+import { createShutdownHandler, createUnhandledRejectionHandler } from './lib/shutdown.js';
+import { prisma } from './db.js';
+import { getIo } from './lib/notifications/realtime.js';
+import { stopScheduler } from './lib/notifications/queue.js';
+import { stopSettlementWorker } from './lib/wallet/settlement.js';
+import { stopPayoutWorker } from './lib/payouts/schedule.js';
+import { stopEscrowReleaseWorker } from './lib/escrow/schedule.js';
+import { stopUnassignedExpiryWorker } from './lib/bookings/expirySchedule.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Behind a load balancer (Railway/Render/ALB) every request arrives from the
+// proxy, so without this `req.ip` is the balancer for everyone — and
+// express-rate-limit buckets all traffic into a single counter, letting one
+// noisy client throttle the entire platform. `1` = trust exactly one hop, which
+// is what a single managed proxy in front of the app gives us; trusting all
+// hops would let a client forge X-Forwarded-For and evade the limiter.
+app.set('trust proxy', 1);
 
 // Same allow-list is shared by the REST CORS layer and the Socket.IO handshake.
 const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:8081,http://localhost:19006').split(',');
@@ -161,6 +178,29 @@ startEscrowReleaseWorker();
 // rather than pretending the money moved. See lib/bookings/expiry.js.
 startUnassignedExpiryWorker();
 
+// ── Process lifecycle ───────────────────────────────────────────────────────
+// A redeploy or scale-in arrives as SIGTERM. Without a handler the process dies
+// immediately, cutting in-flight requests mid-response. SIGINT is the same
+// sequence for a local Ctrl-C.
+const shutdown = createShutdownHandler({
+  server,
+  closeIo: () => getIo()?.close(),
+  disconnectDb: () => prisma.$disconnect(),
+  stopWorkers: [
+    stopScheduler,
+    stopSettlementWorker,
+    stopPayoutWorker,
+    stopEscrowReleaseWorker,
+    stopUnassignedExpiryWorker,
+  ],
+});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// Log what rejected, then exit non-zero — Node's own fail-fast default, with a
+// line that says which promise it was.
+process.on('unhandledRejection', createUnhandledRejectionHandler());
+
 server.listen(PORT, () => {
-  console.log(`✅ ServisAku API running on http://localhost:${PORT}`);
+  console.log(`✅ ServisAku API running on port ${PORT}`);
 });
