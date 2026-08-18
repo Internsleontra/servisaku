@@ -7,14 +7,18 @@
 //
 // Idempotent: categories/services upsert by slug; a service's questions are
 // replaced wholesale (delete-cascade → recreate) so re-running always converges
-// the DB to the config. Run:  npm run seed:booking-engine
+// the DB to the config. Run:  npm run db:seed:booking-engine
+//
+// This is the CANONICAL catalog source. `prisma/seed.js` imports
+// `seedBookingEngine()` so the ordinary seed produces the same catalogue the
+// application actually reads — the client is passed in rather than created here,
+// so importing this module has no side effects.
 // ════════════════════════════════════════════════════════════════════════════
 import { PrismaClient } from '@prisma/client';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const prisma = new PrismaClient();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const config = JSON.parse(readFileSync(join(__dirname, 'data/servisaku-services-config.json'), 'utf8'));
 
@@ -75,7 +79,7 @@ function serviceFromPrice(s) {
   }
 }
 
-async function seedService(categoryId, svc, sortOrder) {
+async function seedService(prisma, categoryId, svc, sortOrder) {
   const data = {
     categoryId,
     name: svc.name,
@@ -129,7 +133,7 @@ async function seedService(categoryId, svc, sortOrder) {
   return service;
 }
 
-async function main() {
+export async function seedBookingEngine(prisma) {
   console.log(`Seeding dynamic booking engine (config v${config.version})…`);
   let catCount = 0, svcCount = 0, qCount = 0, optCount = 0;
 
@@ -153,7 +157,7 @@ async function main() {
     catCount++;
 
     for (const [svcIdx, svc] of cat.services.entries()) {
-      await seedService(category.id, svc, svcIdx);
+      await seedService(prisma, category.id, svc, svcIdx);
       svcCount++;
       qCount += (svc.questions || []).length;
       optCount += (svc.questions || []).reduce((s, q) => s + (q.options || []).length, 0);
@@ -164,6 +168,11 @@ async function main() {
   console.log(`\nDone: ${catCount} categories, ${svcCount} services, ${qCount} questions, ${optCount} options.`);
 }
 
-main()
-  .catch((e) => { console.error(e); process.exit(1); })
-  .finally(async () => { await prisma.$disconnect(); });
+// Run standalone (`npm run db:seed:booking-engine`) — but stay inert on import,
+// so prisma/seed.js can reuse seedBookingEngine() with its own client.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const prisma = new PrismaClient();
+  seedBookingEngine(prisma)
+    .catch((e) => { console.error(e); process.exit(1); })
+    .finally(async () => { await prisma.$disconnect(); });
+}

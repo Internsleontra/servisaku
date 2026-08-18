@@ -1,15 +1,18 @@
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
 import bcrypt from 'bcryptjs';
-import { seedCatalog } from './catalogSeed.js';
+import { seedBookingEngine } from './bookingEngineSeed.js';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // --- Catalog (DB-driven service abstraction) ---
-  await seedCatalog(prisma);
+  // --- Catalog (canonical, config-driven booking engine) ---
+  // Sourced from prisma/data/servisaku-services-config.json: 12 categories,
+  // 71 services and their Step-A questions/options. This must run first — the
+  // partner specializations below resolve real service slugs from it.
+  await seedBookingEngine(prisma);
 
   // --- Users ---
   const adminPw = await bcrypt.hash('admin123', 10);
@@ -54,15 +57,20 @@ async function main() {
 
   // --- Partner specializations (matching engine) ---
   // Maps the demo partners to the services they're admin-verified to perform.
+  // Slugs are real services in the canonical catalog. They were previously
+  // `cleaning`/`plumbing`/`electrical`, which the config-driven catalogue does
+  // not define — every lookup missed and the loop seeded nothing at all.
   const specMap = [
-    { partner: partner1, slug: 'cleaning', years: 5 },   // Ali — cleaning
-    { partner: partner2, slug: 'cleaning', years: 3 },   // Raj — cleaning
-    { partner: partner4, slug: 'plumbing', years: 6 },   // Siti — plumbing
-    { partner: partner3, slug: 'electrical', years: 4 }, // David — electrical
+    { partner: partner1, slug: 'full-house-cleaning', years: 5 },    // Ali — cleaning
+    { partner: partner2, slug: 'ac-servicing', years: 3 },           // Raj — AC servicing
+    { partner: partner4, slug: 'tap-repair-replacement', years: 6 }, // Siti — plumbing
+    { partner: partner3, slug: 'cockroach-control', years: 4 },      // David — pest control
   ];
   for (const { partner, slug, years } of specMap) {
     const service = await prisma.service.findUnique({ where: { slug } });
-    if (!service) continue;
+    // Loud, not `continue`: a missing slug means the catalogue and this map have
+    // drifted apart, which is exactly how the previous mapping rotted unnoticed.
+    if (!service) throw new Error(`Seed error: no service with slug "${slug}" — specialization map is out of sync with the catalog config.`);
     await prisma.partnerSpecialization.upsert({
       where: { partnerId_serviceId: { partnerId: partner.id, serviceId: service.id } },
       update: { verifiedByAdmin: true, isActive: true, yearsExperience: years },
@@ -126,9 +134,14 @@ async function main() {
   });
 
   // --- Payout ---
-  await prisma.payoutRecord.create({
-    data: { partnerId: partner1.id, partnerName: partner1.fullName, amountRequested: 96, amountPaid: 96, status: 'completed', payoutMethod: 'Bank Transfer' },
-  }).catch(() => {}); // ignore if already exists
+  // Upsert on a fixed id, like the bookings above. The previous `create(...)`
+  // with a swallowed catch appended a fresh RM96 record on every seed run and
+  // hid any real error while doing it.
+  await prisma.payoutRecord.upsert({
+    where: { id: 'payout-seed-1' },
+    update: {},
+    create: { id: 'payout-seed-1', partnerId: partner1.id, partnerName: partner1.fullName, amountRequested: 96, amountPaid: 96, status: 'completed', payoutMethod: 'Bank Transfer' },
+  });
 
   console.log('✅ Database seeded successfully!');
   console.log('\n🔐 Demo Credentials:');
@@ -138,5 +151,7 @@ async function main() {
 }
 
 main()
-  .catch(console.error)
+  // Exit non-zero on failure: a deploy step that seeds must not report success
+  // when the seed actually threw.
+  .catch((e) => { console.error(e); process.exitCode = 1; })
   .finally(() => prisma.$disconnect());
