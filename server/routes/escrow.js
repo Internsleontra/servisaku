@@ -4,7 +4,7 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, bookingScope, isBookingParticipant } from '../lib/access.js';
-import { creditEarning } from '../lib/wallet/index.js';
+import { releaseEscrow } from '../lib/escrow/release.js';
 
 const router = Router();
 router.use(authenticate);
@@ -61,18 +61,33 @@ router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema),
   });
   if (!existing) throw new ApiError(404, 'Not found');
 
+  // ── Release goes through the worker's own function ────────────────────────
+  //
+  // This endpoint used to flip the row to `released` and fire `creditEarning`
+  // off into a `.catch()`. That meant an admin could pay out a CASH booking (the
+  // partner already holds the fare) or an unpaid one — every booking gets a
+  // `held` escrow row at creation, so nothing about the row itself says whether
+  // money ever arrived. It also recomputed the split from the partner's CURRENT
+  // tier instead of the figure escrow recorded.
+  //
+  // Delegating to `releaseEscrow` means the manual and automatic paths cannot
+  // drift: same eligibility rules, same snapshotted `partnerPayout`, same
+  // conditional-update idempotency, and the credit is awaited. `ignoreTiming`
+  // waives only the 24/48h clock — releasing early is a legitimate admin call;
+  // releasing money that was never collected is not.
+  if (req.body.status === 'released') {
+    if (existing.status === 'released') return res.json(mapOut(existing));
+
+    const result = await releaseEscrow(existing.bookingId, { ignoreTiming: true });
+    if (!result.released) throw new ApiError(400, `Cannot release this escrow: ${result.reason}`);
+
+    const item = await prisma.escrowLedger.findUnique({ where: { id: req.params.id } });
+    return res.json(mapOut(item));
+  }
+
   const data = { status: req.body.status };
   if (req.body.freeze_reason !== undefined) data.freezeReason = req.body.freeze_reason;
-  if (req.body.status === 'released') data.releasedAt = new Date();
   const item = await prisma.escrowLedger.update({ where: { id: req.params.id }, data });
-
-  // Releasing escrow is the moment the partner's earnings become withdrawable:
-  // the money moves from `pending` to `available` in their wallet. Fire once, on
-  // the transition, and let the ledger's idempotency key absorb any repeat.
-  if (existing.status !== 'released' && item.status === 'released' && existing.booking?.partnerId) {
-    creditEarning(existing.booking, { partner: existing.booking.partner }).catch((err) =>
-      console.error('[escrow] wallet credit failed:', err?.message || err));
-  }
   res.json(mapOut(item));
 }));
 

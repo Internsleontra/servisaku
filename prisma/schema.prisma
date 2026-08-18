@@ -496,6 +496,15 @@ model Booking {
   scheduledStart DateTime?
   scheduledEnd   DateTime?
   lifecycle      Json? // timestamped status transitions
+  // Escrow release timers (T&C 7.9(b)) key off these two, so they are real
+  // indexed columns rather than a scan of the `lifecycle` JSON: the release
+  // worker queries "completed more than 48h ago" on every tick, and a JSON blob
+  // cannot answer that from an index.
+  //   completedAt           — set when status becomes `completed`
+  //   completionConfirmedAt — set when the CUSTOMER confirms, which starts the
+  //                           shorter 24h timer
+  completedAt           DateTime?
+  completionConfirmedAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -515,6 +524,12 @@ model Booking {
   @@index([consumerId, status])
   @@index([partnerId, status])
   @@index([date])
+  // Release worker: "held escrow whose booking completed before X".
+  @@index([status, completedAt])
+  @@index([completionConfirmedAt])
+  // Expiry worker: "paid but still unassigned since X" — partnerId is NULL for
+  // exactly the rows it looks for, so it leads the index.
+  @@index([partnerId, paymentStatus, createdAt])
 }
 
 model Coupon {

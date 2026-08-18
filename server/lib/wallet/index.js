@@ -100,8 +100,20 @@ export function creditEscrowHold(booking, { partner, rate } = {}) {
  * Two entries, not one: the money leaves `pending` and arrives in `available`,
  * and a single-entry shortcut would make the ledger unable to explain either.
  */
-export async function creditEarning(booking, { partner, rate } = {}) {
-  const { netPayout } = split(booking.price, { partner, rate });
+export async function creditEarning(booking, { partner, rate, netPayout: netPayoutOverride } = {}) {
+  // `netPayout` override: pay exactly what the escrow row recorded.
+  //
+  // Without it this recomputes the split from the partner's CURRENT tier, so a
+  // tier change between booking and release would pay a different figure than
+  // the one held in escrow — the drift C-05 describes.
+  //
+  // BOTH release paths pass `escrow.partnerPayout`: the automatic worker and the
+  // admin endpoint, which delegates to the same `releaseEscrow`. The override is
+  // therefore the norm for escrow release; the computed fallback remains for
+  // callers that have no escrow row to quote.
+  const netPayout = netPayoutOverride != null
+    ? round2(netPayoutOverride)
+    : split(booking.price, { partner, rate }).netPayout;
   if (netPayout <= 0 || !booking.partnerId) return null;
 
   await post({

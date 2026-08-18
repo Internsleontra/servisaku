@@ -36,7 +36,17 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "ServisAku uses your location to show jobs near you, guide you to the customer, and confirm you arrived on site.",
+          "locationWhenInUsePermission": "ServisAku uses your location to show jobs near you, guide you to the customer, and confirm you arrived on site.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

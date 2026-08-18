@@ -25,7 +25,11 @@ export async function findUserByEmail(email) {
 }
 
 export async function getBookingOr404(id) {
-  const booking = await prisma.booking.findUnique({ where: { id } });
+  // `payments` is included because the completion payment guard follows the
+  // money, not just the intention: a booking whose `paymentMethod` says online
+  // can still have been settled in cash, and vice versa. Additive — callers that
+  // ignore it are unaffected. See lib/bookings/status.js#isCashBooking.
+  const booking = await prisma.booking.findUnique({ where: { id }, include: { payments: true } });
   if (!booking) throw new ApiError(404, 'Booking not found');
   return booking;
 }

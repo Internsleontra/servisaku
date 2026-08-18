@@ -41,6 +41,8 @@ import legalRouter, { legalAuthRouter } from './routes/legal.js';
 import { attachRealtime, startNotificationWorkers } from './lib/notifications/index.js';
 import { startSettlementWorker } from './lib/wallet/settlement.js';
 import { startPayoutWorker } from './lib/payouts/schedule.js';
+import { startEscrowReleaseWorker } from './lib/escrow/schedule.js';
+import { startUnassignedExpiryWorker } from './lib/bookings/expirySchedule.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -148,6 +150,16 @@ startSettlementWorker();
 // Draft payout batches when a period closes. Stops at `draft` — approval and
 // processing stay human actions, so a bug here can never disburse money.
 startPayoutWorker();
+// Release escrow on the T&C 7.9(b) timetable — 24h after the customer confirms,
+// 48h after completion otherwise. Unlike the payout worker this one does move
+// money, because the contract commits to releasing without human action; the
+// safety is per-row (idempotent, dispute/freeze suppressed) rather than a
+// human gate. See lib/escrow/release.js and conflict C-04.
+startEscrowReleaseWorker();
+// Refund bookings that were paid but never assigned a partner (72h). Billplz
+// has no refund API, so this initiates and flags for a manual dashboard step
+// rather than pretending the money moved. See lib/bookings/expiry.js.
+startUnassignedExpiryWorker();
 
 server.listen(PORT, () => {
   console.log(`✅ ServisAku API running on http://localhost:${PORT}`);

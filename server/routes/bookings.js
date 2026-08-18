@@ -11,7 +11,7 @@ import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
 import { withLiveSstRate } from '../lib/tax/index.js';
 import { isPartnerEligible } from '../lib/matching.js';
-import { canTransition } from '../../src/lib/bookingEngine.js';
+import { buildStatusChange } from '../lib/bookings/status.js';
 import { notifyConsumer, notifyPartner } from '../lib/notifications/index.js';
 import { requireAcceptance } from '../lib/legal/enforce.js';
 
@@ -75,6 +75,11 @@ function mapBookingOut(b) {
     price_breakdown: b.priceBreakdown ?? null,
     photos: b.details?.photos ?? null,          // { before: [...], after: [...] }
     lifecycle: b.lifecycle ?? null,             // [{ status, at, by }]
+    // Escrow release timers (T&C 7.9(b)). Exposed so a client can show the
+    // customer when their confirmation window closes and the partner when their
+    // money is due, instead of both guessing.
+    completed_at: b.completedAt ?? null,
+    completion_confirmed_at: b.completionConfirmedAt ?? null,
     extras: (b.items || []).filter((i) => i.kind === 'addon').map((i) => ({
       id: i.id, label: i.label, qty: i.qty, unit_price: i.unitPrice, total: i.total, status: i.status,
     })),
@@ -407,6 +412,10 @@ const patchSchema = z.object({
   payment_method: z.enum(PAYMENT_METHODS).optional(),
   payment_status: z.enum(['pending', 'paid', 'escrowed', 'refunded', 'failed']).optional(),
   partner_email: z.string().email().nullable().optional(),
+  // Admin override of transition rules. Rejected for every other role, and a
+  // reason is mandatory — a forced jump must never be invisible.
+  force: z.boolean().optional(),
+  reason: z.string().max(500).optional(),
 });
 
 const PARTNER_STATUSES = ['accepted', 'en_route', 'arrived', 'started', 'completed'];
@@ -420,7 +429,9 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
   const data = {};
 
   if (isAdmin(req.user)) {
-    if (body.status !== undefined) data.status = body.status;
+    // Status is applied below via buildStatusChange, like every other role.
+    // Admins used to write it straight through here, skipping both transition
+    // validation and the completion payment guard.
     if (body.payment_status !== undefined) data.paymentStatus = body.payment_status;
     if (body.payment_method !== undefined) data.paymentMethod = body.payment_method;
     if (body.partner_email !== undefined) {
@@ -440,14 +451,13 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
     const isOwner = booking.consumerId === req.user.id;
 
     if (body.status !== undefined) {
+      // WHICH statuses this role may request is decided here. WHETHER the change
+      // is legal, and whether payment permits completion, is buildStatusChange's
+      // job — applied below for every role alike.
       const allowed = isAssignedPartner ? PARTNER_STATUSES : CONSUMER_STATUSES;
       if (!allowed.includes(body.status)) {
         throw new ApiError(403, `You are not allowed to set status "${body.status}"`);
       }
-      if (!canTransition(booking.status, body.status)) {
-        throw new ApiError(400, `Cannot change status from "${booking.status}" to "${body.status}"`);
-      }
-      data.status = body.status;
     }
 
     if (isOwner) {
@@ -461,13 +471,17 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
     // payment_status / payment_method / partner_email changes are admin-only.
   }
 
-  if (Object.keys(data).length === 0) throw new ApiError(400, 'No permitted fields to update');
-
-  // Stamp every status transition onto the lifecycle timeline (server-authoritative).
-  if (data.status) {
-    const lifecycle = Array.isArray(booking.lifecycle) ? booking.lifecycle : [];
-    data.lifecycle = [...lifecycle, { status: data.status, at: new Date().toISOString(), by: req.user.id }];
+  // One place decides transition legality, the completion payment guard,
+  // lifecycle stamping and `completedAt`. `force`/`reason` are admin-only and
+  // are rejected for every other role inside the helper.
+  if (body.status !== undefined) {
+    Object.assign(data, buildStatusChange(booking, body.status, req.user, {
+      force: Boolean(body.force),
+      reason: body.reason ?? null,
+    }));
   }
+
+  if (Object.keys(data).length === 0) throw new ApiError(400, 'No permitted fields to update');
 
   const updated = await prisma.booking.update({
     where: { id: booking.id },
@@ -491,6 +505,52 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
   res.json(mapBookingOut(updated));
 }));
 
+// POST /api/bookings/:id/confirm-completion — the CUSTOMER confirms the work is
+// done. This is the trigger for the shorter escrow timer in T&C 7.9(b): funds
+// release 24 hours after confirmation instead of 48 hours after completion.
+//
+// It is not a status change — `completed` is the partner's assertion that the
+// work is finished, and `STATUS_TRANSITIONS` only allows completed → disputed.
+// Confirmation is the customer agreeing, recorded alongside it. Keeping them
+// separate means a customer who never responds still gets the 48h path, exactly
+// as the clause describes.
+//
+// Idempotent: confirming twice keeps the first timestamp, so a double tap
+// cannot extend the timer.
+router.post('/:id/confirm-completion', asyncHandler(async (req, res) => {
+  const booking = await getBookingOr404(req.params.id);
+  assertBookingParticipant(req.user, booking);
+
+  // The customer confirms their own booking. Admins may act on their behalf for
+  // support cases; a partner confirming their own work would defeat the point.
+  if (!isAdmin(req.user) && booking.consumerId !== req.user.id) {
+    throw new ApiError(403, 'Only the customer can confirm completion');
+  }
+  if (booking.status !== 'completed') {
+    throw new ApiError(400, `Cannot confirm a booking that is "${booking.status}"`);
+  }
+  if (booking.completionConfirmedAt) {
+    return res.json(mapBookingOut(booking));
+  }
+
+  const now = new Date();
+  const lifecycle = Array.isArray(booking.lifecycle) ? booking.lifecycle : [];
+  const updated = await prisma.booking.update({
+    where: { id: booking.id },
+    data: {
+      completionConfirmedAt: now,
+      // Completion may predate this column; anchor the 48h fallback too so the
+      // booking is never left without a timer.
+      completedAt: booking.completedAt ?? now,
+      lifecycle: [...lifecycle, { status: 'completion_confirmed', at: now.toISOString(), by: req.user.id }],
+    },
+    include: { consumer: true, partner: true, escrow: true },
+  });
+
+  fireNotifications([notifyPartner(updated, 'customer_confirmed_completion')]);
+  res.json(mapBookingOut(updated));
+}));
+
 // POST /api/bookings/:id/claim — a partner claims an unassigned pending booking
 // from the open job pool (lightweight dispatch: first to accept gets it).
 router.post('/:id/claim', asyncHandler(async (req, res) => {
@@ -498,9 +558,15 @@ router.post('/:id/claim', asyncHandler(async (req, res) => {
   const booking = await getBookingOr404(req.params.id);
   if (booking.partnerId) throw new ApiError(409, 'This job has already been taken');
   if (booking.status !== 'pending') throw new ApiError(400, 'This job is no longer open');
+  // Through the shared helper so the claim writes a lifecycle entry like every
+  // other transition. It previously wrote `status: 'accepted'` directly, which
+  // is why 5 live bookings carry `accepted` with an empty lifecycle.
   const updated = await prisma.booking.update({
     where: { id: booking.id },
-    data: { partnerId: req.user.id, status: 'accepted' },
+    data: {
+      partnerId: req.user.id,
+      ...buildStatusChange(booking, 'accepted', req.user),
+    },
     include: { consumer: true, partner: true, escrow: true },
   });
   // Consumer: your pro is assigned. Partner: confirm the job is theirs.

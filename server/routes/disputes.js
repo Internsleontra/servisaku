@@ -6,6 +6,7 @@ import { validate } from '../middleware/validate.js';
 import {
   asyncHandler, ApiError, isAdmin, getBookingOr404, isBookingParticipant, bookingScope,
 } from '../lib/access.js';
+import { buildStatusChange } from '../lib/bookings/status.js';
 import { eligibleRefund } from '../lib/refunds/policy.js';
 import { executeRefund } from '../lib/refunds/execute.js';
 import { notify } from '../lib/notifications/index.js';
@@ -107,7 +108,19 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
   });
 
   // Mark the booking so the refund policy holds the full amount pending review.
-  await prisma.booking.update({ where: { id: booking.id }, data: { status: 'disputed' } }).catch(() => {});
+  //
+  // Through the shared helper so the transition is recorded on the lifecycle
+  // like every other one. `force` is used deliberately: raising a dispute is
+  // valid from states STATUS_TRANSITIONS does not list (a customer may dispute a
+  // completed job), and the dispute itself is the authority for the change.
+  // Still audited — the entry records the actor, the previous status and why.
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: buildStatusChange(booking, 'disputed', { id: req.user.id, role: 'admin' }, {
+      force: true,
+      reason: `Dispute ${dispute.reference} raised by ${raisedByRole}`,
+    }),
+  }).catch(() => {});
 
   notify({ userId: req.user.id, event: 'dispute_raised', bookingId: booking.id, data: { reference: dispute.reference } }).catch(() => {});
   if (againstId) {

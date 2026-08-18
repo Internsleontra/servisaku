@@ -9,7 +9,12 @@
 // `dynamicPricing.js` via POST /api/bookings/calculate.)
 
 export const STATUS_TRANSITIONS = {
-  pending:    ['assigned', 'cancelled'],
+  // `accepted` is reachable directly from `pending` because of the open job
+  // pool: POST /api/bookings/:id/claim lets the first partner to accept take an
+  // unassigned booking, skipping `assigned` (which is dispatch assigning someone
+  // TO a partner). The table omitted it, so routing that endpoint through the
+  // shared status helper would have rejected every claim.
+  pending:    ['assigned', 'accepted', 'cancelled'],
   assigned:   ['accepted', 'cancelled'],
   accepted:   ['en_route', 'cancelled'],
   en_route:   ['arrived', 'cancelled'],
