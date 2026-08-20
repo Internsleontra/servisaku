@@ -7,6 +7,7 @@ import { servisaku } from '@/api/servisakuClient';
 import { Button } from '@/components/ui/button';
 import { formatRM } from '@/lib/paymentEngine';
 import { PriceSummary, RING } from '@/components/ds';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Booking confirmation.
@@ -42,6 +43,7 @@ const OUTCOME = {
 export default function PaymentReturn() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const paymentId = params.get('payment_id');
   const [state, setState] = useState('checking');
   const [payment, setPayment] = useState(null);
@@ -71,15 +73,15 @@ export default function PaymentReturn() {
           <span className={`grid size-16 place-items-center rounded-full bg-white/10 ring-1 ring-inset ring-white/20 ${o.tone}`}>
             <Icon className={`size-8 ${o.spin ? 'animate-spin' : ''}`} />
           </span>
-          <h1 className="text-display-2 mt-5 text-white">{o.title}</h1>
-          <p className="mt-3 max-w-[520px] text-lead text-white/[0.78]">{o.sub}</p>
+          <h1 className="text-display-2 mt-5 text-white">{t(o.title)}</h1>
+          <p className="mt-3 max-w-[520px] text-lead text-white/[0.78]">{t(o.sub)}</p>
         </div>
       </div>
 
       <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
         {/* What happens next */}
         <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
-          <h2 className="mb-4 font-display text-h3 font-semibold text-ink">What happens next</h2>
+          <h2 className="mb-4 font-display text-h3 font-semibold text-ink">{t('What happens next')}</h2>
           <ol className="flex flex-col gap-4">
             {[
               [Navigation, 'We match you with a verified pro', 'Usually within 15 minutes. You’ll be notified as soon as they accept.'],
@@ -92,8 +94,8 @@ export default function PaymentReturn() {
                 </span>
                 <span>
                   <span className="sa-num block text-xs text-ink-tertiary">0{i + 1}</span>
-                  <span className="block font-display text-h4 font-semibold text-ink">{title}</span>
-                  <span className="mt-0.5 block text-caption font-normal text-ink-secondary">{body}</span>
+                  <span className="block font-display text-h4 font-semibold text-ink">{t(title)}</span>
+                  <span className="mt-0.5 block text-caption font-normal text-ink-secondary">{t(body)}</span>
                 </span>
               </li>
             ))}
@@ -105,8 +107,8 @@ export default function PaymentReturn() {
           {state === 'paid' && payment ? (
             <PriceSummary
               lines={[
-                { label: 'Method', value: (payment.method || '').toUpperCase() },
-                { label: 'Reference', value: payment.gateway_ref || payment.id },
+                { label: t('Method'), value: (payment.method || '').toUpperCase() },
+                { label: t('Reference'), value: payment.gateway_ref || payment.id },
               ]}
               total={amount}
               totalLabel="Amount paid"
@@ -125,16 +127,16 @@ export default function PaymentReturn() {
                 onClick={() => navigate(`/tracking/${bookingId}`)}
                 className="h-12 w-full rounded-field font-semibold"
               >
-                Track my booking <ArrowRight className="ml-1 size-4" />
+                {t('Track my booking')} <ArrowRight className="ml-1 size-4" />
               </Button>
             )}
             {state === 'pending' && (
               <Button variant="outline" onClick={() => window.location.reload()} className="h-12 w-full rounded-field">
-                Refresh
+                {t('Refresh')}
               </Button>
             )}
             <Button variant="outline" onClick={() => navigate('/bookings')} className="h-12 w-full rounded-field">
-              View my bookings
+              {t('View my bookings')}
             </Button>
           </div>
         </div>

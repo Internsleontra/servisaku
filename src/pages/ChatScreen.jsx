@@ -9,6 +9,7 @@ import { servisaku } from '@/api/servisakuClient';
 import { useChat } from '@/hooks/useChat';
 import { useRealtimeBooking } from '@/hooks/useRealtimeBooking';
 import { ChatBubble, RING } from '@/components/ds';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Chat.
@@ -18,12 +19,27 @@ import { ChatBubble, RING } from '@/components/ds';
  * gradient page header, 1240px container, and a booking-context aside on
  * desktop. Replaces a `lg:max-w-3xl` centre column with vertical borders.
  */
+/* Day separator between message groups. moment's calendar() hardcoded
+   "[Today]"/"[Yesterday]" in English; this asks the dictionary instead and
+   falls back to a locale-formatted date for anything older. */
+function daySeparator(value, t, locale) {
+  const d = new Date(value);
+  const today = new Date();
+  const midnight = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((midnight(today) - midnight(d)) / 86400000);
+  if (days === 0) return t('Today');
+  if (days === 1) return t('Yesterday');
+  if (days < 7) return d.toLocaleDateString(locale, { weekday: 'long' });
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export default function ChatScreen() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [text, setText] = useState('');
   const { booking } = useRealtimeBooking(bookingId);
+  const { t, locale } = useTranslation();
   const { messages, loading, sending, sendMessage, sendPhoto } = useChat(bookingId);
   const bottomRef = useRef();
   const fileRef = useRef();
@@ -59,7 +75,7 @@ export default function ChatScreen() {
             onClick={() => navigate(-1)}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Back
+            <ArrowLeft className="size-[15px]" /> {t('Back')}
           </button>
 
           <div className="flex items-center gap-3.5">
@@ -71,12 +87,12 @@ export default function ChatScreen() {
                 {otherName || 'Chat'}
               </h1>
               <p className="truncate text-caption font-normal text-white/70">
-                {booking?.service_type || 'Booking conversation'}
+                {booking?.service_type || t('Booking conversation')}
               </p>
             </div>
             <a
               href={booking?.partner_phone ? `tel:${booking.partner_phone}` : undefined}
-              aria-label="Call"
+              aria-label={t('Call')}
               className="grid size-11 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-inset ring-white/20 transition hover:bg-white/20"
             >
               <Phone className="size-4" />
@@ -93,16 +109,16 @@ export default function ChatScreen() {
             {loading ? (
               <div className="flex flex-1 items-center justify-center gap-2 text-ink-secondary" role="status">
                 <LoaderCircle className="size-4 animate-spin" />
-                <span className="text-caption">Loading messages…</span>
+                <span className="text-caption">{t('Loading messages…')}</span>
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center text-center">
                 <span className="grid size-16 place-items-center rounded-full bg-grad-brand-soft text-brand-ink">
                   <MessageSquare className="size-7" />
                 </span>
-                <p className="mt-3 font-display text-h4 font-semibold text-ink">No messages yet</p>
+                <p className="mt-3 font-display text-h4 font-semibold text-ink">{t('No messages yet')}</p>
                 <p className="mt-1 text-caption font-normal text-ink-secondary">
-                  Send a message to get started.
+                  {t('Send a message to get started.')}
                 </p>
               </div>
             ) : (
@@ -117,10 +133,7 @@ export default function ChatScreen() {
                   <div key={msg.id} className="contents">
                     {showDate && (
                       <ChatBubble from="system">
-                        {moment(msg.created_date).calendar(null, {
-                          sameDay: '[Today]', lastDay: '[Yesterday]',
-                          lastWeek: 'dddd', sameElse: 'D MMM YYYY',
-                        })}
+                        {daySeparator(msg.created_date, t, locale)}
                       </ChatBubble>
                     )}
 
@@ -137,7 +150,7 @@ export default function ChatScreen() {
                     ) : (
                       <ChatBubble
                         from={isMe ? 'me' : 'them'}
-                        time={moment(msg.created_date).format('h:mm A')}
+                        time={new Date(msg.created_date).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}
                         status={isMe ? (msg.is_read ? 'read' : 'sent') : undefined}
                         pending={msg._optimistic}
                       >
@@ -160,7 +173,7 @@ export default function ChatScreen() {
           <div className="flex items-end gap-2 p-4 shadow-[inset_0_1px_0_rgb(var(--hairline))] md:p-5">
             <button
               onClick={() => fileRef.current?.click()}
-              aria-label="Attach a photo"
+              aria-label={t('Attach a photo')}
               className={`grid size-11 shrink-0 place-items-center rounded-field bg-raised text-ink-secondary transition hover:bg-brand-tint hover:text-brand ${RING}`}
             >
               <Camera className="size-4" />
@@ -171,8 +184,8 @@ export default function ChatScreen() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message…"
-              aria-label="Message"
+              placeholder={t('Type a message…')}
+              aria-label={t('Message')}
               rows={1}
               className={`max-h-24 min-h-11 flex-1 resize-none rounded-field bg-raised px-4 py-3 text-caption text-ink outline-none placeholder:text-ink-tertiary focus:shadow-[inset_0_0_0_1.5px_rgb(var(--brand))] ${RING}`}
             />
@@ -180,7 +193,7 @@ export default function ChatScreen() {
             <button
               onClick={handleSend}
               disabled={!text.trim() || sending}
-              aria-label="Send message"
+              aria-label={t('Send message')}
               className="grid size-11 shrink-0 place-items-center rounded-field bg-brand text-white shadow-brand transition hover:brightness-[0.94] active:scale-[0.97] disabled:opacity-40"
             >
               <Send className="size-4" />
@@ -191,13 +204,13 @@ export default function ChatScreen() {
         {/* Booking context — desktop aside */}
         {booking && (
           <aside className={`hidden flex-col gap-3 rounded-card bg-surface p-5 lg:sticky lg:top-[100px] lg:flex ${RING}`}>
-            <h2 className="font-display text-h4 font-semibold text-ink">Booking</h2>
+            <h2 className="font-display text-h4 font-semibold text-ink">{t('Booking')}</h2>
             <div className="flex flex-col gap-2 text-caption font-normal text-ink-secondary">
               <span className="inline-flex items-center gap-2">
                 <CalendarCheck className="size-4 shrink-0 text-brand" />
                 <span className="sa-num">
                   {booking.date
-                    ? new Date(booking.date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })
+                    ? new Date(booking.date).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
                     : '—'}
                 </span>
                 {booking.time_slot && <span className="sa-num">· {booking.time_slot}</span>}
@@ -208,14 +221,14 @@ export default function ChatScreen() {
                 </span>
               )}
               <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="size-4 shrink-0 text-brand" /> Escrow protected
+                <ShieldCheck className="size-4 shrink-0 text-brand" /> {t('Escrow protected')}
               </span>
             </div>
             <button
               onClick={() => navigate(`/booking/${bookingId}`)}
               className={`mt-1 h-11 rounded-field bg-surface text-caption font-semibold text-brand transition hover:bg-brand-tint ${RING}`}
             >
-              View booking details
+              {t('View booking details')}
             </button>
           </aside>
         )}

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Camera, X, ChevronRight, CheckCircle2, ArrowLeft, PartyPopper } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { CONSUMER_REVIEW_TAGS, checkAndCreateTicket } from '@/lib/qualityEngine';
+import { useTranslation } from '@/lib/useTranslation';
 import { Button } from '@/components/ds';
 import { toast } from 'sonner';
 import { Angry, Frown, Meh, Smile, Laugh } from 'lucide-react';
@@ -30,6 +31,7 @@ function StarPicker({ value, onChange, size = 'lg' }) {
 export default function ReviewFlow() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [booking, setBooking] = useState(null);
   const [user, setUser] = useState(null);
   const [step, setStep] = useState(1); // 1=overall, 2=sub-ratings, 3=tags, 4=comment, 5=done
@@ -66,7 +68,7 @@ export default function ReviewFlow() {
   };
 
   const handleSubmit = async () => {
-    if (!overallRating) return toast.error('Please select a rating');
+    if (!overallRating) return toast.error(t('Please select a rating'));
     setSubmitting(true);
     const reviewPayload = {
       booking_id: bookingId,
@@ -112,9 +114,9 @@ export default function ReviewFlow() {
   if (booking.rating) return (
     <div className="min-h-screen bg-bg font-inter flex flex-col items-center justify-center px-5">
       <CheckCircle2 className="h-16 w-16 text-success mb-4" />
-      <h2 className="text-xl font-semibold mb-2">Already Reviewed</h2>
-      <p className="text-ink-secondary text-sm text-center mb-6">You've already submitted a review for this booking.</p>
-      <Button onClick={() => navigate(`/booking/${bookingId}`)} className="rounded-xl px-8">Back to Booking</Button>
+      <h2 className="text-xl font-semibold mb-2">{t('Already Reviewed')}</h2>
+      <p className="text-ink-secondary text-sm text-center mb-6">{t("You've already submitted a review for this booking.")}</p>
+      <Button onClick={() => navigate(`/booking/${bookingId}`)} className="rounded-xl px-8">{t('Back to Booking')}</Button>
     </div>
   );
 
@@ -123,8 +125,8 @@ export default function ReviewFlow() {
       <span className="mb-4 grid size-16 place-items-center rounded-full bg-grad-brand-soft text-brand-ink">
         <PartyPopper className="size-8" />
       </span>
-      <h2 className="text-xl font-semibold mb-2">Thank you</h2>
-      <p className="text-ink-secondary text-sm mb-2">Your review helps improve our service quality.</p>
+      <h2 className="text-xl font-semibold mb-2">{t('Thank you')}</h2>
+      <p className="text-ink-secondary text-sm mb-2">{t('Your review helps improve our service quality.')}</p>
       {(() => { const F = FACE_MAP[overallRating]; return F ? <F className="mx-auto my-4 size-14 text-brand" /> : null; })()}
       <p className="font-semibold text-lg">{LABEL_MAP[overallRating]}</p>
       <div className="flex gap-1 justify-center my-3">
@@ -140,8 +142,8 @@ export default function ReviewFlow() {
         </div>
       )}
       <div className="flex flex-col gap-2 w-full max-w-xs mt-4">
-        <Button onClick={() => navigate(`/booking/${bookingId}`)} className="rounded-xl">View Booking</Button>
-        <Button onClick={() => navigate('/')} variant="outline" className="rounded-xl">Back to Home</Button>
+        <Button onClick={() => navigate(`/booking/${bookingId}`)} className="rounded-xl">{t('View Booking')}</Button>
+        <Button onClick={() => navigate('/')} variant="outline" className="rounded-xl">{t('Back to Home')}</Button>
       </div>
     </div>
   );
@@ -155,11 +157,11 @@ export default function ReviewFlow() {
             onClick={() => (step > 1 ? setStep((v) => v - 1) : navigate(-1))}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Back
+            <ArrowLeft className="size-[15px]" /> {t('Back')}
           </button>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-display-2 text-white">Rate your experience</h1>
+              <h1 className="text-display-2 text-white">{t('Rate your experience')}</h1>
               <p className="mt-2 text-lead text-white/[0.78]">
                 {booking.service_type}{booking.partner_name ? ` · ${booking.partner_name}` : ''}
               </p>
@@ -202,12 +204,12 @@ export default function ReviewFlow() {
         {/* Step 2: Sub-Ratings */}
         {step === 2 && (
           <div>
-            <h2 className="text-xl font-semibold mb-1 text-center">Rate the details</h2>
-            <p className="text-sm text-ink-secondary text-center mb-6">Optional — but very helpful!</p>
+            <h2 className="text-xl font-semibold mb-1 text-center">{t('Rate the details')}</h2>
+            <p className="text-sm text-ink-secondary text-center mb-6">{t('Optional — but very helpful!')}</p>
             {[
-              { label: 'Punctuality', value: punctuality, onChange: setPunctuality },
-              { label: 'Work Quality', value: quality, onChange: setQuality },
-              { label: 'Professionalism', value: professionalism, onChange: setProfessionalism },
+              { label: t('Punctuality'), value: punctuality, onChange: setPunctuality },
+              { label: t('Work Quality'), value: quality, onChange: setQuality },
+              { label: t('Professionalism'), value: professionalism, onChange: setProfessionalism },
             ].map(({ label, value, onChange }) => (
               <div key={label} className="mb-6">
                 <p className="text-sm font-semibold mb-3 text-center">{label}</p>
@@ -220,8 +222,8 @@ export default function ReviewFlow() {
         {/* Step 3: Tags + Photos */}
         {step === 3 && (
           <div>
-            <h2 className="text-xl font-semibold mb-1 text-center">What stood out?</h2>
-            <p className="text-sm text-ink-secondary text-center mb-6">Select all that apply</p>
+            <h2 className="text-xl font-semibold mb-1 text-center">{t('What stood out?')}</h2>
+            <p className="text-sm text-ink-secondary text-center mb-6">{t('Select all that apply')}</p>
             <div className="flex flex-wrap gap-2 justify-center mb-6">
               {CONSUMER_REVIEW_TAGS.map(tag => (
                 <button key={tag} onClick={() => toggleTag(tag)}
@@ -237,8 +239,8 @@ export default function ReviewFlow() {
 
             {/* Photos */}
             <div className="bg-raised/50 rounded-2xl p-4">
-              <p className="text-sm font-semibold mb-2">Add photos (optional)</p>
-              <p className="text-xs text-ink-secondary mb-3">Show before/after work or issues</p>
+              <p className="text-sm font-semibold mb-2">{t('Add photos (optional)')}</p>
+              <p className="text-xs text-ink-secondary mb-3">{t('Show before/after work or issues')}</p>
               <div className="flex gap-2 flex-wrap">
                 {photos.map((url, i) => (
                   <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden">
@@ -262,8 +264,8 @@ export default function ReviewFlow() {
         {/* Step 4: Comment + Options */}
         {step === 4 && (
           <div>
-            <h2 className="text-xl font-semibold mb-1 text-center">Anything to add?</h2>
-            <p className="text-sm text-ink-secondary text-center mb-6">Your written review helps others decide</p>
+            <h2 className="text-xl font-semibold mb-1 text-center">{t('Anything to add?')}</h2>
+            <p className="text-sm text-ink-secondary text-center mb-6">{t('Your written review helps others decide')}</p>
             <textarea
               value={comment}
               onChange={e => setComment(e.target.value)}
@@ -276,8 +278,8 @@ export default function ReviewFlow() {
             <button onClick={() => setIsAnon(!isAnon)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border transition-all mb-4 ${isAnon ? 'border-brand bg-brand/5' : 'border-hairline/10 bg-surface'}`}>
               <div>
-                <p className="text-sm font-semibold text-left">Post anonymously</p>
-                <p className="text-xs text-ink-secondary">Your name won't be shown publicly</p>
+                <p className="text-sm font-semibold text-left">{t('Post anonymously')}</p>
+                <p className="text-xs text-ink-secondary">{t("Your name won't be shown publicly")}</p>
               </div>
               <div className={`w-5 h-5 rounded-full shadow-[inset_0_0_0_1px_rgb(var(--hairline))] flex items-center justify-center ${isAnon ? 'border-brand bg-brand' : 'border-hairline/10 bg-surface'}`}>
                 {isAnon && <div className="w-2 h-2 bg-surface rounded-full" />}
@@ -292,18 +294,16 @@ export default function ReviewFlow() {
         <div className="max-w-lg mx-auto">
           {step < 4 ? (
             <Button
-              onClick={() => { if (step === 1 && !overallRating) { toast.error('Please select a rating'); return; } setStep(s => s + 1); }}
+              onClick={() => { if (step === 1 && !overallRating) { toast.error(t('Please select a rating')); return; } setStep(s => s + 1); }}
               block size="lg">
-              Continue <ChevronRight className="h-4 w-4 ml-1" />
+              {t('Continue')} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
             <div className="flex gap-2">
               <Button onClick={() => navigate(`/booking/${bookingId}`)} variant="outline" size="lg" className="flex-1">
-                Skip
+                {t('Skip')}
               </Button>
-              <Button onClick={handleSubmit} loading={submitting} size="lg" className="flex-1">
-                Submit review
-              </Button>
+              <Button onClick={handleSubmit} loading={submitting} size="lg" className="flex-1">{t('Submit review')}</Button>
             </div>
           )}
         </div>

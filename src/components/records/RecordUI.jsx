@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ImagePlus, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Shared shell and primitives for the record screens — refunds, damage claims,
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 export function PageShell({ title, subtitle, action, children, aside }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div className="bg-bg pb-16">
       {/* Gradient page header — same pattern as the booking funnel. Replaces
@@ -26,7 +28,7 @@ export function PageShell({ title, subtitle, action, children, aside }) {
             onClick={() => navigate(-1)}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Back
+            <ArrowLeft className="size-[15px]" /> {t('Back')}
           </button>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
@@ -80,12 +82,49 @@ const STATUS_TONE = {
   closed: 'neutral', reopened: 'active',
 };
 
+/* Customer-facing wording for record statuses. Display layer only — the stored
+   value is unchanged; this is the English key that t() then translates. */
+const RECORD_STATUS_LABEL = {
+  pending: 'Pending',
+  requested: 'Requested',
+  submitted: 'Submitted',
+  acknowledged: 'Acknowledged',
+  open: 'Open',
+  under_review: 'Under review',
+  awaiting_customer: 'Awaiting your reply',
+  awaiting_partner_response: 'Awaiting partner response',
+  awaiting_evidence: 'Awaiting evidence',
+  investigating: 'Investigating',
+  processing: 'Processing',
+  in_progress: 'In progress',
+  escalated: 'Escalated',
+  approved: 'Approved',
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+  resolved: 'Resolved',
+  succeeded: 'Succeeded',
+  paid: 'Paid',
+  accepted: 'Accepted',
+  rejected: 'Rejected',
+  failed: 'Failed',
+  declined: 'Declined',
+  cancelled: 'Cancelled',
+  withdrawn: 'Withdrawn',
+  closed: 'Closed',
+  reopened: 'Reopened',
+};
+
 export function StatusPill({ status, className }) {
+  const { t } = useTranslation();
   if (!status) return null;
   const tone = TONE[STATUS_TONE[status] || 'neutral'];
+  // The raw enum was previously printed as customer copy ("awaiting_customer"
+  // → "Awaiting customer"), which cannot be translated. Look the value up as a
+  // key; unknown statuses still fall back to the de-underscored form.
+  const label = t(RECORD_STATUS_LABEL[status] || String(status).replace(/_/g, ' '));
   return (
-    <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize', tone, className)}>
-      {String(status).replace(/_/g, ' ')}
+    <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold', tone, className)}>
+      {label}
     </span>
   );
 }
@@ -117,11 +156,12 @@ export function EmptyState({ icon: Icon, title, body, action }) {
   );
 }
 
-export function Loading({ label = 'Loading…' }) {
+export function Loading({ label }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center gap-2 py-16 text-ink-secondary" role="status">
       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-      <span className="text-sm">{label}</span>
+      <span className="text-sm">{label || t('Loading…')}</span>
     </div>
   );
 }
@@ -149,6 +189,7 @@ export const inputClass =
  * reporting damage.
  */
 export function EvidenceUploader({ evidence, onChange, max = 5, hint }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const fileRef = useRef(null);
 
@@ -164,13 +205,13 @@ export function EvidenceUploader({ evidence, onChange, max = 5, hint }) {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
       });
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) throw new Error(t('Upload failed'));
       const body = await res.json();
       const file0 = Array.isArray(body) ? body[0] : (body.files?.[0] ?? body);
       onChange([...evidence, { kind: 'photo', url: file0.url, caption: file.name?.slice(0, 60) }]);
     } catch {
       onChange([...evidence]); // leave the list untouched
-      throw new Error('That photo could not be uploaded — please try again');
+      throw new Error(t('That photo could not be uploaded — please try again'));
     } finally {
       setBusy(false);
     }
@@ -185,7 +226,7 @@ export function EvidenceUploader({ evidence, onChange, max = 5, hint }) {
             <button
               type="button"
               onClick={() => onChange(evidence.filter((_, j) => j !== i))}
-              aria-label="Remove photo"
+              aria-label={t('Remove photo')}
               className="absolute -right-1.5 -top-1.5 h-5 w-5 rounded-full bg-ink text-ink-inverse flex items-center justify-center"
             >
               <X className="h-3 w-3" />
@@ -199,7 +240,7 @@ export function EvidenceUploader({ evidence, onChange, max = 5, hint }) {
             disabled={busy}
             onClick={() => fileRef.current?.click()}
             className="grid size-16 place-items-center rounded-md text-ink-tertiary shadow-[inset_0_0_0_1px_rgb(var(--hairline))] transition hover:bg-raised disabled:opacity-50"
-            aria-label="Add a photo"
+            aria-label={t('Add a photo')}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
           </button>
@@ -223,10 +264,12 @@ export function EvidenceUploader({ evidence, onChange, max = 5, hint }) {
   );
 }
 
-export const fmtDate = (d) => (d
-  ? new Date(d).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })
+/* Locale is passed in because these are plain functions, not hooks; callers
+   hand over the value from useTranslation() so dates follow the language. */
+export const fmtDate = (d, locale = 'en-MY') => (d
+  ? new Date(d).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
   : '—');
 
-export const fmtDateTime = (d) => (d
-  ? new Date(d).toLocaleString('en-MY', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+export const fmtDateTime = (d, locale = 'en-MY') => (d
+  ? new Date(d).toLocaleString(locale, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
   : '—');

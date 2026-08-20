@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Booking status pill.
@@ -56,6 +57,7 @@ const STATUS_MAP = {
 };
 
 export default function StatusBadge({ status }) {
+  const { t } = useTranslation();
   const s = STATUS_MAP[status] || STATUS_MAP.pending;
   return (
     <span className={cn(
@@ -65,7 +67,7 @@ export default function StatusBadge({ status }) {
       {s.live && (
         <span className="size-[7px] rounded-full bg-live shadow-[0_0_0_3px_rgb(var(--live)/0.25)]" />
       )}
-      {s.label}
+      {t(s.label)}
     </span>
   );
 }

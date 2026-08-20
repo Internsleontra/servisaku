@@ -2,8 +2,10 @@ import { motion } from 'framer-motion';
 import { HelpCircle, MessageCircle, FileText, ChevronDown } from 'lucide-react';
 import { safeMotion, variants } from '@/lib/design/motion';
 import { useState } from 'react';
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function Help() {
+  const { t } = useTranslation();
   const [openFaq, setOpenFaq] = useState(0);
 
   const faqs = [
@@ -37,12 +39,9 @@ export default function Help() {
           <div className="w-16 h-16 bg-info-tint rounded-full flex items-center justify-center mx-auto mb-6">
             <HelpCircle className="w-8 h-8 text-info" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-semibold text-ink tracking-tight mb-4">
-            Help & <span className="text-brand">Support</span>
+          <h1 className="text-4xl md:text-5xl font-semibold text-ink tracking-tight mb-4">{t('Help &')}<span className="text-brand">{t('Support')}</span>
           </h1>
-          <p className="text-lg text-ink-secondary max-w-xl mx-auto font-medium">
-            Find answers to common questions or reach out to our team for assistance.
-          </p>
+          <p className="text-lg text-ink-secondary max-w-xl mx-auto font-medium">{t('Find answers to common questions or reach out to our team for assistance.')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
@@ -51,9 +50,9 @@ export default function Help() {
               <MessageCircle className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-ink mb-1">Live chat support</h3>
-              <p className="text-sm text-ink-secondary mb-3 font-medium">Chat with our customer service team in real-time for immediate help.</p>
-              <button className="text-brand text-sm font-semibold hover:underline">Start chat</button>
+              <h3 className="font-semibold text-ink mb-1">{t('Live chat support')}</h3>
+              <p className="text-sm text-ink-secondary mb-3 font-medium">{t('Chat with our customer service team in real-time for immediate help.')}</p>
+              <button className="text-brand text-sm font-semibold hover:underline">{t('Start chat')}</button>
             </div>
           </div>
           <div className="bg-surface rounded-2xl p-6 border border-hairline/20 shadow-sm flex items-start gap-4">
@@ -61,15 +60,15 @@ export default function Help() {
               <FileText className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-semibold text-ink mb-1">Detailed guides</h3>
-              <p className="text-sm text-ink-secondary mb-3 font-medium">Read our step-by-step guides on how to use all features of ServisAku.</p>
-              <button className="text-brand text-sm font-semibold hover:underline">Browse articles</button>
+              <h3 className="font-semibold text-ink mb-1">{t('Detailed guides')}</h3>
+              <p className="text-sm text-ink-secondary mb-3 font-medium">{t('Read our step-by-step guides on how to use all features of ServisAku.')}</p>
+              <button className="text-brand text-sm font-semibold hover:underline">{t('Browse articles')}</button>
             </div>
           </div>
         </div>
 
         <div>
-          <h2 className="text-2xl font-semibold text-ink mb-6">Frequently asked questions</h2>
+          <h2 className="text-2xl font-semibold text-ink mb-6">{t('Frequently asked questions')}</h2>
           <div className="space-y-4">
             {faqs.map((faq, idx) => (
               <div 
@@ -80,13 +79,13 @@ export default function Help() {
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="w-full px-6 py-5 flex items-center justify-between text-left"
                 >
-                  <span className="font-semibold text-ink pr-4">{faq.q}</span>
+                  <span className="font-semibold text-ink pr-4">{t(faq.q)}</span>
                   <ChevronDown className={`w-5 h-5 text-ink-tertiary transition-transform duration-300 ${openFaq === idx ? 'rotate-180 text-brand' : ''}`} />
                 </button>
                 <div 
                   className={`px-6 overflow-hidden transition-all duration-300 ease-in-out ${openFaq === idx ? 'max-h-40 pb-5 opacity-100' : 'max-h-0 opacity-0'}`}
                 >
-                  <p className="text-ink-secondary text-sm font-medium leading-relaxed">{faq.a}</p>
+                  <p className="text-ink-secondary text-sm font-medium leading-relaxed">{t(faq.a)}</p>
                 </div>
               </div>
             ))}

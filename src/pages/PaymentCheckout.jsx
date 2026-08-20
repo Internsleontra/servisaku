@@ -7,12 +7,14 @@ import { generateIdempotencyKey, markPaymentSubmitted, clearPaymentRecord, audit
 import { Button } from '@/components/ui/button';
 import { PriceSummary, RING, RING_BRAND } from '@/components/ds';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/useTranslation';
 import { paymentIconFor } from '@/lib/paymentIcons';
 
 const BANKS = ['Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank', 'Bank Islam', 'OCBC Bank'];
 
 export default function PaymentCheckout() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const params = new URLSearchParams(window.location.search);
   const bookingId = params.get('booking');
 
@@ -61,10 +63,10 @@ export default function PaymentCheckout() {
         setProcessing(true);
         await servisaku.entities.Booking.update(booking.id, { payment_method: 'cash' });
         auditLog('PAYMENT_METHOD_CASH', { bookingId: booking?.id, amount: total });
-        toast.success('Cash selected — pay your professional when the job is done');
+        toast.success(t('Cash selected — pay your professional when the job is done'));
         navigate(`/booking/${booking.id}`);
       } catch (e) {
-        toast.error(e.message || 'Could not select cash payment');
+        toast.error(e.message || t('Could not select cash payment'));
         setProcessing(false);
       }
       return;
@@ -73,7 +75,7 @@ export default function PaymentCheckout() {
     // Payment replay prevention
     const idemKey = generateIdempotencyKey(booking?.id || 'demo', total, method);
     if (!markPaymentSubmitted(idemKey)) {
-      toast.error('This payment was already submitted. Check your booking status.');
+      toast.error(t('This payment was already submitted. Check your booking status.'));
       auditLog('PAYMENT_REPLAY_BLOCKED', { bookingId: booking?.id, amount: total });
       return;
     }
@@ -83,17 +85,17 @@ export default function PaymentCheckout() {
     setProcessing(true);
 
     try {
-      if (!booking?.id) throw new Error('No booking selected to pay for');
+      if (!booking?.id) throw new Error(t('No booking selected to pay for'));
       // The backend picks the gateway for this method and returns its hosted
       // checkout URL. Payment/escrow are confirmed server-side on the redirect
       // back to /payment/return (and via webhook in production).
       const payment = await servisaku.payments.create(booking.id, method);
-      if (!payment?.checkout_url) throw new Error('Could not start payment');
+      if (!payment?.checkout_url) throw new Error(t('Could not start payment'));
       window.location.href = payment.checkout_url;
     } catch (e) {
       clearPaymentRecord(booking?.id || 'demo', total);
       auditLog('PAYMENT_FAILED', { method, amount: total, error: e.message });
-      toast.error(e.message || 'Payment could not be started');
+      toast.error(e.message || t('Payment could not be started'));
       setPayState('failed');
       setProcessing(false);
     }
@@ -104,16 +106,16 @@ export default function PaymentCheckout() {
       <div className="w-24 h-24 bg-success-tint rounded-full flex items-center justify-center mb-5">
         <CheckCircle2 className="h-12 w-12 text-success" />
       </div>
-      <h2 className="text-2xl font-semibold mb-1">Payment Successful</h2>
-      <p className="text-sm text-ink-secondary mb-1">{formatRM(total)} paid via {selected?.label || method}</p>
-      <p className="text-xs text-ink-secondary mb-6">Funds held in escrow until service completion</p>
+      <h2 className="text-2xl font-semibold mb-1">{t('Payment Successful')}</h2>
+      <p className="text-sm text-ink-secondary mb-1">{t('{amount} paid via {method}', { amount: formatRM(total), method: selected?.label || method })}</p>
+      <p className="text-xs text-ink-secondary mb-6">{t('Funds held in escrow until service completion')}</p>
       <div className="bg-surface rounded-2xl border border-hairline p-4 w-full max-w-xs mb-6 text-left space-y-2 text-xs">
-        <div className="flex justify-between"><span className="text-ink-secondary">Amount paid</span><span className="font-semibold">{formatRM(total)}</span></div>
-        <div className="flex justify-between"><span className="text-ink-secondary">Transaction ID</span><span className="font-mono text-[10px]">TXN{Date.now().toString().slice(-8)}</span></div>
-        <div className="flex justify-between"><span className="text-ink-secondary">Escrow release</span><span className="font-medium">48h after completion</span></div>
+        <div className="flex justify-between"><span className="text-ink-secondary">{t('Amount paid')}</span><span className="font-semibold">{formatRM(total)}</span></div>
+        <div className="flex justify-between"><span className="text-ink-secondary">{t('Transaction ID')}</span><span className="font-mono text-[10px]">TXN{Date.now().toString().slice(-8)}</span></div>
+        <div className="flex justify-between"><span className="text-ink-secondary">{t('Escrow release')}</span><span className="font-medium">{t('48h after completion')}</span></div>
       </div>
       <Button onClick={() => booking ? navigate(`/booking/${booking.id}`) : navigate('/')} className="w-full max-w-xs rounded-2xl">
-        Track Booking
+        {t('Track Booking')}
       </Button>
     </div>
   );
@@ -123,13 +125,13 @@ export default function PaymentCheckout() {
       <div className="w-24 h-24 bg-danger-tint rounded-full flex items-center justify-center mb-5">
         <XCircle className="h-12 w-12 text-danger" />
       </div>
-      <h2 className="text-2xl font-semibold mb-1">Payment Failed</h2>
-      <p className="text-sm text-ink-secondary mb-6">Your card was not charged. Please try again.</p>
+      <h2 className="text-2xl font-semibold mb-1">{t('Payment Failed')}</h2>
+      <p className="text-sm text-ink-secondary mb-6">{t('Your card was not charged. Please try again.')}</p>
       <div className="flex gap-3 w-full max-w-xs">
         <Button onClick={() => setPayState('idle')} className="flex-1 rounded-2xl">
-          <RefreshCw className="h-4 w-4 mr-1" /> Retry
+          <RefreshCw className="h-4 w-4 mr-1" /> {t('Retry')}
         </Button>
-        <Button onClick={() => navigate(-1)} variant="outline" className="flex-1 rounded-2xl">Cancel</Button>
+        <Button onClick={() => navigate(-1)} variant="outline" className="flex-1 rounded-2xl">{t('Cancel')}</Button>
       </div>
     </div>
   );
@@ -151,12 +153,12 @@ export default function PaymentCheckout() {
             onClick={() => navigate(-1)}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Back
+            <ArrowLeft className="size-[15px]" /> {t('Back')}
           </button>
-          <h1 className="text-display-2 text-white">Secure checkout</h1>
+          <h1 className="text-display-2 text-white">{t('Secure checkout')}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
-            <span className="inline-flex items-center gap-1.5"><Lock className="size-4" /> SSL secured</span>
-            <span className="inline-flex items-center gap-1.5"><Shield className="size-4" /> Escrow protected</span>
+            <span className="inline-flex items-center gap-1.5"><Lock className="size-4" /> {t('SSL secured')}</span>
+            <span className="inline-flex items-center gap-1.5"><Shield className="size-4" /> {t('Escrow protected')}</span>
           </div>
         </div>
       </div>
@@ -165,7 +167,7 @@ export default function PaymentCheckout() {
       <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
         <div className="flex flex-col gap-5">
           <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
-            <h2 className="mb-4 font-display text-h3 font-semibold text-ink">Payment method</h2>
+            <h2 className="mb-4 font-display text-h3 font-semibold text-ink">{t('Payment method')}</h2>
             <div className="flex flex-col gap-2">
               {methods.map((pm) => {
                 const on = method === pm.id;
@@ -182,7 +184,7 @@ export default function PaymentCheckout() {
                     <span className="flex-1">
                       <span className="block text-caption font-semibold text-ink">{pm.label}</span>
                       <span className="block text-xs text-ink-secondary">
-                        {pm.available ? pm.sub : 'Currently unavailable'}
+                        {pm.available ? t(pm.sub) : t('Currently unavailable')}
                       </span>
                     </span>
                     <span className={`grid size-5 shrink-0 place-items-center rounded-full ${on ? 'bg-brand' : RING}`}>
@@ -196,7 +198,7 @@ export default function PaymentCheckout() {
 
           {method === 'fpx' && (
             <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
-              <h2 className="mb-4 font-display text-h3 font-semibold text-ink">Select bank</h2>
+              <h2 className="mb-4 font-display text-h3 font-semibold text-ink">{t('Select bank')}</h2>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {BANKS.map((b) => (
                   <button
@@ -231,7 +233,7 @@ export default function PaymentCheckout() {
             lines={priceLines}
             total={formatRM(total)}
             note={isCash
-              ? 'Pay your professional directly when the job is complete.'
+              ? t('Pay your professional directly when the job is complete.')
               : 'Held in escrow until you confirm the job is done'}
           />
 
@@ -243,16 +245,16 @@ export default function PaymentCheckout() {
             className="w-full rounded-field text-base font-semibold"
           >
             {processing ? (
-              <span className="flex items-center gap-2"><RefreshCw className="size-4 animate-spin" /> Processing…</span>
+              <span className="flex items-center gap-2"><RefreshCw className="size-4 animate-spin" /> {t('Processing…')}</span>
             ) : isCash ? (
-              <span className="flex items-center gap-2"><Banknote className="size-4" /> Confirm cash payment</span>
+              <span className="flex items-center gap-2"><Banknote className="size-4" /> {t('Confirm cash payment')}</span>
             ) : (
-              <span className="flex items-center gap-2"><Lock className="size-4" /> Pay {formatRM(total)}</span>
+              <span className="flex items-center gap-2"><Lock className="size-4" /> {t('Pay {amount}', { amount: formatRM(total) })}</span>
             )}
           </Button>
 
           <p className="text-center text-xs text-ink-tertiary">
-            By paying you agree to the ServisAku Terms of Service.
+            {t('By paying you agree to the ServisAku Terms of Service.')}
           </p>
         </div>
       </div>

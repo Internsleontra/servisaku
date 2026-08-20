@@ -5,6 +5,7 @@ import { CheckCircle2, FileText, ScrollText } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { Button } from '@/components/ds';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/useTranslation';
 import {
   PageShell, Card, EmptyState, Loading, fmtDate,
 } from '@/components/records/RecordUI';
@@ -35,11 +36,15 @@ const TITLES = {
   damage_policy: 'Damage Policy',
 };
 
-const titleFor = (d) => d.title || TITLES[d.slug] || String(d.slug || '').replace(/_/g, ' ');
+/* The API already returns Malay for `title` when asked, and always returns
+   `title_my`. tField prefers a genuine Malay value and ignores one that is
+   byte-identical to the English. The TITLES fallback is a dictionary key. */
+const titleFor = (d, tField, t) => tField(d, 'title') || t(TITLES[d.slug] || String(d.slug || '').replace(/_/g, ' '));
 
 // ─── List ────────────────────────────────────────────────────────────────────
 
 function DocumentList() {
+  const { t, tField, locale } = useTranslation();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState(null);
   const [pending, setPending] = useState([]);
@@ -54,37 +59,37 @@ function DocumentList() {
       .catch(() => setPending([]));
   }, []);
 
-  if (!documents) return <PageShell title="Legal"><Loading /></PageShell>;
+  if (!documents) return <PageShell title={t('Legal')}><Loading /></PageShell>;
 
   const pendingSlugs = new Set(pending.map((p) => p.slug));
 
   return (
-    <PageShell title="Legal" subtitle="The terms that apply to your account">
+    <PageShell title={t('Legal')} subtitle={t('The terms that apply to your account')}>
       {pending.length > 0 && (
         <Card className="border-warning/40 bg-warning-tint">
           <p className="text-sm font-semibold">
             {pending.length === 1 ? 'One document needs' : `${pending.length} documents need`} your acceptance
           </p>
           <p className="mt-1 text-sm text-ink-secondary">
-            These have changed since you last accepted them.
+            {t('These have changed since you last accepted them.')}
           </p>
         </Card>
       )}
 
       {documents.length === 0 ? (
-        <EmptyState icon={ScrollText} title="Nothing published yet" body="Our terms will appear here once published." />
+        <EmptyState icon={ScrollText} title={t('Nothing published yet')} body={t('Our terms will appear here once published.')} />
       ) : documents.map((d) => (
         <Card key={d.id ?? d.slug} onClick={() => navigate(`/legal?doc=${d.slug}`)}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-semibold truncate">{titleFor(d)}</p>
+              <p className="font-semibold truncate">{titleFor(d, tField, t)}</p>
               <p className="text-xs text-ink-secondary mt-0.5">
-                Version {d.version}
-                {(d.effective_from ?? d.effectiveFrom) ? ` · in force from ${fmtDate(d.effective_from ?? d.effectiveFrom)}` : ''}
+                {t('Version {v}', { v: d.version })}
+{(d.effective_from ?? d.effectiveFrom) ? ` · ${t('in force from {date}', { date: fmtDate(d.effective_from ?? d.effectiveFrom, locale) })}` : ''}
               </p>
             </div>
             {pendingSlugs.has(d.slug)
-              ? <span className="shrink-0 rounded-full bg-warning-tint px-2.5 py-0.5 text-[11px] font-semibold text-warning">Action needed</span>
+              ? <span className="shrink-0 rounded-full bg-warning-tint px-2.5 py-0.5 text-[11px] font-semibold text-warning">{t('Action needed')}</span>
               : <CheckCircle2 className="h-4 w-4 shrink-0 text-success mt-0.5" aria-hidden="true" />}
           </div>
         </Card>
@@ -96,6 +101,7 @@ function DocumentList() {
 // ─── Document ────────────────────────────────────────────────────────────────
 
 function DocumentView({ slug }) {
+  const { t, tField, locale } = useTranslation();
   const navigate = useNavigate();
   const [doc, setDoc] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -117,9 +123,9 @@ function DocumentView({ slug }) {
     try {
       await servisaku.legal.accept({ document_id: doc.id, slug: doc.slug, version: doc.version });
       setMustAccept(false);
-      toast.success('Accepted — thank you');
+      toast.success(t('Accepted — thank you'));
     } catch (e) {
-      toast.error(e.message || 'Could not record that acceptance');
+      toast.error(e.message || t('Could not record that acceptance'));
     } finally {
       setAccepting(false);
     }
@@ -127,21 +133,23 @@ function DocumentView({ slug }) {
 
   if (failed) {
     return (
-      <PageShell title="Legal">
-        <EmptyState icon={FileText} title="Document not found" body="It may not be published yet." />
+      <PageShell title={t('Legal')}>
+        <EmptyState icon={FileText} title={t('Document not found')} body={t('It may not be published yet.')} />
       </PageShell>
     );
   }
-  if (!doc) return <PageShell title="Legal"><Loading /></PageShell>;
+  if (!doc) return <PageShell title={t('Legal')}><Loading /></PageShell>;
 
-  const body = doc.content_md ?? doc.contentMd ?? '';
+  // Prefer the Malay body the API returns; tField falls back when it is absent
+  // or is just a copy of the English.
+  const body = tField(doc, 'content_md') || doc.content_md || doc.contentMd || '';
 
   return (
-    <PageShell title={titleFor(doc)} subtitle={`Version ${doc.version}`}>
+    <PageShell title={titleFor(doc, tField, t)} subtitle={t('Version {v}', { v: doc.version })}>
       {mustAccept && (
         <Card className="border-warning/40 bg-warning-tint">
-          <p className="text-sm font-semibold">This version needs your acceptance</p>
-          {(doc.summary) && <p className="mt-1 text-sm text-ink-secondary">{doc.summary}</p>}
+          <p className="text-sm font-semibold">{t('This version needs your acceptance')}</p>
+          {tField(doc, 'summary') && <p className="mt-1 text-sm text-ink-secondary">{tField(doc, 'summary')}</p>}
         </Card>
       )}
 
@@ -156,12 +164,12 @@ function DocumentView({ slug }) {
       {mustAccept ? (
         <div className="sticky bottom-4">
           <Button block variant="primary" disabled={accepting} onClick={accept}>
-            {accepting ? 'Recording…' : `Accept version ${doc.version}`}
+            {accepting ? t('Recording…') : t('Accept version {v}', { v: doc.version })}
           </Button>
         </div>
       ) : (
         <Button variant="outline" className="w-full" onClick={() => navigate('/legal')}>
-          Back to documents
+          {t('Back to documents')}
         </Button>
       )}
 

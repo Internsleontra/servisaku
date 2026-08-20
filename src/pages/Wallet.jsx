@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, ArrowDownCircle, ArrowUpCircle, RefreshCw, Medal, Banknote } from 'lucide-react';
 import { formatMYR } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/useTranslation';
 
 // Mock wallet data — swap for `servisaku.wallet.get()` when the endpoint exists.
 const MOCK = {
@@ -19,10 +20,18 @@ const MOCK = {
   ],
 };
 const FILTERS = ['all', 'credit', 'debit', 'refund', 'reward', 'cashback'];
+/* Display copy for the filter chips and the pending pill — the stored values
+   stay lowercase ids; only what the customer reads is translated. */
+const FILTER_LABEL = {
+  all: 'All', credit: 'Credit', debit: 'Debit',
+  refund: 'Refund', reward: 'Reward', cashback: 'Cashback',
+};
+const WALLET_STATUS_LABEL = { pending: 'Pending', completed: 'Completed', failed: 'Failed' };
 const ICON = { credit: ArrowDownCircle, debit: ArrowUpCircle, refund: RefreshCw, reward: Medal, cashback: Banknote };
 
 export default function Wallet() {
   const navigate = useNavigate();
+  const { t, locale } = useTranslation();
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState('all');
 
@@ -30,21 +39,21 @@ export default function Wallet() {
 
   const txns = useMemo(() => {
     if (!data) return [];
-    return filter === 'all' ? data.transactions : data.transactions.filter(t => t.type === filter);
+    return filter === 'all' ? data.transactions : data.transactions.filter(tx => tx.type === filter);
   }, [data, filter]);
 
   return (
     <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-semibold flex-1">Wallet</h1>
-        <button onClick={() => toast.info('Statement export — coming soon')} className="text-brand"><Download className="h-5 w-5" /></button>
+        <h1 className="text-xl font-semibold flex-1">{t('Wallet')}</h1>
+        <button onClick={() => toast.info(t('Statement export — coming soon'))} className="text-brand"><Download className="h-5 w-5" /></button>
       </div>
 
       <div className="px-5 space-y-5 pb-10">
         {/* Balance card */}
         <div className="bg-ink dark:bg-raised text-white rounded-3xl p-6 shadow-e2">
-          <p className="text-xs font-semibold text-white/50">WALLET BALANCE</p>
+          <p className="text-xs font-semibold text-white/50">{t('WALLET BALANCE')}</p>
           {data ? <p className="text-4xl font-semibold mt-1">{formatMYR(data.summary.balance)}</p> : <div className="h-9 w-36 bg-white/10 rounded-lg mt-2 animate-pulse" />}
           <div className="flex flex-wrap gap-2 mt-4">
             {data && [
@@ -58,8 +67,8 @@ export default function Wallet() {
         <div className="flex gap-2 overflow-x-auto scrollbar-none">
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`shrink-0 text-xs font-semibold rounded-full px-3.5 py-2 capitalize border ${filter === f ? 'bg-brand text-white border-brand' : 'bg-surface text-ink-secondary border-hairline/20'}`}>
-              {f}
+              className={`shrink-0 text-xs font-semibold rounded-full px-3.5 py-2 border ${filter === f ? 'bg-brand text-white border-brand' : 'bg-surface text-ink-secondary border-hairline/20'}`}>
+              {t(FILTER_LABEL[f] || f)}
             </button>
           ))}
         </div>
@@ -71,26 +80,26 @@ export default function Wallet() {
             <div className="space-y-2">{[0, 1, 2, 3].map(i => <div key={i} className="h-14 bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-xl animate-pulse" />)}</div>
           ) : txns.length ? (
             <div className="space-y-2">
-              {txns.map(t => {
-                const Icon = ICON[t.type] || Banknote;
-                const positive = t.amount >= 0;
+              {txns.map(tx => {
+                const Icon = ICON[tx.type] || Banknote;
+                const positive = tx.amount >= 0;
                 return (
-                  <div key={t.id} className="flex items-center gap-3 bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-xl p-3">
+                  <div key={tx.id} className="flex items-center gap-3 bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-xl p-3">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${positive ? 'bg-success-tint text-success' : 'bg-raised text-ink-secondary'}`}><Icon className="h-4 w-4" /></div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{t.description}</p>
-                      <p className="text-[11px] text-ink-tertiary">{t.date}{t.bookingRef ? ` · ${t.bookingRef}` : ''}</p>
+                      <p className="text-sm font-semibold truncate">{t(tx.description)}</p>
+                      <p className="text-[11px] text-ink-tertiary">{new Date(tx.date).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}{tx.bookingRef ? ` · ${tx.bookingRef}` : ''}</p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-semibold ${positive ? 'text-success' : 'text-ink'}`}>{positive ? '+' : '−'}{formatMYR(Math.abs(t.amount))}</p>
-                      {t.status !== 'completed' && <span className="text-[9px] font-semibold text-warning capitalize">{t.status}</span>}
+                      <p className={`text-sm font-semibold ${positive ? 'text-success' : 'text-ink'}`}>{positive ? '+' : '−'}{formatMYR(Math.abs(tx.amount))}</p>
+                      {tx.status !== 'completed' && <span className="text-[9px] font-semibold text-warning">{t(WALLET_STATUS_LABEL[tx.status] || tx.status)}</span>}
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-12 text-ink-secondary text-sm">No transactions</div>
+            <div className="text-center py-12 text-ink-secondary text-sm">{t('No transactions')}</div>
           )}
         </div>
       </div>

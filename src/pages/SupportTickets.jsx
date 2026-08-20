@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/lib/useTranslation';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LifeBuoy, Send, Star } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
@@ -40,6 +41,7 @@ const CATEGORIES = [
 // ─── List ────────────────────────────────────────────────────────────────────
 
 function TicketList() {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState(null);
 
@@ -51,26 +53,26 @@ function TicketList() {
 
   return (
     <PageShell
-      title="Support"
-      action={<Button variant="primary" onClick={() => navigate('/support?new=1')}>New</Button>}
+      title={t('Support')}
+      action={<Button variant="primary" onClick={() => navigate('/support?new=1')}>{t('New')}</Button>}
     >
       {!items ? <Loading /> : items.length === 0 ? (
         <EmptyState
           icon={LifeBuoy}
-          title="No tickets"
-          body="Ask the assistant first — it resolves most things instantly. If it cannot, it opens a ticket for you with everything already attached."
-          action={<Button variant="primary" onClick={() => navigate('/support?new=1')}>Open a ticket</Button>}
+          title={t('No tickets')}
+          body={t('Ask the assistant first — it resolves most things instantly. If it cannot, it opens a ticket for you with everything already attached.')}
+          action={<Button variant="primary" onClick={() => navigate('/support?new=1')}>{t('Open a ticket')}</Button>}
         />
-      ) : items.map((t) => (
-        <Card key={t.id} onClick={() => navigate(`/support?id=${t.id}`)}>
+      ) : items.map((ticket) => (
+        <Card key={ticket.id} onClick={() => navigate(`/support?id=${ticket.id}`)}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-semibold truncate">{t.subject}</p>
+              <p className="font-semibold truncate">{ticket.subject}</p>
               <p className="text-xs text-ink-secondary mt-0.5">
-                {t.reference ? `${t.reference} · ` : ''}{fmtDate(t.created_date ?? t.createdAt)}
+                {ticket.reference ? `${ticket.reference} · ` : ''}{fmtDate(ticket.created_date ?? ticket.createdAt, locale)}
               </p>
             </div>
-            <StatusPill status={t.status} />
+            <StatusPill status={ticket.status} />
           </div>
         </Card>
       ))}
@@ -81,6 +83,7 @@ function TicketList() {
 // ─── New ─────────────────────────────────────────────────────────────────────
 
 function NewTicket({ bookingId }) {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [category, setCategory] = useState('booking');
   const [subject, setSubject] = useState('');
@@ -88,8 +91,8 @@ function NewTicket({ bookingId }) {
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
-    if (subject.trim().length < 3) return toast.error('Give it a short subject');
-    if (message.trim().length < 10) return toast.error('Tell us a bit more so we can help');
+    if (subject.trim().length < 3) return toast.error(t('Give it a short subject'));
+    if (message.trim().length < 10) return toast.error(t('Tell us a bit more so we can help'));
     setSubmitting(true);
     try {
       const created = await servisaku.support.create({
@@ -98,18 +101,18 @@ function NewTicket({ bookingId }) {
         message: message.trim(),
         ...(bookingId ? { booking_id: bookingId } : {}),
       });
-      toast.success(created.reference ? `Ticket ${created.reference} opened` : 'Ticket opened');
+      toast.success(created.reference ? t('Ticket {ref} opened', { ref: created.reference }) : t('Ticket opened'));
       navigate(`/support?id=${created.id}`, { replace: true });
     } catch (e) {
-      toast.error(e.message || 'Could not open that ticket');
+      toast.error(e.message || t('Could not open that ticket'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <PageShell title="Open a ticket" subtitle="A person will come back to you">
-      <Field label="What is it about?">
+    <PageShell title={t('Open a ticket')} subtitle={t('A person will come back to you')}>
+      <Field label={t('What is it about?')}>
         <div className="grid grid-cols-2 gap-1.5">
           {CATEGORIES.map((c) => (
             <button
@@ -123,27 +126,27 @@ function NewTicket({ bookingId }) {
                   : 'border-hairline bg-surface hover:bg-raised/50',
               )}
             >
-              {c.label}
+              {t(c.label)}
             </button>
           ))}
         </div>
       </Field>
 
-      <Field label="Subject">
+      <Field label={t('Subject')}>
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          placeholder="e.g. Charged twice for one booking"
+          placeholder={t('e.g. Charged twice for one booking')}
           className={inputClass}
         />
       </Field>
 
-      <Field label="What is happening?">
+      <Field label={t('What is happening?')}>
         <textarea
           rows={5}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Include anything you have already tried."
+          placeholder={t('Include anything you have already tried.')}
           className={inputClass}
         />
       </Field>
@@ -158,6 +161,7 @@ function NewTicket({ bookingId }) {
 // ─── Thread ──────────────────────────────────────────────────────────────────
 
 function TicketThread({ ticketId }) {
+  const { t, locale } = useTranslation();
   const [ticket, setTicket] = useState(null);
   const [failed, setFailed] = useState(false);
   const [draft, setDraft] = useState('');
@@ -177,7 +181,7 @@ function TicketThread({ ticketId }) {
       setDraft('');
       await load();
     } catch (e) {
-      toast.error(e.message || 'Could not send that');
+      toast.error(e.message || t('Could not send that'));
     } finally {
       setSending(false);
     }
@@ -186,21 +190,21 @@ function TicketThread({ ticketId }) {
   const rate = async (stars) => {
     try {
       await servisaku.support.csat(ticketId, stars);
-      toast.success('Thanks — that helps us improve');
+      toast.success(t('Thanks — that helps us improve'));
       await load();
     } catch (e) {
-      toast.error(e.message || 'Could not save that rating');
+      toast.error(e.message || t('Could not save that rating'));
     }
   };
 
   if (failed) {
     return (
-      <PageShell title="Ticket">
-        <EmptyState icon={LifeBuoy} title="Ticket not found" body="It may have been closed, or it belongs to another account." />
+      <PageShell title={t('Ticket')}>
+        <EmptyState icon={LifeBuoy} title={t('Ticket not found')} body={t('It may have been closed, or it belongs to another account.')} />
       </PageShell>
     );
   }
-  if (!ticket) return <PageShell title="Ticket"><Loading /></PageShell>;
+  if (!ticket) return <PageShell title={t('Ticket')}><Loading /></PageShell>;
 
   const messages = ticket.messages ?? [];
   const closed = ['resolved', 'closed'].includes(ticket.status);
@@ -209,7 +213,7 @@ function TicketThread({ ticketId }) {
     <PageShell title={ticket.subject} subtitle={ticket.reference} action={<StatusPill status={ticket.status} />}>
       <Card>
         <p className="text-sm">{ticket.message}</p>
-        <p className="mt-2 text-xs text-ink-secondary">{fmtDateTime(ticket.created_date ?? ticket.createdAt)}</p>
+        <p className="mt-2 text-xs text-ink-secondary">{fmtDateTime(ticket.created_date ?? ticket.createdAt, locale)}</p>
       </Card>
 
       {messages.length > 0 && (
@@ -225,7 +229,7 @@ function TicketThread({ ticketId }) {
                 >
                   <p className="whitespace-pre-wrap break-words">{m.message}</p>
                   <p className={cn('mt-1 text-[10px]', mine ? 'text-brand-ink/70' : 'text-ink-tertiary')}>
-                    {fmtDateTime(m.created_date ?? m.createdAt)}
+                    {fmtDateTime(m.created_date ?? m.createdAt, locale)}
                   </p>
                 </div>
               </div>
@@ -237,7 +241,7 @@ function TicketThread({ ticketId }) {
 
       {closed ? (
         <Card>
-          <p className="text-sm font-semibold">How did we do?</p>
+          <p className="text-sm font-semibold">{t('How did we do?')}</p>
           <div className="mt-2 flex gap-1.5">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -266,11 +270,11 @@ function TicketThread({ ticketId }) {
               try {
                 await servisaku.support.reopen(ticketId, 'Still not resolved');
                 await load();
-                toast.success('Reopened');
-              } catch (e) { toast.error(e.message || 'Could not reopen'); }
+                toast.success(t('Reopened'));
+              } catch (e) { toast.error(e.message || t('Could not reopen')); }
             }}
           >
-            Still not resolved — reopen
+            {t('Still not resolved — reopen')}
           </Button>
         </Card>
       ) : (
@@ -279,8 +283,8 @@ function TicketThread({ ticketId }) {
             rows={2}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Reply…"
-            aria-label="Reply"
+            placeholder={t('Reply…')}
+            aria-label={t('Reply')}
             className={cn(inputClass, 'resize-none')}
           />
           <Button
@@ -289,7 +293,7 @@ function TicketThread({ ticketId }) {
             className="h-11 w-11 shrink-0"
             disabled={sending || !draft.trim()}
             onClick={send}
-            aria-label="Send reply"
+            aria-label={t('Send reply')}
           >
             <Send className="h-4 w-4" />
           </Button>

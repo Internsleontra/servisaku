@@ -2,6 +2,7 @@ import { STATUS_META } from '@/lib/bookingEngine';
 import { CheckCircle2, Circle } from 'lucide-react';
 import { CONSUMER_TIMELINE, labelFor } from '@/lib/statusLabels';
 import { statusIconFor, STATUS_ICON } from '@/lib/statusIcons';
+import { useTranslation } from '@/lib/useTranslation';
 
 /* Consumer-facing progress. Node labels come from the approved consumer
    vocabulary (src/lib/statusLabels.js) — a display mapping only. STATUS_META is
@@ -19,6 +20,7 @@ const SUBTITLE = {
 };
 
 export default function BookingTimeline({ booking }) {
+  const { t } = useTranslation();
   const currentStep = STATUS_META[booking.status]?.step ?? 0;
   const isCancelled = booking.status === 'cancelled';
   const isDisputed = booking.status === 'disputed';
@@ -29,7 +31,7 @@ export default function BookingTimeline({ booking }) {
         {(() => { const I = statusIconFor(booking.status); return I ? <I className="size-6 shrink-0" /> : null; })()}
         <div>
           <p className={`font-semibold text-sm ${isCancelled ? 'text-danger' : 'text-danger'}`}>
-            Booking {labelFor(booking.status).toLowerCase()}
+            {t('Booking {status}', { status: t(labelFor(booking.status)).toLowerCase() })}
           </p>
           {booking.cancellation_reason && (
             <p className="text-xs text-ink-secondary mt-0.5">{booking.cancellation_reason}</p>
@@ -41,7 +43,7 @@ export default function BookingTimeline({ booking }) {
 
   return (
     <div className="rounded-card bg-surface p-4 shadow-e1">
-      <p className="sa-caps mb-4 text-ink-tertiary">Booking progress</p>
+      <p className="sa-caps mb-4 text-ink-tertiary">{t('Booking progress')}</p>
       <div className="space-y-0">
         {CONSUMER_TIMELINE.map((node, i) => {
           // A node's position is the furthest step any of its stored statuses maps to.
@@ -74,11 +76,11 @@ export default function BookingTimeline({ booking }) {
               </div>
               <div className={`pb-3 pt-1 flex-1 ${future ? 'opacity-40' : ''}`}>
                 <p className={`text-sm font-semibold leading-tight ${active ? 'text-brand' : done ? 'text-ink' : 'text-ink-secondary'}`}>
-                  {node.label}
+                  {t(node.label)}
                   {active && <span className="ml-2 inline-block w-1.5 h-1.5 bg-brand rounded-full animate-pulse" />}
                 </p>
                 {active && (
-                  <p className="text-xs text-ink-secondary mt-0.5">{SUBTITLE[node.id]}</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">{t(SUBTITLE[node.id])}</p>
                 )}
               </div>
             </div>
