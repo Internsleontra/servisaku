@@ -48,7 +48,7 @@ function stepAComplete(service, answers) {
 export default function ServiceBooking() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const { data: service, isLoading, error } = useQuery({
     queryKey: ['booking-service', slug],
@@ -239,7 +239,7 @@ export default function ServiceBooking() {
                 <span className="inline-flex items-center gap-2">
                   <CalendarCheck className="size-[15px] text-brand" />
                   <span className="sa-num">
-                    {new Date(schedule.date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {new Date(schedule.date).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })}
                   </span>
                   {schedule.timeSlot && <span className="sa-num">· {schedule.timeSlot}</span>}
                 </span>

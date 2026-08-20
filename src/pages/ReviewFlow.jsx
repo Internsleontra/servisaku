@@ -31,7 +31,7 @@ function StarPicker({ value, onChange, size = 'lg' }) {
 export default function ReviewFlow() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [booking, setBooking] = useState(null);
   const [user, setUser] = useState(null);
   const [step, setStep] = useState(1); // 1=overall, 2=sub-ratings, 3=tags, 4=comment, 5=done
@@ -188,7 +188,7 @@ export default function ReviewFlow() {
               <span className="text-2xl font-semibold text-brand">{booking.partner_name?.charAt(0)}</span>
             </div>
             <h2 className="text-xl font-semibold mb-1">How was {booking.partner_name?.split(' ')[0]}?</h2>
-            <p className="text-sm text-ink-secondary mb-8">{booking.service_type} on {new Date(booking.date).toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <p className="text-sm text-ink-secondary mb-8">{t('{service} on {date}', { service: booking.service_type, date: new Date(booking.date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) })}</p>
 
             <StarPicker value={overallRating} onChange={setOverallRating} size="lg" />
 

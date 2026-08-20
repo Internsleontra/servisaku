@@ -4,6 +4,7 @@ import { MessageCircle } from 'lucide-react';
 import { useChatbot } from '@/hooks/useChatbot';
 import { ChatPanel } from './ChatPanel';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * The chat entry point.
@@ -22,6 +23,7 @@ export function ChatbotWidget({
   title,
   className,
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const chat = useChatbot({ role, mode });
 
@@ -34,7 +36,7 @@ export function ChatbotWidget({
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const panelTitle = title || (role === 'partner' ? 'Partner Assistant' : 'ServisAku Assistant');
+  const panelTitle = title || (role === 'partner' ? t('Partner Assistant') : t('ServisAku Assistant'));
 
   if (variant === 'docked') {
     return (
@@ -71,7 +73,7 @@ export function ChatbotWidget({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Close assistant' : 'Open assistant'}
+        aria-label={open ? t('Close assistant') : t('Open assistant')}
         aria-expanded={open}
         className={cn(
           'fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full',

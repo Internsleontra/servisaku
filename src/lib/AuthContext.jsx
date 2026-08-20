@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { servisaku, readyPromise } from '@/api/servisakuClient';
 import { appParams } from '@/lib/app-params';
+import { useTranslation } from '@/lib/useTranslation';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
@@ -69,7 +71,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         // Keep the session; surface the real reason instead of hiding it.
         console.error('[auth] session check failed, keeping session:', status, error?.message);
-        setAuthError({ type: 'unknown', message: error?.message || 'Could not verify your session' });
+        setAuthError({ type: 'unknown', message: error?.message || t('Could not verify your session') });
       }
       setIsLoadingAuth(false);
       setAuthChecked(true);

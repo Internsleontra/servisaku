@@ -5,6 +5,7 @@ import { groupByDay } from '@/lib/chatbot/state';
 import { ChatMessage, DaySeparator, TypingIndicator } from './ChatMessage';
 import { ChatComposer } from './ChatComposer';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 /** Quick replies. They disappear on tap or as soon as the user types. */
 function QuickReplies({ options, onPick, disabled }) {
@@ -36,6 +37,7 @@ function QuickReplies({ options, onPick, disabled }) {
  * a destructive default is how the wrong thing gets tapped on a phone.
  */
 function ActionCard({ card, actionable, onConfirm, onDecline }) {
+  const { t } = useTranslation();
   if (!card) return null;
   const settled = card.status && card.status !== 'pending';
 
@@ -50,9 +52,7 @@ function ActionCard({ card, actionable, onConfirm, onDecline }) {
         <p className="mt-2 text-xs capitalize text-ink-secondary">{card.status}</p>
       ) : (
         <div className="mt-2.5 flex gap-2">
-          <Button type="button" size="sm" variant="outline" className="flex-1" onClick={onDecline} disabled={!actionable}>
-            Not now
-          </Button>
+          <Button type="button" size="sm" variant="outline" className="flex-1" onClick={onDecline} disabled={!actionable}>{t('Not now')}</Button>
           <Button
             type="button"
             size="sm"
@@ -71,6 +71,7 @@ function ActionCard({ card, actionable, onConfirm, onDecline }) {
 
 /** "Step 2 of 4" — a diagnostic with no visible end feels like an interrogation. */
 function TreeProgress({ tree }) {
+  const { t } = useTranslation();
   if (!tree?.of) return null;
   return (
     <div className="flex items-center gap-2 px-3 pb-1.5">
@@ -80,12 +81,13 @@ function TreeProgress({ tree }) {
           style={{ width: `${Math.min(100, (tree.step / tree.of) * 100)}%` }}
         />
       </div>
-      <span className="text-[11px] text-ink-secondary">Step {tree.step} of {tree.of}</span>
+      <span className="text-[11px] text-ink-secondary">{t('Step')} {tree.step} {t('of')} {tree.of}</span>
     </div>
   );
 }
 
 export function ChatPanel({ chat, title = 'ServisAku Assistant', onClose, className }) {
+  const { t } = useTranslation();
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -103,18 +105,18 @@ export function ChatPanel({ chat, title = 'ServisAku Assistant', onClose, classN
           type="button"
           onClick={() => chat.setLocale(chat.locale === 'en' ? 'ms' : 'en')}
           className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-ink-secondary hover:bg-raised"
-          aria-label="Switch language"
+          aria-label={t('Switch language')}
         >
           <Languages className="h-3.5 w-3.5" />
           {chat.locale === 'en' ? 'EN' : 'BM'}
         </button>
 
-        <button type="button" onClick={chat.reset} className="rounded-md p-1.5 text-ink-secondary hover:bg-raised" aria-label="Start a new conversation">
+        <button type="button" onClick={chat.reset} className="rounded-md p-1.5 text-ink-secondary hover:bg-raised" aria-label={t('Start a new conversation')}>
           <RotateCcw className="h-3.5 w-3.5" />
         </button>
 
         {onClose && (
-          <button type="button" onClick={onClose} className="rounded-md p-1.5 text-ink-secondary hover:bg-raised" aria-label="Close chat">
+          <button type="button" onClick={onClose} className="rounded-md p-1.5 text-ink-secondary hover:bg-raised" aria-label={t('Close chat')}>
             <X className="h-4 w-4" />
           </button>
         )}
@@ -130,7 +132,7 @@ export function ChatPanel({ chat, title = 'ServisAku Assistant', onClose, classN
       )}
 
       {/* Live region: a screen reader should hear the reply, not just see it. */}
-      <div className="flex-1 overflow-y-auto py-2" role="log" aria-live="polite" aria-label="Conversation">
+      <div className="flex-1 overflow-y-auto py-2" role="log" aria-live="polite" aria-label={t('Conversation')}>
         {groups.map((group) => (
           <div key={group.day}>
             <DaySeparator day={group.day} />
@@ -164,9 +166,7 @@ export function ChatPanel({ chat, title = 'ServisAku Assistant', onClose, classN
       {chat.offerHuman && (
         <div className="px-3 pb-2">
           <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => chat.escalate('user_requested')}>
-            <Headphones className="mr-1.5 h-3.5 w-3.5" />
-            Talk to a person
-          </Button>
+            <Headphones className="mr-1.5 h-3.5 w-3.5" />{t('Talk to a person')}</Button>
         </div>
       )}
 

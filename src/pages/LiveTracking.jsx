@@ -7,6 +7,7 @@ import { useRealtimeBooking, usePartnerLocation } from '@/hooks/useRealtimeBooki
 import { calcETA, KL_CENTER } from '@/lib/realtimeService';
 import 'leaflet/dist/leaflet.css';
 import { statusIconFor } from '@/lib/statusIcons';
+import { useTranslation } from '@/lib/useTranslation';
 
 // Fix leaflet default icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -69,6 +70,7 @@ function FlyTo({ center }) {
 export default function LiveTracking() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { booking, loading } = useRealtimeBooking(bookingId);
   const partnerLoc = usePartnerLocation(booking?.partner_email);
   const [eta, setEta] = useState(null);
@@ -151,7 +153,7 @@ export default function LiveTracking() {
             </Marker>
           )}
           <Marker position={[destPos.lat, destPos.lng]} icon={destIcon}>
-            <Popup className="font-inter font-semibold">Your location</Popup>
+            <Popup className="font-inter font-semibold">{t('Your location')}</Popup>
           </Marker>
           {partnerPos && (
             <Polyline
@@ -164,7 +166,7 @@ export default function LiveTracking() {
 
         {/* Floating Back Button */}
         <button onClick={() => navigate(`/booking/${bookingId}`)}
-          aria-label="Close tracking"
+          aria-label={t('Close tracking')}
           className="absolute top-5 left-5 z-[1000] w-11 h-11 bg-surface/90 backdrop-blur-md rounded-2xl shadow-e2 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
           <X className="h-5 w-5 text-ink" />
         </button>
@@ -173,7 +175,7 @@ export default function LiveTracking() {
         {eta && booking.status === 'en_route' && (
           <div className="absolute top-5 left-1/2 -translate-x-1/2 z-[1000] bg-surface/95 backdrop-blur-md rounded-full px-5 py-2.5 shadow-e2 flex items-center gap-2.5">
             <div className="w-2.5 h-2.5 bg-live rounded-full animate-pulse shadow-[0_0_8px_rgb(var(--live))]" />
-            <span className="text-sm font-semibold text-ink tracking-tight">{eta} min away</span>
+            <span className="text-sm font-semibold text-ink tracking-tight">{t('{minutes} min away', { minutes: eta })}</span>
           </div>
         )}
       </div>
@@ -197,9 +199,9 @@ export default function LiveTracking() {
             <p className={`font-semibold text-[15px] leading-tight ${
               booking.status === 'arrived' ? 'text-brand' : booking.status === 'started' ? 'text-info' : 'text-warning'
             }`}>
-              {booking.status === 'en_route' && `Partner on the way • ETA ${eta || '—'} min`}
-              {booking.status === 'arrived' && 'Partner has arrived!'}
-              {booking.status === 'started' && 'Service in progress'}
+              {booking.status === 'en_route' && t('Partner on the way • ETA {minutes} min', { minutes: eta || '—' })}
+              {booking.status === 'arrived' && t('Partner has arrived!')}
+              {booking.status === 'started' && t('Service in progress')}
               {booking.status === 'accepted' && 'Partner preparing to depart'}
             </p>
             <p className="text-xs font-medium text-ink/60 mt-1">{booking.service_type} • {booking.time_slot}</p>
@@ -218,11 +220,11 @@ export default function LiveTracking() {
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button aria-label="Call your partner" className="w-12 h-12 rounded-2xl bg-raised flex items-center justify-center hover:bg-brand-tint transition-colors active:scale-95">
+            <button aria-label={t('Call your partner')} className="w-12 h-12 rounded-2xl bg-raised flex items-center justify-center hover:bg-brand-tint transition-colors active:scale-95">
               <Phone className="h-5 w-5 text-ink-secondary hover:text-brand transition-colors" />
             </button>
             <button onClick={() => navigate(`/chat/${bookingId}`)}
-              aria-label="Message your partner"
+              aria-label={t('Message your partner')}
               className="w-12 h-12 rounded-2xl bg-ink flex items-center justify-center shadow-e2 active:scale-95 transition-all">
               <MessageSquare className="h-5 w-5 text-ink-inverse" />
             </button>

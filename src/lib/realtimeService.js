@@ -106,8 +106,8 @@ export function calcETA(partnerLat, partnerLng, destLat, destLng, speedKmh = 30)
 export async function sendSystemMessage(bookingId, text) {
   await servisaku.entities.ChatMessage.create({
     booking_id: bookingId,
-    sender_email: 'system@fixmate.my',
-    sender_name: 'FixMate',
+    sender_email: 'system@servisaku.my',
+    sender_name: 'ServisAku',
     sender_role: 'admin',
     message: text,
     message_type: 'system',

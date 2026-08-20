@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/lib/useTranslation';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ShieldAlert, Clock } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
@@ -33,6 +34,7 @@ export default function DamageClaims() {
 // ─── List ────────────────────────────────────────────────────────────────────
 
 function ClaimList() {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState(null);
 
@@ -42,23 +44,23 @@ function ClaimList() {
       .catch(() => setItems([]));
   }, []);
 
-  if (!items) return <PageShell title="Damage claims"><Loading /></PageShell>;
+  if (!items) return <PageShell title={t('Damage claims')}><Loading /></PageShell>;
 
   return (
-    <PageShell title="Damage claims">
+    <PageShell title={t('Damage claims')}>
       {items.length === 0 ? (
         <EmptyState
           icon={ShieldAlert}
-          title="No claims"
+          title={t('No claims')}
           body="If something in your home is damaged during a booking, report it from that booking as soon as you can."
-          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>View bookings</Button>}
+          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>{t('View bookings')}</Button>}
         />
       ) : items.map((c) => (
         <Card key={c.id} onClick={() => navigate(`/damage-claims?id=${c.id}`)}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="font-semibold truncate">{c.item_description ?? c.itemDescription ?? 'Damage claim'}</p>
-              <p className="text-xs text-ink-secondary mt-0.5">Filed {fmtDate(c.created_date ?? c.createdAt)}</p>
+              <p className="text-xs text-ink-secondary mt-0.5">{t('Filed')} {fmtDate(c.created_date ?? c.createdAt, locale)}</p>
             </div>
             <StatusPill status={c.status} />
           </div>
@@ -77,6 +79,7 @@ function ClaimList() {
 // ─── New claim ───────────────────────────────────────────────────────────────
 
 function NewClaim({ bookingId }) {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [item, setItem] = useState('');
   const [description, setDescription] = useState('');
@@ -86,9 +89,9 @@ function NewClaim({ bookingId }) {
 
   const submit = async () => {
     if (item.trim().length < 3) return toast.error('What was damaged?');
-    if (description.trim().length < 10) return toast.error('Please describe what happened');
-    if (!(Number(amount) > 0)) return toast.error('Enter the repair or replacement cost');
-    if (evidence.length === 0) return toast.error('At least one photo of the damage is required');
+    if (description.trim().length < 10) return toast.error(t('Please describe what happened'));
+    if (!(Number(amount) > 0)) return toast.error(t('Enter the repair or replacement cost'));
+    if (evidence.length === 0) return toast.error(t('At least one photo of the damage is required'));
 
     setSubmitting(true);
     try {
@@ -99,7 +102,7 @@ function NewClaim({ bookingId }) {
         claimed_amount: Number(amount),
         evidence,
       });
-      toast.success('Claim filed — we will acknowledge it shortly');
+      toast.success(t('Claim filed — we will acknowledge it shortly'));
       navigate(`/damage-claims?id=${created.id}`, { replace: true });
     } catch (e) {
       toast.error(e.message || 'Could not file that claim');
@@ -109,35 +112,34 @@ function NewClaim({ bookingId }) {
   };
 
   return (
-    <PageShell title="Report damage" subtitle="Tell us what happened and we will investigate">
+    <PageShell title={t('Report damage')} subtitle={t('Tell us what happened and we will investigate')}>
       <div className="flex items-start gap-2 rounded-xl bg-warning-tint px-3 py-2.5">
         <Clock className="h-4 w-4 shrink-0 text-warning mt-0.5" aria-hidden="true" />
         <p className="text-xs text-ink">
-          Report damage as soon as possible after the job finishes. A late report is still accepted,
-          but it can be harder to establish what happened.
+          {t('Report damage as soon as possible after the job finishes. A late report is still accepted, but it can be harder to establish what happened.')}
         </p>
       </div>
 
-      <Field label="What was damaged?">
+      <Field label={t('What was damaged?')}>
         <input
           value={item}
           onChange={(e) => setItem(e.target.value)}
-          placeholder="e.g. Kitchen worktop"
+          placeholder={t('e.g. Kitchen worktop')}
           className={inputClass}
         />
       </Field>
 
-      <Field label="What happened?" hint="Include where it was and how you noticed.">
+      <Field label={t('What happened?')} hint="Include where it was and how you noticed.">
         <textarea
           rows={4}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g. A deep scratch appeared along the worktop edge after the deep clean."
+          placeholder={t('e.g. A deep scratch appeared along the worktop edge after the deep clean.')}
           className={inputClass}
         />
       </Field>
 
-      <Field label="Repair or replacement cost" hint="Your best estimate in Ringgit. A quote helps.">
+      <Field label={t('Repair or replacement cost')} hint="Your best estimate in Ringgit. A quote helps.">
         <input
           type="number"
           inputMode="decimal"
@@ -150,12 +152,12 @@ function NewClaim({ bookingId }) {
         />
       </Field>
 
-      <Field label="Photos" hint="Required — a photo of the damage is what makes a claim assessable.">
+      <Field label={t('Photos')} hint="Required — a photo of the damage is what makes a claim assessable.">
         <EvidenceUploader evidence={evidence} onChange={setEvidence} max={6} />
       </Field>
 
       <Button block variant="primary" disabled={submitting} onClick={submit}>
-        {submitting ? 'Filing…' : 'File claim'}
+        {submitting ? t('Filing…') : t('File claim')}
       </Button>
     </PageShell>
   );
@@ -164,6 +166,7 @@ function NewClaim({ bookingId }) {
 // ─── Detail ──────────────────────────────────────────────────────────────────
 
 function ClaimDetail({ claimId }) {
+  const { t, locale } = useTranslation();
   const [claim, setClaim] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -173,35 +176,35 @@ function ClaimDetail({ claimId }) {
 
   if (failed) {
     return (
-      <PageShell title="Damage claim">
-        <EmptyState icon={ShieldAlert} title="Claim not found" body="It may have been withdrawn, or it belongs to another account." />
+      <PageShell title={t('Damage claim')}>
+        <EmptyState icon={ShieldAlert} title={t('Claim not found')} body="It may have been withdrawn, or it belongs to another account." />
       </PageShell>
     );
   }
-  if (!claim) return <PageShell title="Damage claim"><Loading /></PageShell>;
+  if (!claim) return <PageShell title={t('Damage claim')}><Loading /></PageShell>;
 
   // The stages the server actually reports, in the order they happen.
   const stages = [
-    { key: 'submitted', label: 'Filed', at: claim.created_date ?? claim.createdAt },
-    { key: 'acknowledged', label: 'Acknowledged', at: claim.acknowledged_at ?? claim.acknowledgedAt },
-    { key: 'partner', label: 'Professional responded', at: claim.partner_responded_at ?? claim.partnerRespondedAt },
-    { key: 'decided', label: 'Decision', at: claim.decided_at ?? claim.decidedAt },
-    { key: 'paid', label: 'Compensation', at: claim.compensated_at ?? claim.compensatedAt },
+    { key: 'submitted', label: t('Filed'), at: claim.created_date ?? claim.createdAt },
+    { key: 'acknowledged', label: t('Acknowledged'), at: claim.acknowledged_at ?? claim.acknowledgedAt },
+    { key: 'partner', label: t('Professional responded'), at: claim.partner_responded_at ?? claim.partnerRespondedAt },
+    { key: 'decided', label: t('Decision'), at: claim.decided_at ?? claim.decidedAt },
+    { key: 'paid', label: t('Compensation'), at: claim.compensated_at ?? claim.compensatedAt },
   ];
 
   return (
-    <PageShell title="Damage claim" action={<StatusPill status={claim.status} />}>
+    <PageShell title={t('Damage claim')} action={<StatusPill status={claim.status} />}>
       <Card>
         <p className="font-semibold">{claim.item_description ?? claim.itemDescription}</p>
         <p className="mt-1 text-sm text-ink-secondary">{claim.incident_description ?? claim.incidentDescription}</p>
         <div className="mt-3 flex items-baseline gap-4 border-t border-hairline pt-3">
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-ink-tertiary">Claimed</p>
+            <p className="text-[11px] uppercase tracking-wide text-ink-tertiary">{t('Claimed')}</p>
             <p className="font-semibold">{formatMYR(claim.claimed_amount ?? claim.claimedAmount, { decimals: true })}</p>
           </div>
           {(claim.approved_amount ?? claim.approvedAmount) != null && (
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-ink-tertiary">Approved</p>
+              <p className="text-[11px] uppercase tracking-wide text-ink-tertiary">{t('Approved')}</p>
               <p className="font-semibold text-success">{formatMYR(claim.approved_amount ?? claim.approvedAmount, { decimals: true })}</p>
             </div>
           )}
@@ -217,14 +220,14 @@ function ClaimDetail({ claimId }) {
       )}
 
       <Card>
-        <p className="text-sm font-semibold mb-2">Progress</p>
+        <p className="text-sm font-semibold mb-2">{t('Progress')}</p>
         <ol className="space-y-2.5">
           {stages.map((s) => (
             <li key={s.key} className="flex items-start gap-2.5">
               <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${s.at ? 'bg-brand' : 'bg-hairline'}`} />
               <div className="min-w-0">
                 <p className={`text-sm ${s.at ? '' : 'text-ink-tertiary'}`}>{s.label}</p>
-                {s.at && <p className="text-xs text-ink-secondary">{fmtDateTime(s.at)}</p>}
+                {s.at && <p className="text-xs text-ink-secondary">{fmtDateTime(s.at, locale)}</p>}
               </div>
             </li>
           ))}
@@ -233,7 +236,7 @@ function ClaimDetail({ claimId }) {
 
       {(claim.decision_note ?? claim.decisionNote) && (
         <Card>
-          <p className="text-sm font-semibold">Outcome</p>
+          <p className="text-sm font-semibold">{t('Outcome')}</p>
           <p className="mt-1 text-sm text-ink-secondary">{claim.decision_note ?? claim.decisionNote}</p>
         </Card>
       )}

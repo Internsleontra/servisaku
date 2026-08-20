@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/lib/useTranslation';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Receipt, ShieldCheck } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
@@ -28,6 +29,7 @@ export default function Refunds() {
 // ─── List ────────────────────────────────────────────────────────────────────
 
 function RefundList() {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState(null);
 
@@ -37,24 +39,23 @@ function RefundList() {
       .catch(() => setItems([]));
   }, []);
 
-  if (!items) return <PageShell title="Refunds"><Loading /></PageShell>;
+  if (!items) return <PageShell title={t('Refunds')}><Loading /></PageShell>;
 
   return (
-    <PageShell title="Refunds" subtitle={items.length ? `${items.length} request${items.length === 1 ? '' : 's'}` : null}>
+    <PageShell title={t('Refunds')} subtitle={items.length ? t('{count} requests', { count: items.length }) : null}>
       {items.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title="No refund requests"
+          title={t('No refund requests')}
           body="If a booking is cancelled or something goes wrong, you can request a refund from the booking itself."
-          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>View bookings</Button>}
+          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>{t('View bookings')}</Button>}
         />
       ) : items.map((r) => (
         <Card key={r.id}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="font-semibold">{formatMYR(r.refund_amount ?? r.refundAmount, { decimals: true })}</p>
-              <p className="text-xs text-ink-secondary mt-0.5">
-                Requested {fmtDate(r.created_date ?? r.createdAt)}
+              <p className="text-xs text-ink-secondary mt-0.5">{t('Requested')} {fmtDate(r.created_date ?? r.createdAt, locale)}
               </p>
             </div>
             <StatusPill status={r.status} />
@@ -63,8 +64,7 @@ function RefundList() {
           {r.reason && <p className="mt-2 text-sm text-ink-secondary line-clamp-2">{r.reason}</p>}
 
           {r.processed_at || r.processedAt ? (
-            <p className="mt-2 text-xs text-ink-secondary">
-              Processed {fmtDate(r.processed_at ?? r.processedAt)} — allow a few working days for it to
+            <p className="mt-2 text-xs text-ink-secondary">{t('Processed')} {fmtDate(r.processed_at ?? r.processedAt, locale)} — allow a few working days for it to
               appear, depending on your bank.
             </p>
           ) : null}
@@ -77,6 +77,7 @@ function RefundList() {
 // ─── Request flow ────────────────────────────────────────────────────────────
 
 function RequestFlow({ bookingId }) {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
@@ -91,7 +92,7 @@ function RequestFlow({ bookingId }) {
   }, [bookingId]);
 
   const submit = async () => {
-    if (reason.trim().length < 5) return toast.error('Please tell us briefly what happened');
+    if (reason.trim().length < 5) return toast.error(t('Please tell us briefly what happened'));
     setSubmitting(true);
     try {
       const created = await servisaku.refunds.request({
@@ -112,27 +113,27 @@ function RequestFlow({ bookingId }) {
 
   if (error) {
     return (
-      <PageShell title="Request a refund">
+      <PageShell title={t('Request a refund')}>
         <EmptyState
           icon={Receipt}
-          title="This booking cannot be refunded"
+          title={t('This booking cannot be refunded')}
           body={error}
-          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>Back to bookings</Button>}
+          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>{t('Back to bookings')}</Button>}
         />
       </PageShell>
     );
   }
 
-  if (!preview) return <PageShell title="Request a refund"><Loading label="Checking your booking…" /></PageShell>;
+  if (!preview) return <PageShell title={t('Request a refund')}><Loading label={t('Checking your booking…')} /></PageShell>;
 
   const eligible = Number(preview.eligible_amount) > 0;
 
   return (
-    <PageShell title="Request a refund" subtitle={`Booking total ${formatMYR(preview.booking_total, { decimals: true })}`}>
+    <PageShell title={t('Request a refund')} subtitle={t('Booking total {amount}', { amount: formatMYR(preview.booking_total, { decimals: true }) })}>
       {/* The figure and the RULE behind it. A number with no explanation is what
           turns a refund into a support ticket. */}
       <div className="rounded-2xl border border-hairline bg-surface p-4">
-        <p className="text-xs uppercase tracking-wide text-ink-tertiary">You would receive</p>
+        <p className="text-xs uppercase tracking-wide text-ink-tertiary">{t('You would receive')}</p>
         <p className="mt-1 text-3xl font-semibold">{formatMYR(preview.eligible_amount, { decimals: true })}</p>
         {preview.percent != null && Number(preview.percent) < 100 && (
           <p className="mt-0.5 text-sm text-ink-secondary">
@@ -152,32 +153,30 @@ function RequestFlow({ bookingId }) {
       {!eligible ? (
         <EmptyState
           icon={Receipt}
-          title="No automatic refund at this stage"
+          title={t('No automatic refund at this stage')}
           body="You can still raise a dispute and a person will look at what happened."
-          action={<Button onClick={() => navigate(`/disputes?booking=${bookingId}`)}>Raise a dispute</Button>}
+          action={<Button onClick={() => navigate(`/disputes?booking=${bookingId}`)}>{t('Raise a dispute')}</Button>}
         />
       ) : (
         <>
           {preview.auto_approved && (
             <div className="flex items-start gap-2 rounded-xl bg-success-tint px-3 py-2.5">
               <ShieldCheck className="h-4 w-4 shrink-0 text-success mt-0.5" aria-hidden="true" />
-              <p className="text-xs text-ink">
-                This one is approved automatically — no waiting for a review.
-              </p>
+              <p className="text-xs text-ink">{t('This one is approved automatically — no waiting for a review.')}</p>
             </div>
           )}
 
-          <Field label="What happened?" hint="A sentence is enough. It helps us spot problems early.">
+          <Field label={t('What happened?')} hint="A sentence is enough. It helps us spot problems early.">
             <textarea
               rows={4}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. I need to cancel — something came up at home"
+              placeholder={t('e.g. I need to cancel — something came up at home')}
               className={inputClass}
             />
           </Field>
 
-          <Field label="Photos (optional)" hint="Only if something went wrong and a photo helps explain it.">
+          <Field label={t('Photos (optional)')} hint="Only if something went wrong and a photo helps explain it.">
             <EvidenceUploader
               evidence={evidence}
               onChange={setEvidence}
@@ -190,9 +189,8 @@ function RequestFlow({ bookingId }) {
           </Button>
 
           <p className="text-center text-xs text-ink-secondary">
-            The amount is confirmed by our system when you submit, so it always matches the policy
-            that applies at that moment.
-          </p>
+              {t('The amount is confirmed by our system when you submit, so it always matches the policy that applies at that moment.')}
+            </p>
         </>
       )}
     </PageShell>

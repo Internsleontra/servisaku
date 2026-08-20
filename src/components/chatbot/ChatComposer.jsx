@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Loader2, Mic, Send, Square, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * The composer: text, a photo, and a voice note.
@@ -15,6 +16,7 @@ export function ChatComposer({
   draft, onDraftChange, onSend, onAttach, onClearAttachment, onTranscribe,
   disabled, busy, attachment, placeholder,
 }) {
+  const { t } = useTranslation();
   const [recording, setRecording] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const fileRef = useRef(null);
@@ -62,7 +64,7 @@ export function ChatComposer({
       recorderRef.current = recorder;
       setRecording(true);
     } catch {
-      setVoiceError('Microphone access was refused — please type instead');
+      setVoiceError(t('Microphone access was refused — please type instead'));
     }
   };
 
@@ -85,9 +87,9 @@ export function ChatComposer({
           )}
           <span className="flex-1 truncate text-xs text-ink-secondary">{attachment.name}</span>
           {attachment.uploading
-            ? <Loader2 className="h-4 w-4 animate-spin text-ink-secondary" aria-label="Uploading" />
+            ? <Loader2 className="h-4 w-4 animate-spin text-ink-secondary" aria-label={t('Uploading')} />
             : (
-              <button type="button" onClick={onClearAttachment} className="text-ink-secondary hover:text-ink" aria-label="Remove attachment">
+              <button type="button" onClick={onClearAttachment} className="text-ink-secondary hover:text-ink" aria-label={t('Remove attachment')}>
                 <X className="h-4 w-4" />
               </button>
             )}
@@ -115,7 +117,7 @@ export function ChatComposer({
           className="h-9 w-9 shrink-0"
           disabled={disabled}
           onClick={() => fileRef.current?.click()}
-          aria-label="Attach a photo"
+          aria-label={t('Attach a photo')}
         >
           <ImagePlus className="h-4 w-4" />
         </Button>
@@ -128,7 +130,7 @@ export function ChatComposer({
             className="h-9 w-9 shrink-0"
             disabled={disabled}
             onClick={recording ? stopRecording : startRecording}
-            aria-label={recording ? 'Stop recording' : 'Record a voice note'}
+            aria-label={recording ? t('Stop recording') : t('Record a voice note')}
           >
             {recording ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-4 w-4" />}
           </Button>
@@ -139,10 +141,10 @@ export function ChatComposer({
           rows={1}
           value={draft}
           disabled={disabled}
-          placeholder={disabled ? 'This conversation has moved to a support ticket' : (placeholder || 'Ask me anything…')}
+          placeholder={disabled ? t('This conversation has moved to a support ticket') : (placeholder || t('Ask me anything…'))}
           onChange={(e) => onDraftChange(e.target.value)}
           onKeyDown={onKeyDown}
-          aria-label="Message"
+          aria-label={t('Message')}
           className={cn(
             'flex-1 resize-none rounded-2xl border border-hairline bg-surface px-3.5 py-2 text-sm',
             'placeholder:text-ink-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
@@ -156,7 +158,7 @@ export function ChatComposer({
           className="h-9 w-9 shrink-0 rounded-full"
           disabled={disabled || busy || !draft.trim()}
           onClick={submit}
-          aria-label="Send"
+          aria-label={t('Send')}
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>

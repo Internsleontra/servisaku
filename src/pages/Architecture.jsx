@@ -224,7 +224,7 @@ const API_GROUPS = [
   },
 ];
 
-const FOLDER = `fixmate-backend/
+const FOLDER = `servisaku-backend/
 ├── src/
 │   ├── config/
 │   │   ├── database.ts          # Postgres pool + Prisma config
@@ -324,7 +324,7 @@ export default function Architecture() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-1">
             <Server className="h-5 w-5 text-ink-inverse/70" />
-            <span className="text-ink-inverse/70 text-xs font-medium uppercase tracking-wider">FixMate</span>
+            <span className="text-ink-inverse/70 text-xs font-medium uppercase tracking-wider">ServisAku</span>
           </div>
           <h1 className="text-2xl font-semibold text-ink-inverse">Backend Architecture</h1>
           <p className="text-ink-inverse/60 text-sm mt-1">Production-grade schema, API, and real-time design</p>
@@ -354,20 +354,20 @@ export default function Architecture() {
         {tab === 'schema' && (
           <div className="space-y-3">
             <p className="text-xs text-ink-secondary mb-4">Click any table to expand fields. All tables include <code className="bg-raised px-1 rounded text-[10px]">created_at</code>, <code className="bg-raised px-1 rounded text-[10px]">updated_at</code>. UUIDs via <code className="bg-raised px-1 rounded text-[10px]">gen_random_uuid()</code>.</p>
-            {TABLES.map(t => (
-              <div key={t.name} className={`border-l-4 ${t.color} bg-surface border border-hairline rounded-2xl overflow-hidden`}>
+            {TABLES.map(tbl => (
+              <div key={tbl.name} className={`border-l-4 ${tbl.color} bg-surface border border-hairline rounded-2xl overflow-hidden`}>
                 <button
-                  onClick={() => setExpandedTable(expandedTable === t.name ? null : t.name)}
+                  onClick={() => setExpandedTable(expandedTable === tbl.name ? null : tbl.name)}
                   className="w-full flex items-center justify-between px-4 py-3 hover:bg-raised/30 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.badge}`}>TABLE</span>
-                    <span className="font-mono text-sm font-semibold">{t.name}</span>
-                    <span className="text-xs text-ink-secondary">{t.fields.length} fields</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${tbl.badge}`}>TABLE</span>
+                    <span className="font-mono text-sm font-semibold">{tbl.name}</span>
+                    <span className="text-xs text-ink-secondary">{tbl.fields.length} fields</span>
                   </div>
-                  <span className="text-ink-secondary text-xs">{expandedTable === t.name ? '▲' : '▼'}</span>
+                  <span className="text-ink-secondary text-xs">{expandedTable === tbl.name ? '▲' : '▼'}</span>
                 </button>
-                {expandedTable === t.name && (
+                {expandedTable === tbl.name && (
                   <div className="border-t border-hairline overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
@@ -378,7 +378,7 @@ export default function Architecture() {
                         </tr>
                       </thead>
                       <tbody>
-                        {t.fields.map((f, i) => (
+                        {tbl.fields.map((f, i) => (
                           <tr key={i} className="border-t border-hairline/50">
                             <td className="px-4 py-2 font-mono font-medium">{f.name}</td>
                             <td className="px-4 py-2"><span className="bg-raised px-1.5 py-0.5 rounded font-mono text-[10px]">{f.type}</span></td>
@@ -425,7 +425,7 @@ export default function Architecture() {
           <div className="space-y-5">
             <div className="bg-brand-tint rounded-2xl p-4 text-xs mb-2">
               <p className="font-semibold mb-1">Base URL</p>
-              <code className="font-mono">https://api.fixmate.my/v1</code>
+              <code className="font-mono">https://api.servisaku.my/v1</code>
               <p className="text-ink-secondary mt-2">All authenticated routes require: <code>Authorization: Bearer {`{jwt}`}</code></p>
             </div>
             {API_GROUPS.map(g => (
@@ -560,7 +560,7 @@ export default function Architecture() {
         {/* Real-time */}
         {tab === 'realtime' && (
           <div className="space-y-4">
-            <p className="text-xs text-ink-secondary">FixMate uses a multi-channel real-time strategy to handle tracking, chat, notifications, and internal events.</p>
+            <p className="text-xs text-ink-secondary">ServisAku uses a multi-channel real-time strategy to handle tracking, chat, notifications, and internal events.</p>
             {REALTIME_ITEMS.map((item, i) => (
               <div key={i} className={`border rounded-2xl p-5 ${item.color}`}>
                 <h3 className="text-sm font-semibold mb-2">{item.title}</h3>

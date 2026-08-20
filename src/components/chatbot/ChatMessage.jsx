@@ -1,5 +1,6 @@
 import { AlertCircle, Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * One turn in the transcript.
@@ -8,6 +9,7 @@ import { cn } from '@/lib/utils';
  * conversation into a log, and nobody reads it that way.
  */
 export function ChatMessage({ message }) {
+  const { t, locale } = useTranslation();
   const isUser = message.sender === 'user';
   const isSystem = message.sender === 'system';
 
@@ -37,7 +39,7 @@ export function ChatMessage({ message }) {
                 <img
                   key={a.uploadId || i}
                   src={a.url}
-                  alt="Attached photo"
+                  alt={t('Attached photo')}
                   className="max-h-48 w-auto object-cover"
                 />
               ) : null
@@ -47,7 +49,7 @@ export function ChatMessage({ message }) {
 
         {message.content && (
           <div
-            title={new Date(message.createdAt).toLocaleString('en-MY')}
+            title={new Date(message.createdAt).toLocaleString(locale)}
             className={cn(
               'whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
               isUser
@@ -63,9 +65,7 @@ export function ChatMessage({ message }) {
 
         {message.failed && (
           <p className="flex items-center gap-1 text-xs text-danger">
-            <AlertCircle className="h-3 w-3" aria-hidden="true" />
-            Not sent — tap to retry
-          </p>
+            <AlertCircle className="h-3 w-3" aria-hidden="true" />{t('Not sent — tap to retry')}</p>
         )}
       </div>
 
@@ -80,6 +80,7 @@ export function ChatMessage({ message }) {
 
 /** Shown only after a delay — see TYPING_DELAY_MS in lib/chatbot/state.js. */
 export function TypingIndicator({ slow }) {
+  const { t, locale } = useTranslation();
   return (
     <div className="flex items-center gap-2 px-3 py-2" aria-live="polite">
       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-tint text-brand">
@@ -94,13 +95,14 @@ export function TypingIndicator({ slow }) {
           />
         ))}
       </div>
-      {slow && <span className="text-xs text-ink-secondary">Still working on that…</span>}
+      {slow && <span className="text-xs text-ink-secondary">{t('Still working on that…')}</span>}
     </div>
   );
 }
 
 export function DaySeparator({ day }) {
-  const label = new Date(day).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+  const { locale } = useTranslation();
+  const label = new Date(day).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
   return (
     <div className="my-2 flex items-center gap-2 px-3">
       <div className="h-px flex-1 bg-hairline" />

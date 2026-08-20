@@ -1,8 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Minus, Plus } from 'lucide-react';
+import { useTranslation } from '@/lib/useTranslation';
 
 // Shared −/value/+ stepper used by QUANTITY, TIER_QUANTITY and HOURS_INPUT.
 export default function Stepper({ value, onChange, min = 0, max = 99, step = 1, suffix }) {
+  const { t } = useTranslation();
   const v = Number(value) || 0;
   const clamp = (n) => Math.min(max, Math.max(min, Math.round(n / step) * step));
   const dec = () => onChange(clamp(v - step));
@@ -15,7 +17,7 @@ export default function Stepper({ value, onChange, min = 0, max = 99, step = 1, 
         type="button"
         onClick={dec}
         disabled={v <= min}
-        aria-label="Decrease"
+        aria-label={t('Decrease')}
         className={cn('flex h-9 w-9 items-center justify-center rounded-lg transition',
           v <= min ? 'text-ink-tertiary' : 'text-ink hover:bg-raised')}
       >
@@ -28,7 +30,7 @@ export default function Stepper({ value, onChange, min = 0, max = 99, step = 1, 
         type="button"
         onClick={inc}
         disabled={v >= max}
-        aria-label="Increase"
+        aria-label={t('Increase')}
         className={cn('flex h-9 w-9 items-center justify-center rounded-lg transition',
           v >= max ? 'text-ink-tertiary' : 'text-ink hover:bg-raised')}
       >

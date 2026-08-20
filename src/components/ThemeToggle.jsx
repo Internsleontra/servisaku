@@ -1,7 +1,9 @@
 import { Moon, Sun, MonitorSmartphone } from "lucide-react"
 import { useTheme } from "./ThemeProvider"
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function ThemeToggle() {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme()
 
   const options = [
@@ -24,7 +26,7 @@ export default function ThemeToggle() {
             }`}
           >
             <Icon className="h-4 w-4" />
-            {opt.label}
+            {t(opt.label)}
           </button>
         )
       })}

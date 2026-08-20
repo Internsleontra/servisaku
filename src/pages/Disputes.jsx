@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/lib/useTranslation';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Flag, Info } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
@@ -41,6 +42,7 @@ const REASONS = [
 // ─── List ────────────────────────────────────────────────────────────────────
 
 function DisputeList() {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState(null);
 
@@ -50,16 +52,16 @@ function DisputeList() {
       .catch(() => setItems([]));
   }, []);
 
-  if (!items) return <PageShell title="Disputes"><Loading /></PageShell>;
+  if (!items) return <PageShell title={t('Disputes')}><Loading /></PageShell>;
 
   return (
-    <PageShell title="Disputes">
+    <PageShell title={t('Disputes')}>
       {items.length === 0 ? (
         <EmptyState
           icon={Flag}
-          title="No disputes"
+          title={t('No disputes')}
           body="If a job was not done properly, flag it from the booking and we will investigate."
-          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>View bookings</Button>}
+          action={<Button variant="outline" size="sm" onClick={() => navigate('/bookings')}>{t('View bookings')}</Button>}
         />
       ) : items.map((d) => (
         <Card key={d.id} onClick={() => navigate(`/disputes?id=${d.id}`)}>
@@ -68,7 +70,7 @@ function DisputeList() {
               <p className="font-semibold capitalize truncate">
                 {String(d.reason ?? d.category ?? 'Dispute').replace(/_/g, ' ')}
               </p>
-              <p className="text-xs text-ink-secondary mt-0.5">Raised {fmtDate(d.created_date ?? d.createdAt)}</p>
+              <p className="text-xs text-ink-secondary mt-0.5">{t('Raised')} {fmtDate(d.created_date ?? d.createdAt, locale)}</p>
             </div>
             <StatusPill status={d.status} />
           </div>
@@ -82,6 +84,7 @@ function DisputeList() {
 // ─── New ─────────────────────────────────────────────────────────────────────
 
 function NewDispute({ bookingId }) {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [reason, setReason] = useState('quality');
   const [description, setDescription] = useState('');
@@ -89,7 +92,7 @@ function NewDispute({ bookingId }) {
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
-    if (description.trim().length < 10) return toast.error('Please describe what went wrong');
+    if (description.trim().length < 10) return toast.error(t('Please describe what went wrong'));
     setSubmitting(true);
     try {
       const created = await servisaku.disputes.create({
@@ -98,7 +101,7 @@ function NewDispute({ bookingId }) {
         description: description.trim(),
         evidence: evidence.length ? evidence : undefined,
       });
-      toast.success('Dispute raised — the amount is on hold while we look at it');
+      toast.success(t('Dispute raised — the amount is on hold while we look at it'));
       navigate(`/disputes?id=${created.id}`, { replace: true });
     } catch (e) {
       toast.error(e.message || 'Could not raise that dispute');
@@ -108,16 +111,15 @@ function NewDispute({ bookingId }) {
   };
 
   return (
-    <PageShell title="Flag this job" subtitle="Tell us what went wrong">
+    <PageShell title={t('Flag this job')} subtitle={t('Tell us what went wrong')}>
       <div className="flex items-start gap-2 rounded-xl bg-info-tint px-3 py-2.5">
         <Info className="h-4 w-4 shrink-0 text-info mt-0.5" aria-hidden="true" />
         <p className="text-xs text-ink">
-          Raising this puts the payment on hold while we investigate, so nothing is released to the
-          professional until it is settled.
+          {t('Raising this puts the payment on hold while we investigate, so nothing is released to the professional until it is settled.')}
         </p>
       </div>
 
-      <Field label="What is the problem?">
+      <Field label={t('What is the problem?')}>
         <div className="space-y-1.5">
           {REASONS.map((r) => (
             <button
@@ -130,28 +132,28 @@ function NewDispute({ bookingId }) {
                   : 'border-hairline bg-surface hover:bg-raised/50'
               }`}
             >
-              {r.label}
+              {t(r.label)}
             </button>
           ))}
         </div>
       </Field>
 
-      <Field label="What happened?" hint="The more specific you are, the faster we can resolve it.">
+      <Field label={t('What happened?')} hint="The more specific you are, the faster we can resolve it.">
         <textarea
           rows={4}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g. The bathroom was not cleaned at all and the professional left after 20 minutes."
+          placeholder={t('e.g. The bathroom was not cleaned at all and the professional left after 20 minutes.')}
           className={inputClass}
         />
       </Field>
 
-      <Field label="Photos (optional)" hint="Photos of the problem make a dispute much easier to resolve.">
+      <Field label={t('Photos (optional)')} hint="Photos of the problem make a dispute much easier to resolve.">
         <EvidenceUploader evidence={evidence} onChange={setEvidence} />
       </Field>
 
       <Button block variant="primary" disabled={submitting} onClick={submit}>
-        {submitting ? 'Raising…' : 'Raise dispute'}
+        {submitting ? t('Raising…') : t('Raise dispute')}
       </Button>
     </PageShell>
   );
@@ -160,6 +162,7 @@ function NewDispute({ bookingId }) {
 // ─── Detail ──────────────────────────────────────────────────────────────────
 
 function DisputeDetail({ disputeId }) {
+  const { t, locale } = useTranslation();
   const [dispute, setDispute] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -169,24 +172,24 @@ function DisputeDetail({ disputeId }) {
 
   if (failed) {
     return (
-      <PageShell title="Dispute">
-        <EmptyState icon={Flag} title="Dispute not found" body="It may have been resolved, or it belongs to another account." />
+      <PageShell title={t('Dispute')}>
+        <EmptyState icon={Flag} title={t('Dispute not found')} body="It may have been resolved, or it belongs to another account." />
       </PageShell>
     );
   }
-  if (!dispute) return <PageShell title="Dispute"><Loading /></PageShell>;
+  if (!dispute) return <PageShell title={t('Dispute')}><Loading /></PageShell>;
 
   const partnerResponse = dispute.partner_response ?? dispute.partnerResponse;
   const resolution = dispute.resolution ?? dispute.resolutionNote;
 
   return (
-    <PageShell title="Dispute" action={<StatusPill status={dispute.status} />}>
+    <PageShell title={t('Dispute')} action={<StatusPill status={dispute.status} />}>
       <Card>
         <p className="font-semibold capitalize">
           {String(dispute.reason ?? 'Dispute').replace(/_/g, ' ')}
         </p>
         <p className="mt-1 text-sm text-ink-secondary">{dispute.description}</p>
-        <p className="mt-2 text-xs text-ink-secondary">Raised {fmtDateTime(dispute.created_date ?? dispute.createdAt)}</p>
+        <p className="mt-2 text-xs text-ink-secondary">Raised {fmtDateTime(dispute.created_date ?? dispute.createdAt, locale)}</p>
       </Card>
 
       {(dispute.evidence?.length > 0) && (
@@ -199,20 +202,18 @@ function DisputeDetail({ disputeId }) {
 
       {partnerResponse && (
         <Card>
-          <p className="text-sm font-semibold">The professional&apos;s response</p>
+          <p className="text-sm font-semibold">{t("The professional's response")}</p>
           <p className="mt-1 text-sm text-ink-secondary">{partnerResponse}</p>
         </Card>
       )}
 
       {resolution ? (
         <Card className="border-brand/30 bg-brand-tint">
-          <p className="text-sm font-semibold">Outcome</p>
+          <p className="text-sm font-semibold">{t('Outcome')}</p>
           <p className="mt-1 text-sm">{resolution}</p>
         </Card>
       ) : (
-        <p className="px-1 text-center text-xs text-ink-secondary">
-          We will notify you as soon as there is an outcome. Nothing is paid out while this is open.
-        </p>
+        <p className="px-1 text-center text-xs text-ink-secondary">{t('We will notify you as soon as there is an outcome. Nothing is paid out while this is open.')}</p>
       )}
     </PageShell>
   );
