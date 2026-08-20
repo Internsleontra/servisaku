@@ -4,14 +4,16 @@ import { User, MapPin, Globe, ArrowRight, Check } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { Button } from '@/components/ds';
 import { CITIES } from '@/lib/services';
+import { useLanguage, normaliseLang } from '@/lib/LanguageContext';
 import { toast } from 'sonner';
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
+  const { lang, setLang } = useLanguage();
   const [_user, setUser] = useState(null);
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(lang);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -19,7 +21,9 @@ export default function ProfileSetup() {
       setUser(u);
       setName(u.full_name || '');
       if (u.city) setCity(u.city);
-      if (u.language) setLanguage(u.language);
+      // Reflects the saved preference in the control without overriding the
+      // live app language (see ConsumerProfile for the same reasoning).
+      if (normaliseLang(u.language)) setLanguage(normaliseLang(u.language));
     });
   }, []);
 
@@ -81,10 +85,12 @@ export default function ProfileSetup() {
             <Globe className="h-3.5 w-3.5 text-brand" /> Language
           </label>
           <div className="grid grid-cols-2 gap-2">
-            {[{ id: 'en', label: 'English' }, { id: 'ms', label: 'Bahasa Malaysia' }].map(l => (
+            {[{ id: 'ms', label: 'Bahasa Malaysia' }, { id: 'en', label: 'English' }].map(l => (
               <button
                 key={l.id}
-                onClick={() => setLanguage(l.id)}
+                // Applies the language immediately as well as storing it for
+                // save — this control previously only set local state.
+                onClick={() => { setLanguage(l.id); setLang(l.id); }}
                 className={`text-xs py-3 rounded-xl border transition-all ${language === l.id ? 'border-brand bg-brand-tint text-brand font-semibold' : 'border-hairline bg-surface text-ink-secondary'}`}
               >
                 {l.label}

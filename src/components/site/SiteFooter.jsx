@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Linkedin } from 'lucide-react';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Navy site footer — ports WebFooter from the design system's consumer website
@@ -51,6 +52,8 @@ const COLUMNS = [
 ];
 
 export default function SiteFooter() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-navy-ink text-white/70">
       <div className="mx-auto w-full max-w-[1240px] px-5 pt-14 md:px-8">
@@ -62,8 +65,7 @@ export default function SiteFooter() {
               className="h-5 w-auto"
             />
             <p className="mt-3.5 max-w-[260px] text-caption font-normal">
-              Verified home-service professionals across Malaysia. 11 categories,
-              71 services, escrow-protected payments.
+              {t('Verified home-service professionals across Malaysia. 11 categories, 71 services, escrow-protected payments.')}
             </p>
             <div className="mt-[18px] flex gap-2.5">
               {SOCIALS.map(({ Icon, label }) => (
@@ -80,7 +82,7 @@ export default function SiteFooter() {
 
           {COLUMNS.map((col) => (
             <div key={col.head}>
-              <div className="sa-caps mb-3 text-white/45">{col.head}</div>
+              <div className="sa-caps mb-3 text-white/45">{t(col.head)}</div>
               <div className="flex flex-col gap-2">
                 {col.items.map((item) => (
                   <Link
@@ -88,7 +90,7 @@ export default function SiteFooter() {
                     to={item.to}
                     className="flex min-h-11 items-center text-caption font-normal text-white/70 transition-colors hover:text-white md:min-h-0 md:py-0.5"
                   >
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 ))}
               </div>
@@ -99,7 +101,7 @@ export default function SiteFooter() {
         <div className="mt-9 flex flex-col gap-2 border-t border-white/15 px-0 py-[18px] text-xs sm:flex-row sm:items-center">
           <span>© {new Date().getFullYear()} ServisAku Sdn Bhd</span>
           <span className="sm:ml-auto">
-            Available in KL · PJ · JB · Penang · Shah Alam
+            {t('Available in KL · PJ · JB · Penang · Shah Alam')}
           </span>
         </div>
       </div>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { useAuth } from '@/lib/AuthContext';
+import { useLanguage, normaliseLang } from '@/lib/LanguageContext';
 
 import { CITIES } from '@/lib/services';
 import { toast } from 'sonner';
@@ -20,11 +21,14 @@ const TABS = [
 
 export default function ConsumerProfile() {
   const navigate = useNavigate();
+  const { lang, setLang } = useLanguage();
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState('profile');
   const [addresses, setAddresses] = useState([]);
   const [city, setCity] = useState('');
-  const [language, setLanguage] = useState('en');
+  // Seeded from the live app language so the control opens on what is actually
+  // rendering, not a hardcoded 'en' that contradicted the screen.
+  const [language, setLanguage] = useState(lang);
   const [fullName, setFullName] = useState('');
   const [gender, setGender] = useState('');
   const [dob, setDob] = useState('');
@@ -42,7 +46,12 @@ export default function ConsumerProfile() {
       const cp = me.consumerProfile || {};
       setGender(cp.gender || '');
       setDob(cp.birthday || '');
-      setLanguage(cp.language || me.language || 'en');
+      // Deliberately does NOT override the live app language. Most existing
+      // profiles carry 'en' from when that was the hardcoded default, so
+      // adopting it here would flip every returning customer out of Malay.
+      // The device choice (localStorage) wins; this control edits what gets
+      // saved back to the profile.
+      setLanguage(normaliseLang(cp.language || me.language) || lang);
       setMarketing({
         push: cp.comms?.marketing?.push ?? true,
         sms: cp.comms?.marketing?.sms ?? false,
@@ -172,9 +181,12 @@ export default function ConsumerProfile() {
             <label className="text-xs font-semibold mb-2 flex items-center gap-1.5">
               <Globe className="h-3.5 w-3.5 text-brand" /> Language
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[{ id: 'en', label: '🇬🇧 English' }, { id: 'ms', label: '🇲🇾 Melayu' }, { id: 'zh', label: '🇨🇳 中文' }].map(l => (
-                <button key={l.id} onClick={() => setLanguage(l.id)}
+            <div className="grid grid-cols-2 gap-2">
+              {[{ id: 'ms', label: '🇲🇾 Melayu' }, { id: 'en', label: '🇬🇧 English' }].map(l => (
+                // Drives BOTH the saved profile preference and the live app
+                // language — previously this only set local state, so the app
+                // stayed in English whatever the customer picked.
+                <button key={l.id} onClick={() => { setLanguage(l.id); setLang(l.id); }}
                   className={`text-xs py-3 rounded-xl border transition-all ${language === l.id ? 'border-brand bg-brand-tint text-brand-ink font-semibold' : 'border-hairline/10 bg-surface text-ink-secondary'}`}>
                   {l.label}
                 </button>

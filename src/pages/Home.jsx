@@ -13,6 +13,7 @@ import { servisaku } from '@/api/servisakuClient';
 import { formatMYR } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { avatarFor } from '@/lib/categoryAvatars';
+import { useTranslation } from '@/lib/useTranslation';
 
 /* Category glyphs are fixed by the design system — do not improvise per slug. */
 const CATEGORY_ICON = {
@@ -64,6 +65,7 @@ const RING = 'shadow-[inset_0_0_0_1px_rgb(var(--hairline))]';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [q, setQ] = useState('');
 
   const { data: categories } = useQuery({
@@ -91,16 +93,22 @@ export default function Home() {
         <div className="mx-auto grid w-full max-w-[1240px] grid-cols-1 items-center gap-14 px-5 py-16 md:px-8 md:py-[84px] lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <span className="sa-caps inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-white ring-1 ring-inset ring-white/20">
-              <Sparkles className="size-3.5" /> Now serving 5 cities
+              <Sparkles className="size-3.5" /> {t('Now serving 5 cities')}
             </span>
 
+            {/* The line break lives inside the translated value ('|'), because
+                Malay word order does not break where the English does. */}
             <h1 className="text-display-1 mt-5 mb-4 text-white">
-              Home help you<br />don&apos;t have to chase.
+              {t("Home help you don't have to chase.").split('|').map((part, i, all) => (
+                <span key={part}>
+                  {part}
+                  {i < all.length - 1 && <br />}
+                </span>
+              ))}
             </h1>
 
             <p className="max-w-[520px] text-xl text-white/[0.78]">
-              Book verified professionals for cleaning, AC, beauty, repairs and
-              emergencies — fixed prices, live tracking, escrow-protected payment.
+              {t('Book verified professionals for cleaning, AC, beauty, repairs and emergencies — fixed prices, live tracking, escrow-protected payment.')}
             </p>
 
             <div className="mt-7 flex max-w-[560px] flex-col gap-3 sm:flex-row">
@@ -110,8 +118,8 @@ export default function Home() {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && search()}
-                  placeholder="Try 'deep cleaning' or 'AC service'"
-                  aria-label="Search services"
+                  placeholder={t("Try 'deep cleaning' or 'AC service'")}
+                  aria-label={t('Search services')}
                   className="h-13 w-full rounded-field bg-white/10 pl-11 pr-4 text-md text-white outline-none ring-1 ring-inset ring-white/20 backdrop-blur placeholder:text-white/50 focus:ring-2 focus:ring-live"
                 />
               </div>
@@ -119,7 +127,7 @@ export default function Home() {
                 onClick={search}
                 className="inline-flex h-13 shrink-0 items-center justify-center gap-2 rounded-field bg-grad-brand px-6 font-semibold text-white shadow-brand transition hover:brightness-[0.94] active:scale-[0.97]"
               >
-                Find a pro <ArrowRight className="size-[18px]" />
+                {t('Find a pro')} <ArrowRight className="size-[18px]" />
               </button>
             </div>
 
@@ -127,7 +135,7 @@ export default function Home() {
               {[['4.87', 'Average rating'], ['71', 'Services'], ['38k', 'Jobs completed']].map(([v, l]) => (
                 <div key={l}>
                   <div className="sa-num text-[30px] font-medium leading-none">{v}</div>
-                  <div className="mt-1.5 text-xs text-white/60">{l}</div>
+                  <div className="mt-1.5 text-xs text-white/60">{t(l)}</div>
                 </div>
               ))}
             </div>
@@ -140,8 +148,8 @@ export default function Home() {
                 NA
               </span>
               <div className="min-w-0 flex-1">
-                <div className="font-display font-semibold">Nurul is on the way</div>
-                <div className="text-caption font-normal text-white/70">Sofa Cleaning · 2.4 km away</div>
+                <div className="font-display font-semibold">{t('Nurul is on the way')}</div>
+                <div className="text-caption font-normal text-white/70">{t('Sofa Cleaning · 2.4 km away')}</div>
               </div>
               <span className="sa-num shrink-0 font-semibold text-live">9:40 AM</span>
             </div>
@@ -181,8 +189,8 @@ export default function Home() {
 
       {/* ── Catalogue ────────────────────────────────────────────────────── */}
       <WebSection
-        eyebrow="The catalogue"
-        title="Eleven categories, seventy-one services."
+        eyebrow={t('The catalogue')}
+        title={t('Eleven categories, seventy-one services.')}
         body="Every service has a fixed price, a duration and a warranty before you book."
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -230,14 +238,14 @@ export default function Home() {
             <span className="grid size-11 place-items-center rounded-sm bg-white/10 text-live">
               <Zap className="size-[22px]" />
             </span>
-            <span className="text-caption font-semibold leading-snug text-white">Instant Help</span>
-            <span className="text-xs text-white/60">Emergency</span>
+            <span className="text-caption font-semibold leading-snug text-white">{t('Instant Help')}</span>
+            <span className="text-xs text-white/60">{t('Emergency')}</span>
           </button>
         </div>
       </WebSection>
 
       {/* ── How it works ─────────────────────────────────────────────────── */}
-      <WebSection tone="card" eyebrow="How it works" title="Four steps, no phone calls.">
+      <WebSection tone="card" eyebrow={t('How it works')} title={t('Four steps, no phone calls.')}>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map(([Icon, title, body], i) => (
             <div key={title} className={cn('flex flex-col gap-2.5 rounded-card p-5', RING)}>
@@ -245,8 +253,8 @@ export default function Home() {
                 <Icon className="size-[22px]" />
               </span>
               <span className="sa-num text-xs text-ink-tertiary">0{i + 1}</span>
-              <div className="font-display text-h4 font-semibold text-ink">{title}</div>
-              <p className="text-caption font-normal text-ink-secondary">{body}</p>
+              <div className="font-display text-h4 font-semibold text-ink">{t(title)}</div>
+              <p className="text-caption font-normal text-ink-secondary">{t(body)}</p>
             </div>
           ))}
         </div>
@@ -256,24 +264,25 @@ export default function Home() {
       <WebSection tone="paper">
         <div className="grid items-center gap-6 lg:grid-cols-2">
           <div>
-            <div className="sa-caps mb-2.5 text-warning">Instant Help</div>
+            <div className="sa-caps mb-2.5 text-warning">{t('Instant Help')}</div>
             <h2 className="text-display-3 text-ink">
-              Burst pipe at 11pm?<br />Dispatched in minutes.
+              {t('Burst pipe at 11pm? Dispatched in minutes.').split('|').map((part, i, all) => (
+                <span key={part}>{part}{i < all.length - 1 && <br />}</span>
+              ))}
             </h2>
             <p className="mt-3.5 max-w-[460px] text-lead text-ink-secondary">
-              Two emergency services run on a separate on-demand queue with live ETAs —
-              no slot picking, no waiting for a callback.
+              {t('Two emergency services run on a separate on-demand queue with live ETAs — no slot picking, no waiting for a callback.')}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {INSTANT_SERVICES.map((t) => (
+              {INSTANT_SERVICES.map((svc) => (
                 <span
-                  key={t}
+                  key={svc}
                   className={cn(
                     'inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-caption text-ink-secondary',
                     RING,
                   )}
                 >
-                  <Zap className="size-3.5 text-warning" /> {t}
+                  <Zap className="size-3.5 text-warning" /> {t(svc)}
                 </span>
               ))}
             </div>
@@ -287,13 +296,13 @@ export default function Home() {
               <Zap className="size-6" />
             </span>
             <span className="flex-1">
-              <span className="block font-display text-h4 font-semibold">Instant Help</span>
+              <span className="block font-display text-h4 font-semibold">{t('Instant Help')}</span>
               <span className="block text-caption font-normal text-white/85">
-                Emergency pros, dispatched in minutes
+                {t('Emergency pros, dispatched in minutes')}
               </span>
             </span>
             <span className="shrink-0 text-right">
-              <span className="sa-caps block text-white/70">ETA</span>
+              <span className="sa-caps block text-white/70">{t('ETA')}</span>
               <span className="sa-num block font-semibold">~18 min</span>
             </span>
           </button>
@@ -303,8 +312,8 @@ export default function Home() {
       {/* ── Trust ────────────────────────────────────────────────────────── */}
       <WebSection
         tone="dark"
-        eyebrow="Why people stay"
-        title="Trust is the product."
+        eyebrow={t('Why people stay')}
+        title={t('Trust is the product.')}
         body="Escrow, KYC and ratings are not features we advertise — they are how every booking works by default."
       >
         <div className="grid gap-4 lg:grid-cols-3">
@@ -314,15 +323,15 @@ export default function Home() {
               className="flex flex-col gap-2.5 rounded-card bg-white/10 p-5 ring-1 ring-inset ring-white/[0.16] backdrop-blur"
             >
               <Icon className="size-6 text-live" />
-              <div className="font-display text-h4 font-semibold text-white">{title}</div>
-              <p className="text-caption font-normal text-white/[0.72]">{body}</p>
+              <div className="font-display text-h4 font-semibold text-white">{t(title)}</div>
+              <p className="text-caption font-normal text-white/[0.72]">{t(body)}</p>
             </div>
           ))}
         </div>
       </WebSection>
 
       {/* ── Reviews ──────────────────────────────────────────────────────── */}
-      <WebSection tone="card" eyebrow="Reviews" title="What customers say.">
+      <WebSection tone="card" eyebrow={t('Reviews')} title={t('What customers say.')}>
         <div className="grid gap-4 lg:grid-cols-3">
           {REVIEWS.map(([name, service, text]) => (
             <div key={name} className={cn('flex flex-col gap-3 rounded-card p-5', RING)}>
@@ -331,7 +340,7 @@ export default function Home() {
                   <Star key={i} className="size-4 fill-star text-star" />
                 ))}
               </div>
-              <p className="text-md text-ink">{text}</p>
+              <p className="text-md text-ink">{t(text)}</p>
               <div className="mt-auto flex items-center gap-2.5 pt-1">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-navy text-xs font-semibold text-white">
                   {initials(name)}
@@ -339,7 +348,7 @@ export default function Home() {
                 <div>
                   <div className="text-caption font-semibold text-ink">{name}</div>
                   <div className="flex items-center gap-1 text-xs text-ink-tertiary">
-                    {service} · <BadgeCheck className="size-3" /> Verified booking
+                    {t(service)} · <BadgeCheck className="size-3" /> {t('Verified booking')}
                   </div>
                 </div>
               </div>
@@ -353,9 +362,9 @@ export default function Home() {
         <div className="overflow-hidden rounded-card bg-grad-brand">
           <div className="grid items-center gap-6 p-8 md:grid-cols-[1.2fr_1fr] md:p-10">
             <div>
-              <h2 className="text-display-3 text-white">Track your pro from the app.</h2>
+              <h2 className="text-display-3 text-white">{t('Track your pro from the app.')}</h2>
               <p className="mt-3 max-w-[460px] text-lead text-white/85">
-                Live location, in-app chat, invoices and one-tap rebooking.
+                {t('Live location, in-app chat, invoices and one-tap rebooking.')}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 {[[Apple, 'App Store'], [Play, 'Google Play']].map(([Icon, label]) => (

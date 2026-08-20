@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MapPin, User, ArrowRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Consumer site header — ports WebNav from the design system's consumer website
@@ -26,12 +27,13 @@ export default function TopNav() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation();
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-surface/[0.86] shadow-[inset_0_-1px_0_rgb(var(--hairline))] backdrop-blur-[18px] backdrop-saturate-150">
       <div className="mx-auto flex h-[76px] w-full max-w-[1240px] items-center gap-6 px-5 md:px-8">
 
-        <Link to="/" className="flex shrink-0 items-center" aria-label="ServisAku home">
+        <Link to="/" className="flex shrink-0 items-center" aria-label={t('ServisAku home')}>
           <img
             src="/img/brand/logo-wordmark.png"
             alt="ServisAku"
@@ -52,7 +54,7 @@ export default function TopNav() {
                 )}
               >
                 {l.accent && <Zap className="size-3.5 text-warning" />}
-                {l.label}
+                {t(l.label)}
               </Link>
             );
           })}
@@ -66,7 +68,7 @@ export default function TopNav() {
           {user ? (
             <Link
               to="/profile"
-              aria-label="Account"
+              aria-label={t('Account')}
               className="grid size-11 place-items-center rounded-full bg-raised text-ink transition-colors hover:bg-brand-tint"
             >
               {user.full_name
@@ -78,7 +80,7 @@ export default function TopNav() {
               to="/otp-login"
               className="hidden h-11 items-center rounded-field px-4 text-caption text-ink transition-colors hover:bg-raised sm:inline-flex"
             >
-              Log in
+              {t('Log in')}
             </Link>
           )}
 
@@ -86,7 +88,7 @@ export default function TopNav() {
             onClick={() => navigate('/catalog')}
             className="inline-flex h-11 items-center gap-2 rounded-field bg-grad-brand px-5 text-caption font-semibold text-white shadow-brand transition hover:brightness-[0.94] active:scale-[0.97]"
           >
-            Book a service <ArrowRight className="size-4" />
+            {t('Book a service')} <ArrowRight className="size-4" />
           </button>
         </div>
       </div>
