@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import AccountShell from '@/components/account/AccountShell';
+import { useTranslation } from '@/lib/useTranslation';
 import { RING } from '@/components/ds';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -34,6 +35,7 @@ const SHORTCUTS = [
 ];
 
 export default function Profile() {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -50,7 +52,7 @@ export default function Profile() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center gap-2 text-ink-secondary" role="status">
         <LoaderCircle className="size-4 animate-spin" />
-        <span className="text-caption">Loading your account…</span>
+        <span className="text-caption">{t('Loading your account…')}</span>
       </div>
     );
   }
@@ -63,18 +65,16 @@ export default function Profile() {
       user={user}
       aside={(
         <div className={`flex flex-col gap-4 rounded-card bg-surface p-5 ${RING}`}>
-          <h2 className="font-display text-h4 font-semibold text-ink">Appearance</h2>
+          <h2 className="font-display text-h4 font-semibold text-ink">{t('Appearance')}</h2>
           <ThemeToggle />
-          <p className="text-xs text-ink-tertiary">
-            ServisAku · Klang Valley, Malaysia
-          </p>
+          <p className="text-xs text-ink-tertiary">{t('ServisAku · Klang Valley, Malaysia')}</p>
         </div>
       )}
     >
       {/* At-a-glance */}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className={`rounded-card bg-surface p-5 ${RING}`}>
-          <span className="sa-caps text-ink-tertiary">Active bookings</span>
+          <span className="sa-caps text-ink-tertiary">{t('Active bookings')}</span>
           <p className="sa-num mt-1 text-h1 font-semibold text-ink">{active}</p>
         </div>
         <button
@@ -85,8 +85,8 @@ export default function Profile() {
             <Sparkles className="size-5" />
           </span>
           <span className="flex-1">
-            <span className="block font-display text-h4 font-semibold">Book a service</span>
-            <span className="block text-caption font-normal text-white/85">71 services, upfront pricing</span>
+            <span className="block font-display text-h4 font-semibold">{t('Book a service')}</span>
+            <span className="block text-caption font-normal text-white/85">{t('71 services, upfront pricing')}</span>
           </span>
           <ChevronRight className="size-5 shrink-0" />
         </button>
@@ -104,8 +104,8 @@ export default function Profile() {
               <Icon className="size-[18px]" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-caption font-semibold text-ink">{label}</span>
-              <span className="block text-xs text-ink-secondary">{sub}</span>
+              <span className="block text-caption font-semibold text-ink">{t(label)}</span>
+              <span className="block text-xs text-ink-secondary">{t(sub)}</span>
             </span>
             <ChevronRight className="size-4 shrink-0 text-ink-tertiary" />
           </Link>
@@ -122,8 +122,8 @@ export default function Profile() {
             <Wrench className="size-[18px]" />
           </span>
           <span className="flex-1">
-            <span className="block text-caption font-semibold text-ink">Partner dashboard</span>
-            <span className="block text-xs text-ink-secondary">Jobs, earnings, availability</span>
+            <span className="block text-caption font-semibold text-ink">{t('Partner dashboard')}</span>
+            <span className="block text-xs text-ink-secondary">{t('Jobs, earnings, availability')}</span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-ink-tertiary" />
         </Link>

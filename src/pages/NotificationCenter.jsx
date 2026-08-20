@@ -2,7 +2,33 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, CheckCheck, Search, Filter, Trash2, BookOpen, CreditCard, MessageSquare, Settings, Megaphone, X } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
-import moment from 'moment';
+import { useTranslation } from '@/lib/useTranslation';
+
+/* Relative time and day grouping, locale-aware. moment's fromNow() and
+   calendar() emit English regardless of the selected language; Intl follows
+   the locale and needs no extra locale bundle. */
+function relativeTime(value, locale) {
+  const then = new Date(value).getTime();
+  const diff = then - Date.now();
+  const abs = Math.abs(diff);
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const UNITS = [['year', 31536000000], ['month', 2592000000], ['week', 604800000],
+    ['day', 86400000], ['hour', 3600000], ['minute', 60000]];
+  for (const [unit, ms] of UNITS) {
+    if (abs >= ms) return rtf.format(Math.round(diff / ms), unit);
+  }
+  return rtf.format(Math.round(diff / 1000), 'second');
+}
+
+function dayGroup(value, t, locale) {
+  const d = new Date(value);
+  const midnight = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((midnight(new Date()) - midnight(d)) / 86400000);
+  if (days === 0) return t('Today');
+  if (days === 1) return t('Yesterday');
+  if (days < 7) return d.toLocaleDateString(locale, { weekday: 'long' });
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
 const TYPE_META = {
   booking_update: { icon: BookOpen,      color: 'bg-info-tint text-info',      label: 'Booking' },
@@ -16,6 +42,7 @@ const TYPE_META = {
 };
 
 function NotifItem({ n, onRead, onDelete }) {
+  const { t, locale } = useTranslation();
   const meta = TYPE_META[n.type] || TYPE_META.system;
   const Icon = meta.icon;
   return (
@@ -31,12 +58,12 @@ function NotifItem({ n, onRead, onDelete }) {
         <div className="flex items-start justify-between gap-2">
           <p className={`text-sm leading-snug ${!n.is_read ? 'font-semibold' : 'font-medium'}`}>{n.title}</p>
           <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-            <span className="text-[9.5px] text-ink-secondary">{moment(n.created_date).fromNow()}</span>
+            <span className="text-[9.5px] text-ink-secondary">{relativeTime(n.created_date, locale)}</span>
             {!n.is_read && <div className="w-1.5 h-1.5 bg-brand rounded-full" />}
           </div>
         </div>
         <p className="text-xs text-ink-secondary mt-1 leading-relaxed line-clamp-2">{n.body}</p>
-        <span className={`inline-block text-[9px] font-semibold mt-2 px-2 py-0.5 rounded-full ${meta.color}`}>{meta.label}</span>
+        <span className={`inline-block text-[9px] font-semibold mt-2 px-2 py-0.5 rounded-full ${meta.color}`}>{t(meta.label)}</span>
       </div>
       <button
         onClick={e => { e.stopPropagation(); onDelete(n); }}
@@ -49,6 +76,7 @@ function NotifItem({ n, onRead, onDelete }) {
 }
 
 export default function NotificationCenter() {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [_user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -99,9 +127,7 @@ export default function NotificationCenter() {
   });
 
   const groups = filtered.reduce((acc, n) => {
-    const key = moment(n.created_date).calendar(null, {
-      sameDay: '[Today]', lastDay: '[Yesterday]', lastWeek: 'dddd', sameElse: 'D MMMM YYYY',
-    });
+    const key = dayGroup(n.created_date, t, locale);
     if (!acc[key]) acc[key] = [];
     acc[key].push(n);
     return acc;
@@ -116,11 +142,11 @@ export default function NotificationCenter() {
             onClick={() => navigate(-1)}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Back
+            <ArrowLeft className="size-[15px]" /> {t('Back')}
           </button>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-display-2 text-white">Notifications</h1>
+              <h1 className="text-display-2 text-white">{t('Notifications')}</h1>
               {unreadCount > 0 && (
                 <p className="sa-num mt-2 text-lead text-live">{unreadCount} unread</p>
               )}
@@ -129,15 +155,14 @@ export default function NotificationCenter() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllRead}
-                  aria-label="Mark all as read"
+                  aria-label={t('Mark all as read')}
                   className="inline-flex min-h-11 items-center gap-2 rounded-field bg-white/10 px-4 text-caption font-semibold text-white ring-1 ring-inset ring-white/20 transition hover:bg-white/20"
                 >
-                  <CheckCheck className="size-4" /> Mark all read
-                </button>
+                  <CheckCheck className="size-4" />{t('Mark all read')}</button>
               )}
               <button
                 onClick={() => setShowFilter(!showFilter)}
-                aria-label="Filter notifications"
+                aria-label={t('Filter notifications')}
                 aria-pressed={filter !== 'all'}
                 className={`inline-flex min-h-11 items-center gap-2 rounded-field px-4 text-caption font-semibold transition ${
                   filter !== 'all'
@@ -145,8 +170,7 @@ export default function NotificationCenter() {
                     : 'bg-white/10 text-white ring-1 ring-inset ring-white/20 hover:bg-white/20'
                 }`}
               >
-                <Filter className="size-4" /> Filter
-              </button>
+                <Filter className="size-4" />{t('Filter')}</button>
             </div>
           </div>
         </div>
@@ -157,8 +181,8 @@ export default function NotificationCenter() {
         <div className="flex min-h-11 items-center gap-2.5 rounded-field bg-surface px-3.5 shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
           <Search className="h-3.5 w-3.5 text-ink-secondary shrink-0" />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            aria-label="Search notifications"
-            placeholder="Search notifications…"
+            aria-label={t('Search notifications')}
+            placeholder={t('Search notifications…')}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-secondary/60" />
           {search && (
             <button onClick={() => setSearch('')} className="shrink-0">
@@ -175,7 +199,7 @@ export default function NotificationCenter() {
                 className={`px-3 py-1.5 rounded-full text-[10px] font-semibold whitespace-nowrap transition-all shrink-0 ${
                   filter === f ? 'bg-brand text-white' : 'bg-raised text-ink-secondary hover:bg-raised/80'
                 }`}>
-                {f === 'all' ? 'All' : TYPE_META[f]?.label || f}
+                {f === 'all' ? t('All') : t(TYPE_META[f]?.label || f)}
               </button>
             ))}
           </div>
@@ -206,7 +230,7 @@ export default function NotificationCenter() {
               {search || filter !== 'all' ? 'No matching notifications' : 'You\'re all caught up!'}
             </p>
             <p className="text-sm text-ink-secondary max-w-xs">
-              {search || filter !== 'all' ? 'Try adjusting your search or filter' : 'New notifications will appear here'}
+              {search || filter !== 'all' ? t('Try adjusting your search or filter') : t('New notifications will appear here')}
             </p>
           </div>
         ) : (

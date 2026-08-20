@@ -137,7 +137,7 @@ export default function PaymentCheckout() {
   );
 
   const priceLines = [
-    { label: booking?.service_type || 'Service', value: formatRM(total) },
+    { label: booking?.service_type || t('Service'), value: formatRM(total) },
     ...((booking?.discount_amount || 0) > 0
       ? [{ label: `Promo ${booking.coupon_code || ''}`.trim(), value: '− ' + formatRM(booking.discount_amount), tone: 'discount' }]
       : []),
@@ -221,8 +221,8 @@ export default function PaymentCheckout() {
             <div className={`flex items-start gap-2 rounded-card bg-surface p-4 text-caption font-normal text-ink-secondary shadow-e1 ${RING}`}>
               <Lock className="mt-0.5 size-3.5 shrink-0" />
               {method === 'duitnow'
-                ? "You'll be redirected to complete the DuitNow transfer from your banking app."
-                : "You'll be taken to our payment provider's secure page. ServisAku never sees or stores your card details."}
+                ? t("You'll be redirected to complete the DuitNow transfer from your banking app.")
+                : t("You'll be taken to our payment provider's secure page. ServisAku never sees or stores your card details.")}
             </div>
           )}
         </div>
@@ -234,7 +234,7 @@ export default function PaymentCheckout() {
             total={formatRM(total)}
             note={isCash
               ? t('Pay your professional directly when the job is complete.')
-              : 'Held in escrow until you confirm the job is done'}
+              : t('Held in escrow until you confirm the job is done')}
           />
 
           <Button

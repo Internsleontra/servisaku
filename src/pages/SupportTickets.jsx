@@ -152,7 +152,7 @@ function NewTicket({ bookingId }) {
       </Field>
 
       <Button block variant="primary" disabled={submitting} onClick={submit}>
-        {submitting ? 'Opening…' : 'Open ticket'}
+        {submitting ? t('Opening…') : t('Open ticket')}
       </Button>
     </PageShell>
   );

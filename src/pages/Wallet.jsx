@@ -35,7 +35,7 @@ export default function Wallet() {
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => { const t = setTimeout(() => setData(MOCK), 450); return () => clearTimeout(t); }, []);
+  useEffect(() => { const timer = setTimeout(() => setData(MOCK), 450); return () => clearTimeout(timer); }, []);
 
   const txns = useMemo(() => {
     if (!data) return [];

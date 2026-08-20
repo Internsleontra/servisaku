@@ -22,7 +22,7 @@ export default function Reviews() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [tab, setTab] = useState('given');
-  useEffect(() => { const t = setTimeout(() => setData(MOCK), 400); return () => clearTimeout(t); }, []);
+  useEffect(() => { const timer = setTimeout(() => setData(MOCK), 400); return () => clearTimeout(timer); }, []);
 
   const del = (id) => { setData(d => ({ ...d, given: d.given.filter(g => g.id !== id) })); toast.success(t('Review deleted')); };
 

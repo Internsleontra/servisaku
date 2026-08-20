@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/useTranslation';
 
 const TABS = [
   { key: 'active', label: 'Active' }, { key: 'personalized', label: 'For you' }, { key: 'cashback', label: 'Cashback' },
@@ -19,22 +20,23 @@ const MOCK = [
 const daysLeft = (iso) => Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
 
 export default function Offers() {
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const [tab, setTab] = useState('active');
   const [data, setData] = useState(null);
-  useEffect(() => { const t = setTimeout(() => setData(MOCK), 400); return () => clearTimeout(t); }, []);
+  useEffect(() => { const timer = setTimeout(() => setData(MOCK), 400); return () => clearTimeout(timer); }, []);
   const list = useMemo(() => (data || []).filter(c => c.tab === tab), [data, tab]);
 
   return (
     <div className="font-inter min-h-screen bg-bg max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-5 pt-12 pb-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center"><ArrowLeft className="h-4 w-4" /></button>
-        <h1 className="text-xl font-semibold">Offers & coupons</h1>
+        <h1 className="text-xl font-semibold flex-1">{t('Offers & coupons')}</h1>
       </div>
       <div className="px-5 flex gap-2 overflow-x-auto scrollbar-none pb-2">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`shrink-0 text-xs font-semibold rounded-full px-3.5 py-2 border ${tab === t.key ? 'bg-brand text-white border-brand' : 'bg-surface text-ink-secondary border-hairline/20'}`}>{t.label}</button>
+        {TABS.map(tabItem => (
+          <button key={tabItem.key} onClick={() => setTab(tabItem.key)}
+            className={`shrink-0 text-xs font-semibold rounded-full px-3.5 py-2 border ${tab === tabItem.key ? 'bg-brand text-white border-brand' : 'bg-surface text-ink-secondary border-hairline/20'}`}>{t(tabItem.label)}</button>
         ))}
       </div>
       <div className="px-5 space-y-3 pb-10 pt-2">
@@ -44,22 +46,22 @@ export default function Offers() {
             <div key={c.id} className="bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl overflow-hidden">
               <div className={`flex items-center justify-between px-4 py-2.5 ${expired ? 'bg-raised' : 'bg-brand-tint'}`}>
                 <span className={`font-semibold tracking-wider ${expired ? 'text-ink-secondary' : 'text-brand'}`}>{c.code}</span>
-                <span className="text-[11px] text-ink-tertiary">{expired ? 'Expired' : dl <= 7 ? `${dl}d left` : `Until ${c.expiry}`}</span>
+                <span className="text-[11px] text-ink-tertiary">{expired ? t('Expired') : dl <= 7 ? t('{days}d left', { days: dl }) : t('Until {date}', { date: new Date(c.expiry).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) })}</span>
               </div>
               <div className="p-4 space-y-1.5">
-                <p className="text-sm font-semibold">{c.title}</p>
+                <p className="text-sm font-semibold">{t(c.title)}</p>
                 <p className="text-sm font-semibold text-brand">{c.discount}</p>
-                <p className="text-[11px] text-ink-tertiary">{c.minOrder > 0 ? `Min. spend RM${c.minOrder} · ` : ''}Valid on {c.categories.join(', ')}</p>
+                <p className="text-[11px] text-ink-tertiary">{c.minOrder > 0 ? `${t('Min. spend RM{amount}', { amount: c.minOrder })} · ` : ''}{t('Valid on {categories}', { categories: c.categories.map((x) => t(x)).join(', ') })}</p>
                 {!expired && (
                   <div className="flex gap-2 pt-2">
-                    <button onClick={() => { navigator.clipboard?.writeText(c.code); toast.success(`${c.code} copied & applied`); }} className="flex-1 h-10 rounded-lg bg-brand text-white text-sm font-semibold">Apply</button>
-                    <button onClick={() => toast.success('Share link copied')} className="w-11 h-10 rounded-lg shadow-[inset_0_0_0_1px_rgb(var(--hairline))] flex items-center justify-center"><Share2 className="h-4 w-4" /></button>
+                    <button onClick={() => { navigator.clipboard?.writeText(c.code); toast.success(t('{code} copied & applied', { code: c.code })); }} className="flex-1 h-10 rounded-lg bg-brand text-white text-sm font-semibold">{t('Apply')}</button>
+                    <button onClick={() => toast.success(t('Share link copied'))} className="w-11 h-10 rounded-lg shadow-[inset_0_0_0_1px_rgb(var(--hairline))] flex items-center justify-center"><Share2 className="h-4 w-4" /></button>
                   </div>
                 )}
               </div>
             </div>
           );
-        }) : <div className="text-center py-12 text-ink-secondary text-sm">No offers in this tab</div>}
+        }) : <div className="text-center py-12 text-ink-secondary text-sm">{t('No offers in this tab')}</div>}
       </div>
     </div>
   );

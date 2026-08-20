@@ -5,6 +5,7 @@ import {
 import { cn } from '@/lib/utils';
 import { servisaku } from '@/api/servisakuClient';
 import { RING } from '@/components/ds';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Shared shell for the account area.
@@ -32,7 +33,8 @@ const NAV = [
 
 export default function AccountShell({ user, title, subtitle, children, aside }) {
   const navigate = useNavigate();
-  const name = user?.full_name || 'Your account';
+  const { t } = useTranslation();
+  const name = user?.full_name || t('Your account');
   const initials = user?.full_name
     ? user.full_name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : 'U';
@@ -46,7 +48,7 @@ export default function AccountShell({ user, title, subtitle, children, aside })
             onClick={() => navigate('/')}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Home
+            <ArrowLeft className="size-[15px]" /> {t('Home')}
           </button>
 
           <div className="flex items-center gap-4">
@@ -66,7 +68,7 @@ export default function AccountShell({ user, title, subtitle, children, aside })
       {/* Left nav + content */}
       <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[248px_1fr]">
         <nav
-          aria-label="Account"
+          aria-label={t('Account')}
           className={cn('flex flex-col gap-1 rounded-card bg-surface p-2 lg:sticky lg:top-[100px]', RING)}
         >
           {NAV.map(({ to, label, icon: Icon, end }) => (
@@ -82,7 +84,7 @@ export default function AccountShell({ user, title, subtitle, children, aside })
               )}
             >
               <Icon className="size-4 shrink-0" />
-              {label}
+              {t(label)}
             </NavLink>
           ))}
 
@@ -90,7 +92,7 @@ export default function AccountShell({ user, title, subtitle, children, aside })
             onClick={() => servisaku.auth.logout()}
             className="mt-1 flex min-h-11 items-center gap-3 rounded-field px-3 text-caption text-danger transition-colors hover:bg-danger-tint"
           >
-            <LogOut className="size-4 shrink-0" /> Sign out
+            <LogOut className="size-4 shrink-0" /> {t('Sign out')}
           </button>
         </nav>
 

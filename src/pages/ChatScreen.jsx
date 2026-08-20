@@ -49,9 +49,9 @@ export default function ChatScreen() {
 
   const handleSend = async () => {
     if (!text.trim() || !user) return;
-    const t = text;
+    const body = text;
     setText('');
-    await sendMessage(user.email, user.full_name, user.role || 'consumer', t);
+    await sendMessage(user.email, user.full_name, user.role || 'consumer', body);
   };
 
   const handleKeyDown = (e) => {

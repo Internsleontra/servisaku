@@ -112,11 +112,11 @@ export default function PaymentReturn() {
               ]}
               total={amount}
               totalLabel="Amount paid"
-              note="Held in escrow until you confirm the job is done"
+              note={t('Held in escrow until you confirm the job is done')}
             />
           ) : (
             <p className={`rounded-field p-4 text-caption font-normal text-ink-secondary ${RING}`}>
-              {state === 'checking' ? 'Waiting for the payment provider…' : o.sub}
+              {state === 'checking' ? t('Waiting for the payment provider…') : t(o.sub)}
             </p>
           )}
 

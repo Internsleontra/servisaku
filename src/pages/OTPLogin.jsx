@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { requestEmailOtp, verifyEmailOtp, createJWT } from '@/lib/appwriteAuth';
 import { House, Wrench } from 'lucide-react';
+import { useTranslation } from '@/lib/useTranslation';
 
 const STEP = { ROLE: 'role', INPUT: 'input', OTP: 'otp', FORGOT: 'forgot', DONE: 'done' };
 const METHOD = { PASSWORD: 'password', EMAIL_OTP: 'email-otp', PHONE_OTP: 'phone-otp' };
@@ -43,6 +44,7 @@ const APP_ROLES = APP_TARGET === 'partner'
 const SHOW_ROLE_STEP = APP_ROLES.length > 1;
 
 export default function OTPLogin() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { checkUserAuth } = useAuth();
   const [step, setStep] = useState(SHOW_ROLE_STEP ? STEP.ROLE : STEP.INPUT);
@@ -76,7 +78,7 @@ export default function OTPLogin() {
 
   useEffect(() => {
     if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown]);
 
@@ -86,16 +88,16 @@ export default function OTPLogin() {
     const passwordVal = passwordRef.current?.value ?? password;
     if (emailVal !== email) setEmail(emailVal);
     if (passwordVal !== password) setPassword(passwordVal);
-    if (!emailVal || !passwordVal) { toast.error('Please enter your email and password'); return; }
-    if (isRegister && !fullName) { toast.error('Please enter your full name'); return; }
+    if (!emailVal || !passwordVal) { toast.error(t('Please enter your email and password')); return; }
+    if (isRegister && !fullName) { toast.error(t('Please enter your full name')); return; }
     setLoading(true);
     try {
       if (isRegister) {
         await servisaku.auth.register(emailVal, passwordVal, fullName);
-        toast.success('Account created. Welcome to ServisAku.');
+        toast.success(t('Account created. Welcome to ServisAku.'));
       } else {
         await servisaku.auth.loginViaEmailPassword(emailVal, passwordVal);
-        toast.success('Logged in successfully!');
+        toast.success(t('Logged in successfully!'));
       }
       if (checkUserAuth) await checkUserAuth();
       auditLog('LOGIN_SUCCESS', { role, method: 'email' });
@@ -113,13 +115,13 @@ export default function OTPLogin() {
     try {
       if (channel === 'email') {
         const em = (emailRef.current?.value ?? email).trim();
-        if (!em) { toast.error('Enter your email address'); setLoading(false); return; }
+        if (!em) { toast.error(t('Enter your email address')); setLoading(false); return; }
         const uid = await requestEmailOtp(em);
         setOtpUserId(uid); setOtpChannel('email'); setOtpTarget(em);
       } else {
         const raw = (phoneRef.current?.value ?? phone).replace(/\D/g, '');
         if (raw !== phone) setPhone(raw);
-        if (raw.length < 8) { toast.error('Enter a valid mobile number'); setLoading(false); return; }
+        if (raw.length < 8) { toast.error(t('Enter a valid mobile number')); setLoading(false); return; }
         const full = `${dialCode}${raw.replace(/^0/, '')}`;
         // Backend-native OTP (server's own Twilio) — bypasses Appwrite's phone limit.
         const res = await servisaku.auth.requestPhoneOtp(full);
@@ -129,7 +131,7 @@ export default function OTPLogin() {
       setOtpCode('');
       setStep(STEP.OTP);
       setCountdown(60);
-      toast.success('Verification code sent');
+      toast.success(t('Verification code sent'));
     } catch (err) {
       // Surface the real Appwrite reason — the common one for phone OTP is a
       // missing/disabled SMS provider in Appwrite Messaging.
@@ -144,7 +146,7 @@ export default function OTPLogin() {
 
   // ---- OTP: verify the code, then exchange the Appwrite session for our JWT ----
   const verifyOtpCode = async () => {
-    if (otpCode.length < 6) { toast.error('Enter the 6-digit code'); return; }
+    if (otpCode.length < 6) { toast.error(t('Enter the 6-digit code')); return; }
     setLoading(true);
     try {
       if (otpChannel === 'phone') {
@@ -152,7 +154,7 @@ export default function OTPLogin() {
         await servisaku.auth.verifyPhoneOtp(otpTarget, otpCode, { fullName: fullName?.trim() || undefined });
       } else {
         // Appwrite email OTP → Appwrite session.
-        if (!otpUserId) { toast.error('Please request a new code'); setLoading(false); return; }
+        if (!otpUserId) { toast.error(t('Please request a new code')); setLoading(false); return; }
         await verifyEmailOtp(otpUserId, otpCode);
         const { jwt } = await createJWT();
         await servisaku.auth.loginWithAppwrite(jwt, { role, fullName: fullName?.trim() || undefined });
@@ -169,12 +171,12 @@ export default function OTPLogin() {
 
   // ---- Forgot password ----
   const handleForgotPassword = async () => {
-    if (!email) { toast.error('Enter your email first'); return; }
+    if (!email) { toast.error(t('Enter your email first')); return; }
     setLoading(true);
     try {
       const res = await servisaku.auth.forgotPassword(email);
       setResetSent({ devLink: res?.dev_reset_link || null });
-      toast.success('If that email has an account, a reset link is on its way.');
+      toast.success(t('If that email has an account, a reset link is on its way.'));
     } catch (err) {
       toast.error(err.message || 'Could not send reset link');
     }
@@ -199,7 +201,7 @@ export default function OTPLogin() {
           {/* Official brand mark, not a generic house glyph. The mark is already
               a finished shape, so it is shown bare rather than boxed in a tile.
               White variant because this panel sits on the navy hero gradient. */}
-          <Link to="/" className="inline-flex items-center gap-3 group" aria-label="ServisAku home">
+          <Link to="/" className="inline-flex items-center gap-3 group" aria-label={t('ServisAku home')}>
             <img
               src="/img/brand/logo-mark-white.png"
               alt=""
@@ -212,12 +214,9 @@ export default function OTPLogin() {
 
         <div className="relative z-10 mb-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-            <h1 className="text-4xl xl:text-5xl font-display font-semibold text-white mb-6 leading-[1.15]">
-              Trusted Home Services,<br/> <span className="text-brand">At Your Fingertips.</span>
+            <h1 className="text-4xl xl:text-5xl font-display font-semibold text-white mb-6 leading-[1.15]">{t('Trusted Home Services,')}<br/> <span className="text-brand">{t('At Your Fingertips.')}</span>
             </h1>
-            <p className="text-lg text-white/70 max-w-md mb-10 leading-relaxed">
-              Book verified professionals for cleaning, repairs, maintenance, and home improvement across Malaysia.
-            </p>
+            <p className="text-lg text-white/70 max-w-md mb-10 leading-relaxed">{t('Book verified professionals for cleaning, repairs, maintenance, and home improvement across Malaysia.')}</p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.4 }} className="flex flex-col sm:flex-row gap-6">
@@ -226,8 +225,8 @@ export default function OTPLogin() {
                  <Shield className="h-6 w-6 text-brand" />
                </div>
                <div>
-                 <p className="text-sm font-semibold text-white">Verified pros</p>
-                 <p className="text-xs text-white/60 mt-0.5">Vetted experts only</p>
+                 <p className="text-sm font-semibold text-white">{t('Verified pros')}</p>
+                 <p className="text-xs text-white/60 mt-0.5">{t('Vetted experts only')}</p>
                </div>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-md">
@@ -235,8 +234,8 @@ export default function OTPLogin() {
                  <CheckCircle2 className="h-6 w-6 text-brand" />
                </div>
                <div>
-                 <p className="text-sm font-semibold text-white">Quality work</p>
-                 <p className="text-xs text-white/60 mt-0.5">Satisfaction guaranteed</p>
+                 <p className="text-sm font-semibold text-white">{t('Quality work')}</p>
+                 <p className="text-xs text-white/60 mt-0.5">{t('Satisfaction guaranteed')}</p>
                </div>
             </div>
           </motion.div>
@@ -251,7 +250,7 @@ export default function OTPLogin() {
       <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-bg">
         <div className="lg:hidden absolute top-6 left-6 z-10">
           {/* Same lockup, compact. Colour mark here — this header sits on --bg. */}
-          <Link to="/" className="inline-flex items-center gap-2" aria-label="ServisAku home">
+          <Link to="/" className="inline-flex items-center gap-2" aria-label={t('ServisAku home')}>
             <img
               src="/img/brand/logo-mark.png"
               alt=""
@@ -270,8 +269,8 @@ export default function OTPLogin() {
               {step === STEP.ROLE && (
                 <div>
                   <div className="mb-10 text-center lg:text-left">
-                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">Welcome back</h2>
-                    <p className="text-ink-secondary">Choose how you want to use ServisAku</p>
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">{t('Welcome back')}</h2>
+                    <p className="text-ink-secondary">{t('Choose how you want to use ServisAku')}</p>
                   </div>
                   <div className="space-y-4 mb-8">
                     {APP_ROLES.map(r => (
@@ -279,8 +278,8 @@ export default function OTPLogin() {
                         className={`w-full flex items-center gap-5 p-5 rounded-2xl shadow-[inset_0_0_0_1px_rgb(var(--hairline))] transition-all ${role === r.id ? 'border-brand bg-brand-tint/20 shadow-sm' : 'border-hairline/20 bg-surface hover:border-hairline/60 hover:shadow-sm'}`}>
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${role === r.id ? 'bg-brand/10' : 'bg-raised'}`}><r.icon className="size-6" /></div>
                         <div className="flex-1 text-left">
-                          <p className={`font-semibold text-base ${role === r.id ? 'text-brand-ink' : 'text-ink'}`}>{r.label}</p>
-                          <p className="text-sm text-ink-secondary mt-0.5">{r.desc}</p>
+                          <p className={`font-semibold text-base ${role === r.id ? 'text-brand-ink' : 'text-ink'}`}>{t(r.label)}</p>
+                          <p className="text-sm text-ink-secondary mt-0.5">{t(r.desc)}</p>
                         </div>
                         <div className={`ml-auto shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${role === r.id ? 'bg-brand border-brand' : 'shadow-[inset_0_0_0_1px_rgb(var(--hairline))]'}`}>
                           {role === r.id && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
@@ -288,8 +287,7 @@ export default function OTPLogin() {
                       </button>
                     ))}
                   </div>
-                  <Button onClick={() => setStep(STEP.INPUT)} variant="primary" size="lg" className="w-full">
-                    Continue <ArrowRight className="h-5 w-5 ml-2" />
+                  <Button onClick={() => setStep(STEP.INPUT)} variant="primary" size="lg" className="w-full">{t('Continue')}<ArrowRight className="h-5 w-5 ml-2" />
                   </Button>
                 </div>
               )}
@@ -299,16 +297,15 @@ export default function OTPLogin() {
                 <div>
                   {SHOW_ROLE_STEP && (
                     <button onClick={() => setStep(STEP.ROLE)} className="flex items-center gap-1.5 text-sm font-medium text-ink-secondary mb-8 hover:text-ink transition-colors">
-                      <ArrowLeft className="h-4 w-4" /> Back to roles
-                    </button>
+                      <ArrowLeft className="h-4 w-4" />{t('Back to roles')}</button>
                   )}
 
                   <div className="mb-6">
                     <h2 className="text-3xl font-display font-semibold mb-2 text-ink">
-                      {isRegister ? 'Create an account' : 'Sign in to your account'}
+                      {isRegister ? t('Create an account') : t('Sign in to your account')}
                     </h2>
                     <p className="text-ink-secondary">
-                      {isRegister ? 'Join thousands of users on ServisAku' : 'Choose how you want to sign in'}
+                      {isRegister ? t('Join thousands of users on ServisAku') : t('Choose how you want to sign in')}
                     </p>
                   </div>
 
@@ -317,7 +314,7 @@ export default function OTPLogin() {
                     {methodTabs.map(m => (
                       <button key={m.id} onClick={() => { setMethod(m.id); setIsRegister(false); }}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${method === m.id ? 'bg-surface shadow-sm text-ink' : 'text-ink-secondary hover:text-ink'}`}>
-                        <m.icon className="h-3.5 w-3.5" /> {m.label}
+                        <m.icon className="h-3.5 w-3.5" /> {t(m.label)}
                       </button>
                     ))}
                   </div>
@@ -327,30 +324,30 @@ export default function OTPLogin() {
                     <div className="space-y-4">
                       {isRegister && (
                         <div className="space-y-1.5">
-                          <label className="text-sm font-medium text-ink pl-1">Full name</label>
+                          <label className="text-sm font-medium text-ink pl-1">{t('Full name')}</label>
                           <div className="relative">
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                            <input type="text" placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)}
+                            <input type="text" placeholder={t('John Doe')} value={fullName} onChange={e => setFullName(e.target.value)}
                               className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all" />
                           </div>
                         </div>
                       )}
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Email address</label>
+                        <label className="text-sm font-medium text-ink pl-1">{t('Email address')}</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input ref={emailRef} type="email" placeholder="you@example.com" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)}
+                          <input ref={emailRef} type="email" placeholder={t('you@example.com')} aria-label={t('Email address')} value={email} onChange={e => setEmail(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all" autoFocus />
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Password</label>
+                        <label className="text-sm font-medium text-ink pl-1">{t('Password')}</label>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input ref={passwordRef} type={showPassword ? 'text' : 'password'} placeholder="••••••••" aria-label="Password" value={password} onChange={e => setPassword(e.target.value)}
+                          <input ref={passwordRef} type={showPassword ? 'text' : 'password'} placeholder="••••••••" aria-label={t('Password')} value={password} onChange={e => setPassword(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-12 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                             onKeyDown={e => e.key === 'Enter' && handleEmailAuth()} />
-                          <button onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          <button onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t('Hide password') : t('Show password')}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-secondary hover:text-ink transition-colors">
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                           </button>
@@ -358,32 +355,30 @@ export default function OTPLogin() {
                       </div>
                       {!isRegister && (
                         <div className="text-right -mt-1">
-                          <button type="button" onClick={() => { setResetSent(null); setStep(STEP.FORGOT); }} className="text-sm font-semibold text-brand hover:underline">
-                            Forgot password?
-                          </button>
+                          <button type="button" onClick={() => { setResetSent(null); setStep(STEP.FORGOT); }} className="text-sm font-semibold text-brand hover:underline">{t('Forgot password?')}</button>
                         </div>
                       )}
                       <Button onClick={handleEmailAuth} disabled={loading}
                         variant="primary" size="lg" className="w-full mt-4">
-                        {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'} <ArrowRight className="h-5 w-5 ml-2" />
+                        {loading ? t('Please wait...') : isRegister ? t('Create Account') : t('Sign In')} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                       <div className="text-center pt-4">
                         <span className="text-sm text-ink-secondary">{isRegister ? "Already have an account?" : "Don't have an account?"}</span>
                         <button onClick={() => setIsRegister(!isRegister)} className="ml-2 text-sm font-semibold text-brand hover:underline">
-                          {isRegister ? 'Sign in' : 'Sign up'}
+                          {isRegister ? t('Sign in') : t('Sign up')}
                         </button>
                       </div>
                       {!isRegister && (
                         <div className="mt-8 bg-info-tint/50 border border-info/30 rounded-xl p-4 text-xs text-info">
-                          <div className="font-semibold mb-2 flex items-center gap-1.5"><Shield className="h-3.5 w-3.5"/>Demo credentials</div>
+                          <div className="font-semibold mb-2 flex items-center gap-1.5"><Shield className="h-3.5 w-3.5"/>{t('Demo credentials')}</div>
                           <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
                             {APP_TARGET === 'partner' ? (
                               <>
-                                <div>Partner: <span className="font-medium text-info">ali@servisaku.my</span><br/>Pass: partner123</div>
-                                <div>Admin: <span className="font-medium text-info">admin@servisaku.my</span><br/>Pass: admin123</div>
+                                <div>{t('Partner:')}<span className="font-medium text-info">ali@servisaku.my</span><br/>{t('Pass:')} partner123</div>
+                                <div>{t('Admin:')}<span className="font-medium text-info">admin@servisaku.my</span><br/>{t('Pass:')} admin123</div>
                               </>
                             ) : (
-                              <div className="col-span-2">User: <span className="font-medium text-info">user@servisaku.my</span> / user123</div>
+                              <div className="col-span-2">{t('User:')}<span className="font-medium text-info">user@servisaku.my</span> / user123</div>
                             )}
                           </div>
                         </div>
@@ -395,21 +390,21 @@ export default function OTPLogin() {
                   {method === METHOD.EMAIL_OTP && (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Email address</label>
+                        <label className="text-sm font-medium text-ink pl-1">{t('Email address')}</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input ref={emailRef} type="email" placeholder="you@example.com" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)}
+                          <input ref={emailRef} type="email" placeholder={t('you@example.com')} aria-label={t('Email address')} value={email} onChange={e => setEmail(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                             onKeyDown={e => e.key === 'Enter' && sendOtp('email')} autoFocus />
                         </div>
                       </div>
                       <div className="bg-brand-tint/30 rounded-xl p-4 text-sm text-brand-ink flex items-start gap-3">
                         <Shield className="h-5 w-5 text-brand shrink-0 mt-0.5" />
-                        <p>We'll email you a 6-digit one-time code to sign in. No password needed.</p>
+                        <p>{t("We'll email you a 6-digit one-time code to sign in. No password needed.")}</p>
                       </div>
                       <Button onClick={() => sendOtp('email')} disabled={loading}
                         variant="primary" size="lg" className="w-full">
-                        {loading ? 'Sending...' : 'Email me a code'} <ArrowRight className="h-5 w-5 ml-2" />
+                        {loading ? t('Sending...') : t('Email me a code')} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
                   )}
@@ -418,7 +413,7 @@ export default function OTPLogin() {
                   {method === METHOD.PHONE_OTP && (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Mobile Number</label>
+                        <label className="text-sm font-medium text-ink pl-1">{t('Mobile Number')}</label>
                         <div className="flex gap-2">
                           <select value={dialCode} onChange={e => setDialCode(e.target.value)}
                             className="shrink-0 bg-raised rounded-xl px-3 py-3.5 text-sm font-medium outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink">
@@ -431,11 +426,11 @@ export default function OTPLogin() {
                       </div>
                       <div className="bg-brand-tint/30 rounded-xl p-4 text-sm text-brand-ink flex items-start gap-3">
                         <Shield className="h-5 w-5 text-brand shrink-0 mt-0.5" />
-                        <p>We'll text you a 6-digit one-time code via SMS to verify it's you.</p>
+                        <p>{t("We'll text you a 6-digit one-time code via SMS to verify it's you.")}</p>
                       </div>
                       <Button onClick={() => sendOtp('phone')} disabled={loading}
                         variant="primary" size="lg" className="w-full">
-                        {loading ? 'Sending...' : 'Text me a code'} <ArrowRight className="h-5 w-5 ml-2" />
+                        {loading ? t('Sending...') : t('Text me a code')} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
                   )}
@@ -446,15 +441,13 @@ export default function OTPLogin() {
               {step === STEP.OTP && (
                 <div>
                   <button onClick={() => { setStep(STEP.INPUT); setOtpUserId(null); setOtpCode(''); setDevCode(null); }} className="flex items-center gap-1.5 text-sm font-medium text-ink-secondary mb-8 hover:text-ink transition-colors">
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
+                    <ArrowLeft className="h-4 w-4" />{t('Back')}</button>
                   <div className="mb-8">
-                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">Enter verification code</h2>
-                    <p className="text-ink-secondary">We've sent a 6-digit code to <span className="font-semibold text-ink">{otpTarget}</span></p>
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">{t('Enter verification code')}</h2>
+                    <p className="text-ink-secondary">{t("We've sent a 6-digit code to")}<span className="font-semibold text-ink">{otpTarget}</span></p>
                   </div>
                   {devCode && (
-                    <div className="mb-6 rounded-xl border border-info/30 bg-info-tint/60 p-3 text-center text-xs text-info">
-                      Dev mode (no SMS provider): your code is <span className="font-mono text-base font-semibold tracking-widest text-info">{devCode}</span>
+                    <div className="mb-6 rounded-xl border border-info/30 bg-info-tint/60 p-3 text-center text-xs text-info">{t('Dev mode (no SMS provider): your code is')}<span className="font-mono text-base font-semibold tracking-widest text-info">{devCode}</span>
                     </div>
                   )}
                   <div className="relative mb-6">
@@ -466,11 +459,11 @@ export default function OTPLogin() {
                   </div>
                   <div className="text-center mb-8">
                     {countdown > 0
-                      ? <p className="text-sm text-ink-secondary">Resend code in <span className="font-medium text-ink">{countdown}s</span></p>
-                      : <button onClick={() => sendOtp(otpChannel)} disabled={loading} className="text-sm font-semibold text-brand hover:underline disabled:opacity-50">Resend code</button>}
+                      ? <p className="text-sm text-ink-secondary">{t('Resend code in')}<span className="font-medium text-ink">{countdown}s</span></p>
+                      : <button onClick={() => sendOtp(otpChannel)} disabled={loading} className="text-sm font-semibold text-brand hover:underline disabled:opacity-50">{t('Resend code')}</button>}
                   </div>
                   <Button onClick={verifyOtpCode} disabled={otpCode.length < 6 || loading} variant="primary" size="lg" className="w-full">
-                    {loading ? 'Verifying...' : 'Verify & Continue'} <ArrowRight className="h-5 w-5 ml-2" />
+                    {loading ? t('Verifying...') : t('Verify & Continue')} <ArrowRight className="h-5 w-5 ml-2" />
                   </Button>
                 </div>
               )}
@@ -479,39 +472,38 @@ export default function OTPLogin() {
               {step === STEP.FORGOT && (
                 <div>
                   <button onClick={() => { setStep(STEP.INPUT); setResetSent(null); }} className="flex items-center gap-1.5 text-sm font-medium text-ink-secondary mb-8 hover:text-ink transition-colors">
-                    <ArrowLeft className="h-4 w-4" /> Back to sign in
-                  </button>
+                    <ArrowLeft className="h-4 w-4" />{t('Back to sign in')}</button>
                   <div className="mb-8">
-                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">Reset your password</h2>
-                    <p className="text-ink-secondary">Enter your email and we'll send you a link to set a new password.</p>
+                    <h2 className="text-3xl font-display font-semibold mb-2 text-ink">{t('Reset your password')}</h2>
+                    <p className="text-ink-secondary">{t("Enter your email and we'll send you a link to set a new password.")}</p>
                   </div>
                   {resetSent ? (
                     <div className="space-y-4">
                       <div className="bg-success-tint border border-success/30 rounded-xl p-4 text-sm text-success flex items-start gap-3">
                         <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                        <p>If an account exists for <span className="font-semibold">{email}</span>, a reset link has been sent. The link expires in 30 minutes.</p>
+                        <p>{t('If an account exists for')}<span className="font-semibold">{email}</span>{t(', a reset link has been sent. The link expires in 30 minutes.')}</p>
                       </div>
                       {resetSent.devLink && (
                         <div className="bg-info-tint/60 border border-info/30 rounded-xl p-4 text-xs text-info break-all">
-                          <div className="font-semibold mb-1">Dev mode (SMTP not configured) — open this link:</div>
+                          <div className="font-semibold mb-1">{t('Dev mode (SMTP not configured) — open this link:')}</div>
                           <a href={resetSent.devLink} className="underline font-medium">{resetSent.devLink}</a>
                         </div>
                       )}
-                      <Button onClick={() => setStep(STEP.INPUT)} variant="primary" size="lg" className="w-full">Back to sign in</Button>
+                      <Button onClick={() => setStep(STEP.INPUT)} variant="primary" size="lg" className="w-full">{t('Back to sign in')}</Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-ink pl-1">Email address</label>
+                        <label className="text-sm font-medium text-ink pl-1">{t('Email address')}</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-tertiary" />
-                          <input type="email" placeholder="you@example.com" aria-label="Email address" value={email} onChange={e => setEmail(e.target.value)}
+                          <input type="email" placeholder={t('you@example.com')} aria-label={t('Email address')} value={email} onChange={e => setEmail(e.target.value)}
                             className="w-full bg-raised rounded-xl pl-12 pr-4 py-3.5 text-sm outline-none focus:ring-2 ring-brand/30 border border-transparent focus:border-brand/30 text-ink transition-all"
                             onKeyDown={e => e.key === 'Enter' && handleForgotPassword()} autoFocus />
                         </div>
                       </div>
                       <Button onClick={handleForgotPassword} disabled={loading || !email} variant="primary" size="lg" className="w-full">
-                        {loading ? 'Sending...' : 'Send reset link'} <ArrowRight className="h-5 w-5 ml-2" />
+                        {loading ? t('Sending...') : t('Send reset link')} <ArrowRight className="h-5 w-5 ml-2" />
                       </Button>
                     </div>
                   )}
@@ -525,8 +517,8 @@ export default function OTPLogin() {
                     className="w-24 h-24 bg-success-tint rounded-full flex items-center justify-center mb-6">
                     <CheckCircle2 className="h-12 w-12 text-success" />
                   </motion.div>
-                  <h2 className="text-2xl font-display font-semibold text-ink">Successfully Verified!</h2>
-                  <p className="text-ink-secondary mt-2">Redirecting to your dashboard...</p>
+                  <h2 className="text-2xl font-display font-semibold text-ink">{t('Successfully Verified!')}</h2>
+                  <p className="text-ink-secondary mt-2">{t('Redirecting to your dashboard...')}</p>
                 </div>
               )}
 

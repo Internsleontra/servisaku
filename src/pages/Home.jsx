@@ -167,7 +167,7 @@ export default function Home() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="sa-caps block text-ink-tertiary">
-                      {s.category_name || 'Service'}
+                      {s.category_name || t('Service')}
                     </span>
                     <span className="mt-0.5 block truncate font-display font-semibold text-ink">
                       {s.name}

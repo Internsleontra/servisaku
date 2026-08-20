@@ -21,7 +21,7 @@ export default function PaymentMethods() {
   const navigate = useNavigate();
   const [methods, setMethods] = useState(null);
 
-  useEffect(() => { const t = setTimeout(() => setMethods(MOCK), 400); return () => clearTimeout(t); }, []);
+  useEffect(() => { const timer = setTimeout(() => setMethods(MOCK), 400); return () => clearTimeout(timer); }, []);
 
   const setDefault = (id) => { setMethods(ms => ms.map(m => ({ ...m, isDefault: m.id === id }))); toast.success(t('Default payment updated')); };
   const remove = (id) => { setMethods(ms => ms.filter(m => m.id !== id)); toast.success(t('Removed')); };

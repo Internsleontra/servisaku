@@ -257,7 +257,7 @@ export default function ServiceBooking() {
             <PriceSummary
               lines={priceLines}
               total={money(quote.total)}
-              note="Held in escrow until you confirm the job is done"
+              note={t('Held in escrow until you confirm the job is done')}
             />
           ) : (
             <p className="text-caption font-normal text-ink-tertiary">
