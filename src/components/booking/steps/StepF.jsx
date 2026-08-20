@@ -2,9 +2,12 @@ import { cn, formatMYR } from '@/lib/utils';
 import { PAYMENT_METHODS } from '@/lib/bookingEngine';
 import { Field } from '../fields';
 import { paymentIconFor } from '@/lib/paymentIcons';
+import { useTranslation } from '@/lib/useTranslation';
 
 // Step F — Review & Pay. Itemised breakdown from the authoritative quote + payment.
 export default function StepF({ service, quote, quoteError, payment, setPayment }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-hairline bg-surface p-4">
@@ -25,21 +28,21 @@ export default function StepF({ service, quote, quoteError, payment, setPayment 
               </div>
             ))}
             <div className="mt-2 flex items-center justify-between border-t border-hairline pt-3">
-              <span className="font-semibold text-ink">Total</span>
+              <span className="font-semibold text-ink">{t('Total')}</span>
               <span className="text-lg font-semibold tabular-nums text-brand">
                 {formatMYR(quote.total, { decimals: !Number.isInteger(quote.total) })}
               </span>
             </div>
             {service.pricing_type === 'DIAGNOSTIC' && (
               <p className="mt-1 text-xs text-ink-secondary">
-                This is the call-out fee. The technician will quote repairs on site for your approval before any work.
-              </p>
+                  {t('This is the call-out fee. The technician will quote repairs on site for your approval before any work.')}
+                </p>
             )}
           </div>
         )}
       </div>
 
-      <Field label="Payment method" required>
+      <Field label={t('Payment method')} required>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {PAYMENT_METHODS.map((m) => {
             const on = payment.method === m.id;
@@ -56,8 +59,8 @@ export default function StepF({ service, quote, quoteError, payment, setPayment 
               >
                 {(() => { const I = paymentIconFor(m.id); return <I className="size-5 shrink-0 text-ink-secondary" />; })()}
                 <span>
-                  <span className="block text-sm font-medium text-ink">{m.label}</span>
-                  <span className="block text-xs text-ink-secondary">{m.sub}</span>
+                  <span className="block text-sm font-medium text-ink">{t(m.label)}</span>
+                  <span className="block text-xs text-ink-secondary">{t(m.sub)}</span>
                 </span>
               </button>
             );

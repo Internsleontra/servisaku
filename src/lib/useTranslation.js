@@ -400,6 +400,140 @@ const DICTIONARY = {
     'Earnings': 'Earnings',
     'Users': 'Users',
     'View': 'View',
+
+    // Catalog
+    'The catalogue isn’t available yet.': 'The catalogue isn’t available yet.',
+    'Seed the booking engine (': 'Seed the booking engine (',
+    ') to populate it.': ') to populate it.',
+    'Every service has a fixed price, a duration and a warranty before you book.': 'Every service has a fixed price, a duration and a warranty before you book.',
+    'Category not found.': 'Category not found.',
+    'All categories': 'All categories',
+    'No services in this category yet.': 'No services in this category yet.',
+    '30-day warranty': '30-day warranty',
+    'services': 'services',
+    'hrs': 'hrs',
+
+    // Pricing labels
+    'Fixed price': 'Fixed price',
+    'Per unit': 'Per unit',
+    'Per item': 'Per item',
+    'Per sqft': 'Per sqft',
+    'Per hour': 'Per hour',
+    'Call-out': 'Call-out',
+
+    // Booking wizard shell
+    'Options': 'Options',
+    'Address': 'Address',
+    'Details': 'Details',
+    'Review': 'Review',
+    'Service not found.': 'Service not found.',
+    'This service isn’t available in the dynamic booking flow yet.': 'This service isn’t available in the dynamic booking flow yet.',
+    'Escrow protected': 'Escrow protected',
+    'Confirm booking': 'Confirm booking',
+    'Free cancellation up to 4 h before': 'Free cancellation up to 4 h before',
+    'Complete the required options to see a price.': 'Complete the required options to see a price.',
+    '(required)': '(required)',
+
+    // Booking wizard toasts
+    'Booking confirmed!': 'Booking confirmed!',
+    'Could not start payment — you can pay from your booking.': 'Could not start payment — you can pay from your booking.',
+    'Please log in to confirm your booking': 'Please log in to confirm your booking',
+    'Could not create booking': 'Could not create booking',
+    'Upload failed': 'Upload failed',
+    'Maximum': 'Maximum',
+    'photos': 'photos',
+
+    // Step A and B — options and property
+    'This service has no extra options — continue to schedule.': 'This service has no extra options — continue to schedule.',
+    'Property type': 'Property type',
+    'Building type': 'Building type',
+    'Floor number': 'Floor number',
+    'Ground floor = 0': 'Ground floor = 0',
+    'Lift available?': 'Lift available?',
+    'Parking available?': 'Parking available?',
+    'Residential': 'Residential',
+    'Commercial': 'Commercial',
+    'Apartment': 'Apartment',
+    'Condo': 'Condo',
+    'Landed House': 'Landed House',
+
+    // Step C — schedule
+    'Date & time': 'Date & time',
+    'Same-day booking — an urgent surcharge applies.': 'Same-day booking — an urgent surcharge applies.',
+    'After-hours slot — an after-hours surcharge applies.': 'After-hours slot — an after-hours surcharge applies.',
+
+    // Step D — address
+    'Address line': 'Address line',
+    'Street, building, area': 'Street, building, area',
+    'Unit number': 'Unit number',
+    'e.g. A-12-3': 'e.g. A-12-3',
+    'Contact person': 'Contact person',
+    'Contact phone': 'Contact phone',
+
+    // Step E — notes and photos
+    'Notes for the technician': 'Notes for the technician',
+    'Describe the issue, gate code, pets, etc.': 'Describe the issue, gate code, pets, etc.',
+    'Optional — helps the technician prepare': 'Optional — helps the technician prepare',
+
+    // Step F — review and pay
+    'Payment method': 'Payment method',
+    'This is the call-out fee. The technician will quote repairs on site for your approval before any work.': 'This is the call-out fee. The technician will quote repairs on site for your approval before any work.',
+    'FPX Online Banking': 'FPX Online Banking',
+    'Instant payment': 'Instant payment',
+    'Pay with Grab credits': 'Pay with Grab credits',
+    'Cashback rewards': 'Cashback rewards',
+    'Credit / Debit Card': 'Credit / Debit Card',
+    'Cash on Service': 'Cash on Service',
+    'Pay at completion': 'Pay at completion',
+
+    // Booking history
+    'My bookings': 'My bookings',
+    'booking': 'booking',
+    'bookings': 'bookings',
+    'Loading bookings': 'Loading bookings',
+    'Ongoing': 'Ongoing',
+    'No upcoming bookings': 'No upcoming bookings',
+    'No ongoing bookings': 'No ongoing bookings',
+    'No completed bookings': 'No completed bookings',
+    'No cancelled bookings': 'No cancelled bookings',
+    'Book a service to get started.': 'Book a service to get started.',
+    'Your completed bookings will appear here.': 'Your completed bookings will appear here.',
+    'Your cancelled bookings will appear here.': 'Your cancelled bookings will appear here.',
+
+    // Booking detail
+    '{name} Package': '{name} Package',
+    '− {amount} saved': '− {amount} saved',
+    'Pending assignment': 'Pending assignment',
+    'Partner is on the way': 'Partner is on the way',
+    'Partner has arrived!': 'Partner has arrived!',
+    'Estimated arrival: ~15 minutes': 'Estimated arrival: ~15 minutes',
+    'Starting service shortly': 'Starting service shortly',
+    'Extra services': 'Extra services',
+    'Your partner proposed extra work — approve to add it to your bill.': 'Your partner proposed extra work — approve to add it to your bill.',
+    'Your pro': 'Your pro',
+    'Call partner': 'Call partner',
+    'Message partner': 'Message partner',
+    'Rate your experience': 'Rate your experience',
+    'Takes only 30 seconds': 'Takes only 30 seconds',
+    'Your review': 'Your review',
+    'Invoice': 'Invoice',
+    'Rebook': 'Rebook',
+    'Cancel Booking': 'Cancel Booking',
+    'Flag job': 'Flag job',
+    'Report damage': 'Report damage',
+    'Get help with this booking': 'Get help with this booking',
+
+    // Booking detail toasts
+    'Extra approved — added to your bill': 'Extra approved — added to your bill',
+    'Extra declined': 'Extra declined',
+    'Could not update': 'Could not update',
+    'Please select a rating': 'Please select a rating',
+    'Review submitted!': 'Review submitted!',
+    'Invoice PDF coming soon': 'Invoice PDF coming soon',
+
+    // Address fields
+    'City': 'City',
+    'Name': 'Name',
   },
   ms: {
     // Navigation
@@ -800,23 +934,179 @@ const DICTIONARY = {
     'Earnings': 'Pendapatan',
     'Users': 'Pengguna',
     'View': 'Lihat',
+
+    // Catalog
+    'The catalogue isn’t available yet.': 'Katalog belum tersedia lagi.',
+    'Seed the booking engine (': 'Jalankan seed enjin tempahan (',
+    ') to populate it.': ') untuk mengisinya.',
+    'Every service has a fixed price, a duration and a warranty before you book.': 'Setiap perkhidmatan mempunyai harga tetap, tempoh masa dan jaminan sebelum anda menempah.',
+    'Category not found.': 'Kategori tidak dijumpai.',
+    'All categories': 'Semua Kategori',
+    'No services in this category yet.': 'Tiada perkhidmatan dalam kategori ini lagi.',
+    '30-day warranty': 'Jaminan 30 hari',
+    'services': 'perkhidmatan',
+    'hrs': 'jam',
+
+    // Pricing labels
+    'Fixed price': 'Harga tetap',
+    'Per unit': 'Setiap unit',
+    'Per item': 'Setiap item',
+    'Per sqft': 'Setiap kaki persegi',
+    'Per hour': 'Sejam',
+    'Call-out': 'Panggilan keluar',
+
+    // Booking wizard shell
+    'Options': 'Pilihan',
+    'Address': 'Alamat',
+    'Details': 'Butiran',
+    'Review': 'Semakan',
+    'Service not found.': 'Perkhidmatan tidak dijumpai.',
+    'This service isn’t available in the dynamic booking flow yet.': 'Perkhidmatan ini belum tersedia dalam aliran tempahan dinamik.',
+    'Escrow protected': 'Dilindungi escrow',
+    'Confirm booking': 'Sahkan Tempahan',
+    'Free cancellation up to 4 h before': 'Pembatalan percuma sehingga 4 jam sebelum',
+    'Complete the required options to see a price.': 'Lengkapkan pilihan yang diperlukan untuk melihat harga.',
+    '(required)': '(wajib)',
+
+    // Booking wizard toasts
+    'Booking confirmed!': 'Tempahan disahkan!',
+    'Could not start payment — you can pay from your booking.': 'Pembayaran tidak dapat dimulakan — anda boleh membayar melalui tempahan anda.',
+    'Please log in to confirm your booking': 'Sila log masuk untuk mengesahkan tempahan anda',
+    'Could not create booking': 'Tempahan tidak dapat dibuat',
+    'Upload failed': 'Muat naik gagal',
+    'Maximum': 'Maksimum',
+    'photos': 'gambar',
+
+    // Step A and B — options and property
+    'This service has no extra options — continue to schedule.': 'Perkhidmatan ini tiada pilihan tambahan — teruskan ke penjadualan.',
+    'Property type': 'Jenis hartanah',
+    'Building type': 'Jenis bangunan',
+    'Floor number': 'Nombor tingkat',
+    'Ground floor = 0': 'Tingkat bawah = 0',
+    'Lift available?': 'Ada lif?',
+    'Parking available?': 'Ada tempat letak kereta?',
+    'Residential': 'Kediaman',
+    'Commercial': 'Komersial',
+    'Apartment': 'Apartmen',
+    'Condo': 'Kondominium',
+    'Landed House': 'Rumah Landed',
+
+    // Step C — schedule
+    'Date & time': 'Tarikh & masa',
+    'Same-day booking — an urgent surcharge applies.': 'Tempahan hari sama — caj tambahan segera dikenakan.',
+    'After-hours slot — an after-hours surcharge applies.': 'Slot luar waktu — caj tambahan luar waktu dikenakan.',
+
+    // Step D — address
+    'Address line': 'Alamat',
+    'Street, building, area': 'Jalan, bangunan, kawasan',
+    'Unit number': 'Nombor unit',
+    'e.g. A-12-3': 'cth. A-12-3',
+    'Contact person': 'Orang untuk dihubungi',
+    'Contact phone': 'Nombor telefon',
+
+    // Step E — notes and photos
+    'Notes for the technician': 'Nota untuk juruteknik',
+    'Describe the issue, gate code, pets, etc.': 'Terangkan masalah, kod pagar, haiwan peliharaan, dsb.',
+    'Optional — helps the technician prepare': 'Pilihan — membantu juruteknik bersedia',
+
+    // Step F — review and pay
+    'Payment method': 'Kaedah pembayaran',
+    'This is the call-out fee. The technician will quote repairs on site for your approval before any work.': 'Ini ialah bayaran panggilan keluar. Juruteknik akan memberi sebut harga pembaikan di lokasi untuk kelulusan anda sebelum sebarang kerja dimulakan.',
+    'FPX Online Banking': 'Perbankan Dalam Talian FPX',
+    'Instant payment': 'Pembayaran serta-merta',
+    'Pay with Grab credits': 'Bayar dengan kredit Grab',
+    'Cashback rewards': 'Ganjaran pulangan tunai',
+    'Credit / Debit Card': 'Kad Kredit / Debit',
+    'Cash on Service': 'Bayar Tunai Selepas Perkhidmatan',
+    'Pay at completion': 'Bayar setelah selesai',
+
+    // Booking history
+    'My bookings': 'Tempahan Saya',
+    'booking': 'tempahan',
+    'bookings': 'tempahan',
+    'Loading bookings': 'Memuatkan tempahan',
+    'Ongoing': 'Sedang Berjalan',
+    'No upcoming bookings': 'Tiada tempahan akan datang',
+    'No ongoing bookings': 'Tiada tempahan sedang berjalan',
+    'No completed bookings': 'Tiada tempahan selesai',
+    'No cancelled bookings': 'Tiada tempahan dibatalkan',
+    'Book a service to get started.': 'Tempah perkhidmatan untuk bermula.',
+    'Your completed bookings will appear here.': 'Tempahan anda yang telah selesai akan dipaparkan di sini.',
+    'Your cancelled bookings will appear here.': 'Tempahan anda yang dibatalkan akan dipaparkan di sini.',
+
+    // Booking detail
+    '{name} Package': 'Pakej {name}',
+    '− {amount} saved': '− {amount} dijimatkan',
+    'Pending assignment': 'Menunggu penugasan',
+    'Partner is on the way': 'Rakan kongsi dalam perjalanan',
+    'Partner has arrived!': 'Rakan kongsi telah tiba!',
+    'Estimated arrival: ~15 minutes': 'Anggaran tiba: ~15 minit',
+    'Starting service shortly': 'Perkhidmatan akan bermula sebentar lagi',
+    'Extra services': 'Perkhidmatan tambahan',
+    'Your partner proposed extra work — approve to add it to your bill.': 'Rakan kongsi anda mencadangkan kerja tambahan — luluskan untuk menambahkannya ke bil anda.',
+    'Your pro': 'Profesional anda',
+    'Call partner': 'Hubungi rakan kongsi',
+    'Message partner': 'Hantar mesej kepada rakan kongsi',
+    'Rate your experience': 'Nilai pengalaman anda',
+    'Takes only 30 seconds': 'Hanya 30 saat',
+    'Your review': 'Ulasan anda',
+    'Invoice': 'Invois',
+    'Rebook': 'Tempah Semula',
+    'Cancel Booking': 'Batalkan Tempahan',
+    'Flag job': 'Laporkan Kerja',
+    'Report damage': 'Laporkan Kerosakan',
+    'Get help with this booking': 'Dapatkan bantuan untuk tempahan ini',
+
+    // Booking detail toasts
+    'Extra approved — added to your bill': 'Tambahan diluluskan — ditambah ke bil anda',
+    'Extra declined': 'Tambahan ditolak',
+    'Could not update': 'Tidak dapat dikemas kini',
+    'Please select a rating': 'Sila pilih penarafan',
+    'Review submitted!': 'Ulasan dihantar!',
+    'Invoice PDF coming soon': 'PDF invois akan datang',
+
+    // Address fields
+    'City': 'Bandar',
+    'Name': 'Nama',
   }
 };
+
+/** BCP-47 tag per language — used for dates, weekdays and number formatting. */
+const LOCALE = { ms: 'ms-MY', en: 'en-MY' };
 
 export function useTranslation() {
   const { lang } = useLanguage();
 
-  const t = (key) => {
-    return DICTIONARY[lang]?.[key] || DICTIONARY['en']?.[key] || key;
+  /**
+   * Translate `key`, optionally filling `{name}` placeholders from `vars`.
+   *
+   * Placeholders rather than string concatenation, because Malay word order
+   * frequently differs from English: "Deep Clean Package" becomes "Pakej Deep
+   * Clean", so the pieces cannot be glued together in a fixed order at the call
+   * site. Each language positions the placeholder itself.
+   */
+  const t = (key, vars) => {
+    const value = DICTIONARY[lang]?.[key] || DICTIONARY['en']?.[key] || key;
+    if (!vars) return value;
+    return value.replace(/\{(\w+)\}/g, (match, name) => (
+      Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match
+    ));
   };
 
   const tField = (obj, field) => {
     if (!obj) return '';
-    if (lang === 'ms' && obj[`${field}My`]) {
-      return obj[`${field}My`];
+    if (lang === 'ms') {
+      // The API serialises in snake_case (`name_my`) while Prisma models use
+      // camelCase (`nameMy`); accept either so the same call site works for
+      // both a raw record and an API payload.
+      const my = obj[`${field}My`] || obj[`${field}_my`];
+      // Seeded rows currently copy the English text into the *_my column, so a
+      // value identical to the English one is not a translation — fall through
+      // rather than pretending it is.
+      if (my && my !== obj[field]) return my;
     }
     return obj[field] || '';
   };
 
-  return { t, tField, lang };
+  return { t, tField, lang, locale: LOCALE[lang] || LOCALE.en };
 }

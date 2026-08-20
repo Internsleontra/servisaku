@@ -6,6 +6,7 @@ import { formatMYR } from '@/lib/utils';
 import { serviceImageFor } from '@/lib/serviceImages';
 import { iconFor } from '@/lib/categoryIcons';
 import { ServiceCard } from '@/components/ds';
+import { useTranslation } from '@/lib/useTranslation';
 
 /* Pricing model → the label shown next to the figure. */
 const PRICING_LABEL = {
@@ -16,6 +17,7 @@ const PRICING_LABEL = {
 export default function CatalogCategory() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data, isLoading } = useQuery({
     queryKey: ['catalog-category', slug],
@@ -32,7 +34,7 @@ export default function CatalogCategory() {
   if (!data?.category) {
     return (
       <div className="mx-auto max-w-[1240px] px-5 py-16 text-center text-ink-secondary md:px-8">
-        Category not found.
+        {t('Category not found.')}
       </div>
     );
   }
@@ -51,7 +53,7 @@ export default function CatalogCategory() {
             onClick={() => navigate('/catalog')}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> All categories
+            <ArrowLeft className="size-[15px]" /> {t('All categories')}
           </button>
 
           <div className="flex items-start gap-4">
@@ -62,13 +64,13 @@ export default function CatalogCategory() {
               <h1 className="text-display-2 text-white">{category.name}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
                 <span className="sa-num inline-flex items-center gap-1.5">
-                  {services.length} services
+                  {services.length} {t('services')}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="size-4" /> 30-day warranty
+                  <ShieldCheck className="size-4" /> {t('30-day warranty')}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="size-4" /> Same-day slots
+                  <Clock className="size-4" /> {t('Same-day slots')}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="size-4" /> Kuala Lumpur
@@ -90,10 +92,10 @@ export default function CatalogCategory() {
               icon={Icon}
               image={serviceImageFor(s.slug)}
               price={s.price_from > 0 ? formatMYR(s.price_from) : '—'}
-              unit={PRICING_LABEL[s.pricing_type] || undefined}
+              unit={PRICING_LABEL[s.pricing_type] ? t(PRICING_LABEL[s.pricing_type]) : undefined}
               rating={4.9}
               ratingCount={s.rating_count ?? undefined}
-              duration={s.duration_min ? `${Math.round(s.duration_min / 60 * 10) / 10} hrs` : undefined}
+              duration={s.duration_min ? `${Math.round(s.duration_min / 60 * 10) / 10} ${t('hrs')}` : undefined}
               onOpen={() => navigate(`/book-service/${s.slug}`)}
             />
           ))}
@@ -101,7 +103,7 @@ export default function CatalogCategory() {
 
         {services.length === 0 && (
           <p className="py-16 text-center text-ink-secondary">
-            No services in this category yet.
+            {t('No services in this category yet.')}
           </p>
         )}
       </div>

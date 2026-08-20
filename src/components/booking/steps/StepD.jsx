@@ -1,9 +1,11 @@
 import { Field, TextField } from '../fields';
+import { useTranslation } from '@/lib/useTranslation';
 import { MapPin } from 'lucide-react';
 
 // Step D — Address & Contact. Saved-address shortcut + manual entry. A real
 // map picker (react-leaflet) can replace the pin button later.
 export default function StepD({ address, setAddress, savedCity }) {
+  const { t } = useTranslation();
   const set = (k) => (v) => setAddress((a) => ({ ...a, [k]: v }));
 
   return (
@@ -18,24 +20,24 @@ export default function StepD({ address, setAddress, savedCity }) {
         </button>
       )}
 
-      <Field label="Address line" required>
-        <TextField value={address.addressLine} onChange={set('addressLine')} placeholder="Street, building, area" />
+      <Field label={t('Address line')} required>
+        <TextField value={address.addressLine} onChange={set('addressLine')} placeholder={t('Street, building, area')} />
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Unit number">
-          <TextField value={address.unitNumber} onChange={set('unitNumber')} placeholder="e.g. A-12-3" />
+        <Field label={t('Unit number')}>
+          <TextField value={address.unitNumber} onChange={set('unitNumber')} placeholder={t('e.g. A-12-3')} />
         </Field>
-        <Field label="City">
-          <TextField value={address.city} onChange={set('city')} placeholder="City" />
+        <Field label={t('City')}>
+          <TextField value={address.city} onChange={set('city')} placeholder={t('City')} />
         </Field>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Contact person" required>
-          <TextField value={address.contactPerson} onChange={set('contactPerson')} placeholder="Name" />
+        <Field label={t('Contact person')} required>
+          <TextField value={address.contactPerson} onChange={set('contactPerson')} placeholder={t('Name')} />
         </Field>
-        <Field label="Contact phone" required>
+        <Field label={t('Contact phone')} required>
           <TextField value={address.contactPhone} onChange={set('contactPhone')} type="tel" placeholder="01x-xxxxxxx" />
         </Field>
       </div>

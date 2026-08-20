@@ -6,6 +6,7 @@ import { WebSection } from '@/components/site/WebSection';
 import { CategoryTile, Chip } from '@/components/ds';
 import { CATEGORY_ICON } from '@/lib/categoryIcons';
 import { avatarFor } from '@/lib/categoryAvatars';
+import { useTranslation } from '@/lib/useTranslation';
 
 /* The Instant Help lane offers TWO services. The design system's landing band
    shows six, which is aspirational — the seeded catalogue
@@ -23,6 +24,7 @@ const INSTANT_SERVICES = ['Instant Hourly Handyman', 'Emergency Diagnostic / Cal
  */
 export default function Catalog() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data: categories, isLoading } = useQuery({
     queryKey: ['catalog-categories'],
     queryFn: () => servisaku.catalog.getCategories(),
@@ -41,10 +43,9 @@ export default function Catalog() {
 
   if (!bookable.length) {
     return (
-      <WebSection title="The catalogue isn’t available yet.">
+      <WebSection title={t('The catalogue isn’t available yet.')}>
         <p className="text-lead text-ink-secondary">
-          Seed the booking engine (<code className="sa-num">npm run db:seed:booking-engine</code>)
-          to populate it.
+          {t('Seed the booking engine (')}<code className="sa-num">npm run db:seed:booking-engine</code>{t(') to populate it.')}
         </p>
       </WebSection>
     );
@@ -54,9 +55,9 @@ export default function Catalog() {
     <>
       <WebSection
         titleAs="h1"
-        eyebrow="The catalogue"
-        title="Eleven categories, seventy-one services."
-        body="Every service has a fixed price, a duration and a warranty before you book."
+        eyebrow={t('The catalogue')}
+        title={t('Eleven categories, seventy-one services.')}
+        body={t('Every service has a fixed price, a duration and a warranty before you book.')}
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {bookable.map((c) => (
@@ -77,17 +78,18 @@ export default function Catalog() {
         <WebSection tone="card">
           <div className="grid items-center gap-6 lg:grid-cols-2">
             <div>
-              <div className="sa-caps mb-2.5 text-warning">Instant Help</div>
+              <div className="sa-caps mb-2.5 text-warning">{t('Instant Help')}</div>
               <h2 className="text-display-3 text-ink">
-                Burst pipe at 11pm?<br />Dispatched in minutes.
+                {t('Burst pipe at 11pm? Dispatched in minutes.').split('|').map((part, i, all) => (
+                  <span key={part}>{part}{i < all.length - 1 && <br />}</span>
+                ))}
               </h2>
               <p className="mt-3.5 max-w-[460px] text-lead text-ink-secondary">
-                Two emergency services run on a separate on-demand queue with live ETAs —
-                no slot picking, no waiting for a callback.
+                {t('Two emergency services run on a separate on-demand queue with live ETAs — no slot picking, no waiting for a callback.')}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {INSTANT_SERVICES.map((t) => (
-                  <Chip key={t} icon={Zap}>{t}</Chip>
+                {INSTANT_SERVICES.map((svc) => (
+                  <Chip key={svc} icon={Zap}>{t(svc)}</Chip>
                 ))}
               </div>
             </div>
@@ -100,9 +102,9 @@ export default function Catalog() {
                 <Zap className="size-6" />
               </span>
               <span className="flex-1">
-                <span className="block font-display text-h4 font-semibold">Instant Help</span>
+                <span className="block font-display text-h4 font-semibold">{t('Instant Help')}</span>
                 <span className="block text-caption font-normal text-white/85">
-                  Emergency pros, dispatched in minutes
+                  {t('Emergency pros, dispatched in minutes')}
                 </span>
               </span>
               <ArrowRight className="size-5 shrink-0" />

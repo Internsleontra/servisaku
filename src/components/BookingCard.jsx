@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { variants } from '@/lib/design/motion';
 import { CalendarDays, Clock, MapPin, ChevronRight } from 'lucide-react';
 import StatusBadge from './StatusBadge';
-import moment from 'moment';
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function BookingCard({ booking }) {
+  const { locale } = useTranslation();
   const Icon = CalendarDays;
 
   return (
@@ -22,7 +23,7 @@ export default function BookingCard({ booking }) {
         </div>
         <div className="flex items-center gap-3 text-[11px] text-ink-secondary">
           <span className="flex items-center gap-1">
-            <CalendarDays className="h-3 w-3" />{moment(booking.date).format('D MMM')}
+            <CalendarDays className="h-3 w-3" />{new Date(booking.date).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
           </span>
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />{booking.time_slot}

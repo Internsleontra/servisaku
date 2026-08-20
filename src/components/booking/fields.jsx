@@ -1,5 +1,6 @@
 import { Children, cloneElement, useId } from 'react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 // Small shared form primitives for the universal steps (B–F).
 
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils';
  * announced the controls unnamed.
  */
 export function Field({ label, required, hint, children }) {
+  const { t } = useTranslation();
   const uid = useId();
   const labelId = `${uid}-label`;
   const controlId = `${uid}-control`;
@@ -43,7 +45,7 @@ export function Field({ label, required, hint, children }) {
         <label id={labelId} htmlFor={targetId} className="text-caption font-medium text-ink">
           {label}
           {required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}
-          {required && <span className="sr-only"> (required)</span>}
+          {required && <span className="sr-only"> {t('(required)')}</span>}
         </label>
       )}
       {body}

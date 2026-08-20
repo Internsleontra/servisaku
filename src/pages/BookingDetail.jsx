@@ -11,12 +11,13 @@ import { formatBookingRef } from '@/lib/bookingEngine';
 import { ExtraServices } from '@/components/ExtraServices';
 import { toast } from 'sonner';
 import { formatMYR } from '@/lib/utils';
-import moment from 'moment';
 import { statusIconFor } from '@/lib/statusIcons';
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function BookingDetail() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
+  const { t, locale } = useTranslation();
   const [booking, setBooking] = useState(null);
   const [rating, _setRating] = useState(0);
   const [reviewText, _setReviewText] = useState('');
@@ -46,9 +47,9 @@ export default function BookingDetail() {
     try {
       const res = await servisaku.entities.Booking.decideExtra(booking.id, itemId, { status });
       setBooking(b => ({ ...b, extras: res.extras, price: res.price }));
-      toast.success(status === 'approved' ? 'Extra approved — added to your bill' : 'Extra declined');
+      toast.success(status === 'approved' ? t('Extra approved — added to your bill') : t('Extra declined'));
     } catch (e) {
-      toast.error(e.message || 'Could not update');
+      toast.error(e.message || t('Could not update'));
     } finally {
       setDecidingExtra(false);
     }
@@ -57,7 +58,7 @@ export default function BookingDetail() {
   const pendingExtras = (booking?.extras || []).filter(e => e.status === 'pending');
 
   const _handleReview = async () => {
-    if (!rating) return toast.error('Please select a rating');
+    if (!rating) return toast.error(t('Please select a rating'));
     await servisaku.entities.Booking.update(booking.id, { rating, review: reviewText });
     if (booking.partner_email) {
       await servisaku.entities.Review.create({
@@ -69,7 +70,7 @@ export default function BookingDetail() {
       });
     }
     setBooking(b => ({ ...b, rating, review: reviewText }));
-    toast.success('Review submitted!');
+    toast.success(t('Review submitted!'));
   };
 
   const handleRebook = () => navigate('/explore');
@@ -83,7 +84,7 @@ export default function BookingDetail() {
             onClick={() => navigate(-1)}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> Back
+            <ArrowLeft className="size-[15px]" /> {t('Back')}
           </button>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
@@ -107,21 +108,21 @@ export default function BookingDetail() {
             </div>
             <div className="flex-1">
               <p className="font-semibold text-ink">{booking.service_type}</p>
-              {booking.package_name && <p className="text-xs text-ink-secondary">{booking.package_name} Package</p>}
+              {booking.package_name && <p className="text-xs text-ink-secondary">{t('{name} Package', { name: booking.package_name })}</p>}
             </div>
             <div className="text-right">
               <p className="sa-num font-semibold text-brand text-lg">{formatMYR(booking.price, { decimals: true })}</p>
               {booking.discount_amount > 0 && (
-                <p className="sa-num text-xs text-success">− {formatMYR(booking.discount_amount, { decimals: true })} saved</p>
+                <p className="sa-num text-xs text-success">{t('− {amount} saved', { amount: formatMYR(booking.discount_amount, { decimals: true }) })}</p>
               )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             {[
-              { icon: CalendarDays, label: moment(booking.date).format('ddd, D MMM YYYY') },
+              { icon: CalendarDays, label: new Date(booking.date).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) },
               { icon: Clock, label: booking.time_slot },
               { icon: MapPin, label: booking.city },
-              { icon: User, label: booking.partner_name || 'Pending assignment' },
+              { icon: User, label: booking.partner_name || t('Pending assignment') },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-1.5 text-ink-secondary">
                 <item.icon className="h-3.5 w-3.5 shrink-0" />
@@ -139,10 +140,10 @@ export default function BookingDetail() {
           <div className="bg-brand rounded-2xl p-4 flex items-center justify-between">
             <div>
               <p className="text-ink-inverse font-semibold text-sm">
-                {booking.status === 'en_route' ? 'Partner is on the way' : 'Partner has arrived!'}
+                {booking.status === 'en_route' ? t('Partner is on the way') : t('Partner has arrived!')}
               </p>
               <p className="text-ink-inverse/60 text-xs mt-0.5">
-                {booking.status === 'en_route' ? 'Estimated arrival: ~15 minutes' : 'Starting service shortly'}
+                {booking.status === 'en_route' ? t('Estimated arrival: ~15 minutes') : t('Starting service shortly')}
               </p>
             </div>
             <div className="w-10 h-10 bg-surface/20 rounded-xl flex items-center justify-center">
@@ -154,9 +155,9 @@ export default function BookingDetail() {
         {/* Extra services — partner-proposed, customer approves */}
         {booking.extras?.length > 0 && (
           <div className="bg-surface rounded-card shadow-e1 p-4">
-            <p className="text-xs text-ink-secondary font-medium mb-1">Extra services</p>
+            <p className="text-xs text-ink-secondary font-medium mb-1">{t('Extra services')}</p>
             {pendingExtras.length > 0 && (
-              <p className="text-[11px] text-warning mb-3">Your partner proposed extra work — approve to add it to your bill.</p>
+              <p className="text-[11px] text-warning mb-3">{t('Your partner proposed extra work — approve to add it to your bill.')}</p>
             )}
             <ExtraServices
               extras={booking.extras}
@@ -170,7 +171,7 @@ export default function BookingDetail() {
         {/* Partner Card */}
         {booking.partner_name && (
           <div className="bg-surface rounded-card shadow-e1 p-4">
-            <p className="text-xs text-ink-secondary font-medium mb-3">Your pro</p>
+            <p className="text-xs text-ink-secondary font-medium mb-3">{t('Your pro')}</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-brand-tint flex items-center justify-center">
@@ -187,13 +188,13 @@ export default function BookingDetail() {
               <div className="flex gap-2">
                 <button
                   onClick={() => navigate(`/chat/${booking.id}`)}
-                  aria-label="Call partner"
+                  aria-label={t('Call partner')}
                   className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center hover:bg-brand-tint transition-colors">
                   <Phone className="h-4 w-4 text-ink-secondary" />
                 </button>
                 <button
                   onClick={() => navigate(`/chat/${booking.id}`)}
-                  aria-label="Message partner"
+                  aria-label={t('Message partner')}
                   className="w-9 h-9 rounded-xl bg-raised flex items-center justify-center hover:bg-brand-tint transition-colors">
                   <MessageSquare className="h-4 w-4 text-ink-secondary" />
                 </button>
@@ -210,8 +211,8 @@ export default function BookingDetail() {
           <button onClick={() => navigate(`/review/${booking.id}`)}
             className="w-full bg-grad-brand text-ink-inverse rounded-card p-4 flex items-center justify-between shadow-brand transition hover:brightness-[0.94] focus-visible:outline-none focus-visible:shadow-[shadow:var(--focus-ring)]">
             <div className="text-left">
-              <p className="font-semibold text-sm">Rate your experience</p>
-              <p className="text-ink-inverse/70 text-xs mt-0.5">Takes only 30 seconds</p>
+              <p className="font-semibold text-sm">{t('Rate your experience')}</p>
+              <p className="text-ink-inverse/70 text-xs mt-0.5">{t('Takes only 30 seconds')}</p>
             </div>
             <div className="flex gap-0.5">
               {[1,2,3,4,5].map(i => <Star key={i} className="h-5 w-5 text-star" />)}
@@ -221,7 +222,7 @@ export default function BookingDetail() {
 
         {booking.rating && (
           <div className="bg-surface rounded-card p-4 shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
-            <p className="text-xs text-ink-secondary mb-2">Your review</p>
+            <p className="text-xs text-ink-secondary mb-2">{t('Your review')}</p>
             <div className="flex gap-0.5 mb-1">
               {[1, 2, 3, 4, 5].map(i => (
                 <Star key={i} className={`h-4 w-4 ${i <= booking.rating ? 'text-star fill-star' : 'text-raised'}`} />
@@ -237,14 +238,14 @@ export default function BookingDetail() {
         <div className={`flex flex-col gap-3 rounded-card bg-surface p-5 shadow-e2 lg:sticky lg:top-[100px]`}>
         {/* Invoice + Actions */}
         <div className="flex gap-2">
-          <button onClick={() => toast.info('Invoice PDF coming soon')}
+          <button onClick={() => toast.info(t('Invoice PDF coming soon'))}
             className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-field bg-surface text-caption font-semibold text-ink transition hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
-            <Download className="h-4 w-4" /> Invoice
+            <Download className="h-4 w-4" /> {t('Invoice')}
           </button>
           {booking.status === 'completed' && (
             <button onClick={handleRebook}
               className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-field bg-surface text-caption font-semibold text-ink transition hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
-              <RotateCcw className="h-4 w-4" /> Rebook
+              <RotateCcw className="h-4 w-4" /> {t('Rebook')}
             </button>
           )}
         </div>
@@ -255,7 +256,7 @@ export default function BookingDetail() {
         {canCancel && (
           <button onClick={() => navigate(`/refunds?booking=${booking.id}`)}
             className="flex min-h-11 w-full items-center justify-center gap-2 rounded-field text-caption font-semibold text-danger transition hover:bg-danger-tint shadow-[inset_0_0_0_1px_rgb(var(--danger)/0.3)]">
-            <AlertTriangle className="h-4 w-4" /> Cancel Booking
+            <AlertTriangle className="h-4 w-4" /> {t('Cancel Booking')}
           </button>
         )}
 
@@ -264,18 +265,18 @@ export default function BookingDetail() {
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => navigate(`/disputes?booking=${booking.id}`)}
               className="flex min-h-11 items-center justify-center gap-1.5 rounded-field text-caption font-semibold text-ink transition hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
-              <Flag className="h-4 w-4" /> Flag job
+              <Flag className="h-4 w-4" /> {t('Flag job')}
             </button>
             <button onClick={() => navigate(`/damage-claims?booking=${booking.id}`)}
               className="flex min-h-11 items-center justify-center gap-1.5 rounded-field text-caption font-semibold text-ink transition hover:bg-raised shadow-[inset_0_0_0_1px_rgb(var(--hairline))]">
-              <ShieldAlert className="h-4 w-4" /> Report damage
+              <ShieldAlert className="h-4 w-4" /> {t('Report damage')}
             </button>
           </div>
         )}
 
         <button onClick={() => navigate(`/support?new=1&booking=${booking.id}`)}
           className="flex min-h-11 w-full items-center justify-center gap-2 rounded-field text-caption font-semibold text-ink-secondary transition hover:bg-raised">
-          <LifeBuoy className="size-4" /> Get help with this booking
+          <LifeBuoy className="size-4" /> {t('Get help with this booking')}
         </button>
         </div>
       </div>

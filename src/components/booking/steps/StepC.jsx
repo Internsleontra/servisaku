@@ -2,7 +2,9 @@ import { Field } from '../fields';
 import { SLOT_GROUPS } from '@/lib/bookingEngine';
 import { isAfterHours, isUrgent } from '../scheduleRules';
 import { Zap, Moon } from 'lucide-react';
+import { useMemo } from 'react';
 import { TimeSlotPicker } from '@/components/ds';
+import { useTranslation } from '@/lib/useTranslation';
 
 /**
  * Step C — Date & time.
@@ -18,7 +20,7 @@ import { TimeSlotPicker } from '@/components/ds';
 
 /* Next 14 days as a day strip. Sundays are marked full — the seed treats them
    as non-operating; adjust when real availability lands. */
-function buildDays(count = 14) {
+function buildDays(count, locale) {
   const out = [];
   const today = new Date();
   for (let i = 0; i < count; i += 1) {
@@ -26,7 +28,7 @@ function buildDays(count = 14) {
     d.setDate(today.getDate() + i);
     out.push({
       id: d.toISOString().slice(0, 10),
-      dow: d.toLocaleDateString('en-MY', { weekday: 'short' }),
+      dow: d.toLocaleDateString(locale, { weekday: 'short' }),
       date: d.getDate(),
       full: d.getDay() === 0,
     });
@@ -40,17 +42,20 @@ const SLOTS = Object.values(SLOT_GROUPS).flatMap((g) =>
   g.slots.map((s) => ({ id: s, label: s })),
 );
 
-const DAYS = buildDays();
-
 export default function StepC({ schedule, setSchedule }) {
+  const { t, locale } = useTranslation();
   const afterHours = isAfterHours(schedule.timeSlot);
   const urgent = isUrgent(schedule.date);
 
+  // Weekday abbreviations come from the locale, so the strip reads Isn/Sel/Rab
+  // in Malay rather than Mon/Tue/Wed. Rebuilt when the language changes.
+  const days = useMemo(() => buildDays(14, locale), [locale]);
+
   return (
     <div className="flex flex-col gap-6">
-      <Field label="Date & time" required>
+      <Field label={t('Date & time')} required>
         <TimeSlotPicker
-          days={DAYS}
+          days={days}
           slots={SLOTS}
           day={schedule.date}
           slot={schedule.timeSlot}
@@ -63,12 +68,12 @@ export default function StepC({ schedule, setSchedule }) {
         <div className="flex flex-col gap-1.5 rounded-field bg-warning/5 px-4 py-3 text-caption font-normal text-ink shadow-[inset_0_0_0_1px_rgb(var(--warning)/0.3)]">
           {urgent && (
             <div className="flex items-center gap-2">
-              <Zap className="size-4 shrink-0 text-warning" /> Same-day booking — an urgent surcharge applies.
+              <Zap className="size-4 shrink-0 text-warning" /> {t('Same-day booking — an urgent surcharge applies.')}
             </div>
           )}
           {afterHours && (
             <div className="flex items-center gap-2">
-              <Moon className="size-4 shrink-0 text-warning" /> After-hours slot — an after-hours surcharge applies.
+              <Moon className="size-4 shrink-0 text-warning" /> {t('After-hours slot — an after-hours surcharge applies.')}
             </div>
           )}
         </div>

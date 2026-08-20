@@ -4,12 +4,28 @@ import { servisaku } from '@/api/servisakuClient';
 import { SegmentedTabs, Button, RING } from '@/components/ds';
 import BookingCard from '../components/BookingCard';
 import { CalendarDays, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from '@/lib/useTranslation';
+
+/* Empty-state copy is keyed per tab rather than built by concatenation:
+   "No <tab> bookings" cannot be assembled word-by-word in Malay, where the
+   qualifier follows the noun ("Tiada tempahan akan datang"). */
+const EMPTY_TITLE = {
+  upcoming: 'No upcoming bookings',
+  ongoing: 'No ongoing bookings',
+  completed: 'No completed bookings',
+  cancelled: 'No cancelled bookings',
+};
+const EMPTY_BODY = {
+  completed: 'Your completed bookings will appear here.',
+  cancelled: 'Your cancelled bookings will appear here.',
+};
 
 export default function BookingHistory() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('upcoming');
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const load = async () => {
@@ -40,9 +56,9 @@ export default function BookingHistory() {
       {/* Gradient page header — replaces the sticky translucent bar. */}
       <div className="bg-grad-hero text-white">
         <div className="mx-auto w-full max-w-[1240px] px-5 py-8 md:px-8 md:pb-12">
-          <h1 className="text-display-2 text-white">My bookings</h1>
+          <h1 className="text-display-2 text-white">{t('My bookings')}</h1>
           <p className="sa-num mt-2 text-lead text-white/[0.78]">
-            {bookings.length} booking{bookings.length === 1 ? '' : 's'}
+            {bookings.length} {t(bookings.length === 1 ? 'booking' : 'bookings')}
           </p>
         </div>
       </div>
@@ -50,7 +66,7 @@ export default function BookingHistory() {
       <div className="mx-auto w-full max-w-[1240px] px-5 pt-6 md:px-8">
         {/* Tabs — design-system underline pattern with count pills. */}
         <SegmentedTabs
-          items={TABS.map((t) => ({ id: t.id, label: `${t.label} (${t.count})` }))}
+          items={TABS.map((item) => ({ id: item.id, label: `${t(item.label)} (${item.count})` }))}
           value={tab}
           onChange={setTab}
         />
@@ -59,7 +75,7 @@ export default function BookingHistory() {
           {loading ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className={`space-y-3 rounded-card bg-surface p-5 ${RING}`} role="status" aria-label="Loading bookings">
+                <div key={i} className={`space-y-3 rounded-card bg-surface p-5 ${RING}`} role="status" aria-label={t('Loading bookings')}>
                   <div className="flex gap-3">
                     <div className="size-11 animate-pulse rounded-md bg-raised" />
                     <div className="flex-1 space-y-2">
@@ -80,14 +96,14 @@ export default function BookingHistory() {
               <span className="grid size-16 place-items-center rounded-full bg-grad-brand-soft text-brand-ink">
                 <CalendarDays className="size-7" />
               </span>
-              <p className="mt-3 font-display text-h4 font-semibold text-ink">No {tab} bookings</p>
+              <p className="mt-3 font-display text-h4 font-semibold text-ink">{t(EMPTY_TITLE[tab])}</p>
               <p className="mt-1 max-w-xs text-caption font-normal text-ink-secondary">
                 {tab === 'upcoming' || tab === 'ongoing'
-                  ? 'Book a service to get started.'
-                  : `Your ${tab} bookings will appear here.`}
+                  ? t('Book a service to get started.')
+                  : t(EMPTY_BODY[tab])}
               </p>
               {(tab === 'upcoming' || tab === 'ongoing') && (
-                <Button className="mt-5" onClick={() => navigate('/catalog')}>Book a service</Button>
+                <Button className="mt-5" onClick={() => navigate('/catalog')}>{t('Book a service')}</Button>
               )}
             </div>
           )}

@@ -3,11 +3,13 @@ import { Camera, X } from 'lucide-react';
 import { servisaku } from '@/api/servisakuClient';
 import { Field } from '../fields';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/useTranslation';
 
 const MAX_PHOTOS = 5;
 
 // Step E — Notes & Photos (optional). Up to 5 images uploaded to object storage.
 export default function StepE({ extras, setExtras }) {
+  const { t } = useTranslation();
   const fileRef = useRef();
   const [uploading, setUploading] = useState(false);
   const photos = extras.photos || [];
@@ -16,7 +18,7 @@ export default function StepE({ extras, setExtras }) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     const room = MAX_PHOTOS - photos.length;
-    if (room <= 0) { toast.error(`Maximum ${MAX_PHOTOS} photos`); return; }
+    if (room <= 0) { toast.error(`${t('Maximum')} ${MAX_PHOTOS} ${t('photos')}`); return; }
     setUploading(true);
     try {
       const uploaded = [];
@@ -26,7 +28,7 @@ export default function StepE({ extras, setExtras }) {
       }
       setExtras((x) => ({ ...x, photos: [...(x.photos || []), ...uploaded] }));
     } catch {
-      toast.error('Upload failed');
+      toast.error(t('Upload failed'));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -37,7 +39,7 @@ export default function StepE({ extras, setExtras }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Field label="Notes for the technician" hint="Describe the issue, gate code, pets, etc.">
+      <Field label={t('Notes for the technician')} hint={t('Describe the issue, gate code, pets, etc.')}>
         <textarea
           rows={4}
           value={extras.notes ?? ''}

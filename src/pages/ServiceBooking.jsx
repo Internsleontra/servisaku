@@ -16,6 +16,7 @@ import StepE from '@/components/booking/steps/StepE';
 import StepF from '@/components/booking/steps/StepF';
 import { isAfterHours, isUrgent } from '@/components/booking/scheduleRules';
 import { PriceSummary } from '@/components/ds';
+import { useTranslation } from '@/lib/useTranslation';
 
 const STEPS = ['Options', 'Property', 'Schedule', 'Address', 'Details', 'Review'];
 
@@ -47,6 +48,7 @@ function stepAComplete(service, answers) {
 export default function ServiceBooking() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data: service, isLoading, error } = useQuery({
     queryKey: ['booking-service', slug],
@@ -130,7 +132,7 @@ export default function ServiceBooking() {
 
       // Cash on service → no online payment; the partner collects at completion.
       if (payment.method === 'cash') {
-        toast.success('Booking confirmed!');
+        toast.success(t('Booking confirmed!'));
         navigate(`/booking/${booking.id}`);
         return;
       }
@@ -140,15 +142,15 @@ export default function ServiceBooking() {
         const pay = await servisaku.payments.create(booking.id, payment.method);
         if (pay?.checkout_url) { window.location.href = pay.checkout_url; return; }
       } catch (payErr) {
-        toast.error(payErr.message || 'Could not start payment — you can pay from your booking.');
+        toast.error(payErr.message || t('Could not start payment — you can pay from your booking.'));
       }
       navigate(`/booking/${booking.id}`); // fallback if the gateway didn't return a URL
     } catch (e) {
       if (/log in|unauth|401/i.test(e.message)) {
-        toast.info('Please log in to confirm your booking');
+        toast.info(t('Please log in to confirm your booking'));
         setTimeout(() => navigate('/otp-login'), 800);
       } else {
-        toast.error(e.message || 'Could not create booking');
+        toast.error(e.message || t('Could not create booking'));
       }
     } finally {
       setSubmitting(false);
@@ -159,13 +161,13 @@ export default function ServiceBooking() {
     return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-brand" /></div>;
   }
   if (error || !service) {
-    return <div className="p-6 text-center text-ink-secondary">Service not found.</div>;
+    return <div className="p-6 text-center text-ink-secondary">{t('Service not found.')}</div>;
   }
   if (!service.pricing_type) {
     return (
       <div className="p-6 text-center text-ink-secondary">
-        This service isn’t available in the dynamic booking flow yet.
-      </div>
+          {t('This service isn’t available in the dynamic booking flow yet.')}
+        </div>
     );
   }
 
@@ -190,15 +192,15 @@ export default function ServiceBooking() {
             onClick={() => (step === 0 ? navigate(-1) : setStep((s) => s - 1))}
             className="mb-4 inline-flex items-center gap-1.5 text-caption font-normal text-white/75 transition-colors hover:text-white"
           >
-            <ArrowLeft className="size-[15px]" /> {step === 0 ? 'Back' : STEPS[step - 1]}
+            <ArrowLeft className="size-[15px]" /> {step === 0 ? t('Back') : t(STEPS[step - 1])}
           </button>
 
           <h1 className="text-display-2 text-white">{service.name}</h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4" /> 30-day warranty</span>
-            <span className="inline-flex items-center gap-1.5"><Lock className="size-4" /> Escrow protected</span>
-            <span className="sa-num">Step {step + 1} of {STEPS.length}</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4" /> {t('30-day warranty')}</span>
+            <span className="inline-flex items-center gap-1.5"><Lock className="size-4" /> {t('Escrow protected')}</span>
+            <span className="sa-num">{t('Step')} {step + 1} {t('of')} {STEPS.length}</span>
           </div>
 
           <div className="mt-5 flex gap-1.5">
@@ -212,7 +214,7 @@ export default function ServiceBooking() {
       {/* Two-column desktop: step body + sticky booking rail. */}
       <div className="mx-auto -mt-8 grid w-full max-w-[1240px] items-start gap-6 px-5 md:px-8 lg:grid-cols-[1.5fr_0.9fr]">
         <div className="rounded-card bg-surface p-5 shadow-e2 md:p-6">
-          <h2 className="mb-5 font-display text-h3 font-semibold text-ink">{STEPS[step]}</h2>
+          <h2 className="mb-5 font-display text-h3 font-semibold text-ink">{t(STEPS[step])}</h2>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={step} {...safeMotion(variants.fadeUp)}>
               {step === 0 && <StepA service={service} answers={answers} setAnswer={setAnswer} />}
@@ -259,22 +261,22 @@ export default function ServiceBooking() {
             />
           ) : (
             <p className="text-caption font-normal text-ink-tertiary">
-              {quoteError || 'Complete the required options to see a price.'}
+              {quoteError || t('Complete the required options to see a price.')}
             </p>
           )}
 
           {step < STEPS.length - 1 ? (
             <Button variant="primary" size="lg" className="w-full" disabled={!canAdvance} onClick={() => setStep((s) => s + 1)}>
-              Continue <ArrowRight size={18} className="ml-1" />
+              {t('Continue')} <ArrowRight size={18} className="ml-1" />
             </Button>
           ) : (
             <Button variant="primary" size="lg" className="w-full" loading={submitting} disabled={submitting || !quote} onClick={submit}>
-              Confirm booking
+              {t('Confirm booking')}
             </Button>
           )}
 
           <div className="flex items-center justify-center gap-1.5 text-xs text-ink-tertiary">
-            <ShieldCheck className="size-3.5" /> Free cancellation up to 4 h before
+            <ShieldCheck className="size-3.5" /> {t('Free cancellation up to 4 h before')}
           </div>
         </div>
       </div>

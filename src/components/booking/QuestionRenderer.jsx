@@ -7,6 +7,7 @@ import QuantitySelector from './widgets/QuantitySelector';
 import TierQuantitySelector from './widgets/TierQuantitySelector';
 import AreaInput from './widgets/AreaInput';
 import HoursInput from './widgets/HoursInput';
+import { useTranslation } from '@/lib/useTranslation';
 
 const WIDGETS = {
   TIER_SELECT: TierSelect,
@@ -19,6 +20,7 @@ const WIDGETS = {
 };
 
 export default function QuestionRenderer({ question, value, onChange }) {
+  const { t } = useTranslation();
   // INFO — non-priced context for the technician (reference photo notes, last
   // service date, injury area…). Captured into answers but ignored by pricing.
   if (question.type === 'INFO') {
@@ -34,7 +36,7 @@ export default function QuestionRenderer({ question, value, onChange }) {
           rows={2}
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Optional — helps the technician prepare"
+          placeholder={t('Optional — helps the technician prepare')}
           className="rounded-field bg-surface px-4 py-3 text-ink outline-none shadow-[inset_0_0_0_1px_rgb(var(--hairline))] focus:shadow-[inset_0_0_0_1.5px_rgb(var(--brand))]"
         />
       </div>
@@ -51,7 +53,7 @@ export default function QuestionRenderer({ question, value, onChange }) {
       <label id={`q-${question.id}-label`} className="font-semibold text-ink">
         {question.label}
         {question.required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}
-        {question.required && <span className="sr-only"> (required)</span>}
+        {question.required && <span className="sr-only"> {t('(required)')}</span>}
       </label>
       <div role="group" aria-labelledby={`q-${question.id}-label`}>
         <Widget question={question} value={value} onChange={onChange} />
