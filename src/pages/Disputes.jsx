@@ -74,6 +74,7 @@ function DisputeList() {
             </div>
             <StatusPill status={d.status} />
           </div>
+          {/* dual-field-exempt: the customer's own words — translating them would be wrong */}
           {d.description && <p className="mt-2 text-sm text-ink-secondary line-clamp-2">{d.description}</p>}
         </Card>
       ))}

@@ -126,6 +126,7 @@ export default function BookingDetail() {
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-1.5 text-ink-secondary">
                 <item.icon className="h-3.5 w-3.5 shrink-0" />
+                {/* dual-field-exempt: built locally from dates, slots and city, not catalogue text */}
                 <span className="truncate">{item.label}</span>
               </div>
             ))}

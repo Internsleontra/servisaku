@@ -23,6 +23,7 @@ function QuickReplies({ options, onPick, disabled }) {
             'transition-colors hover:bg-brand-tint disabled:opacity-50',
           )}
         >
+          {/* dual-field-exempt: chatbot options are localized server-side (SWAP) */}
           {o.label}
         </button>
       ))}
@@ -47,6 +48,7 @@ function ActionCard({ card, actionable, onConfirm, onDecline }) {
       card.destructive ? 'border-danger/40 bg-danger-tint' : 'border-hairline bg-raised/60',
     )}
     >
+      {/* dual-field-exempt: chatbot cards are localized server-side (SWAP) */}
       <p className="text-sm font-medium text-ink">{card.summary}</p>
       {settled ? (
         <p className="mt-2 text-xs capitalize text-ink-secondary">{card.status}</p>

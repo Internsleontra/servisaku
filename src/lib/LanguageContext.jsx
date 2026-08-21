@@ -1,12 +1,23 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
+// The partner app has no localization coverage: its pages are literal English,
+// and only shared chrome (bottom nav, chatbot widget, 404) goes through the
+// dictionary. Leaving it on the consumer default rendered that chrome in Malay
+// — "Papan Pemuka · Jadual · Pendapatan · Profil" — around English pages.
+//
+// So partner is pinned to English rather than merely defaulted to it: `ms` is
+// not in its supported set, which means a stored preference (shared origin in
+// dev, or a stale value) is coerced away instead of reviving the problem.
+// VITE_APP is a compile-time literal, so each bundle keeps only its own branch.
+const IS_PARTNER = import.meta.env.VITE_APP === 'partner';
+
 // Languages the dictionary actually carries. Anything else falls back to the
 // default rather than leaving the UI in a language we cannot render.
-export const SUPPORTED_LANGS = ['ms', 'en'];
+export const SUPPORTED_LANGS = IS_PARTNER ? ['en'] : ['ms', 'en'];
 
 // ServisAku is a Malaysian marketplace, so Bahasa Malaysia is the default for
 // anyone who has not chosen otherwise. A stored preference always wins.
-export const DEFAULT_LANG = 'ms';
+export const DEFAULT_LANG = IS_PARTNER ? 'en' : 'ms';
 
 // Exported so the API client can read the same key rather than repeating the
 // literal — the request layer is not a component and cannot use the context.

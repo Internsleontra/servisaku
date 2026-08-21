@@ -19,7 +19,7 @@ const MOCK = {
 };
 
 export default function Wishlist() {
-  const { t } = useTranslation();
+  const { t, tField } = useTranslation();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [view, setView] = useState('grid');
@@ -43,11 +43,11 @@ export default function Wishlist() {
                 {data.services.map(s => (
                   <div key={s.slug} className={`bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-2xl overflow-hidden ${view === 'list' ? 'flex' : ''}`}>
                     <div className={`relative bg-brand-tint ${view === 'list' ? 'w-28 shrink-0' : 'h-28'}`}>
-                      {serviceImageFor(s.slug) && <img src={serviceImageFor(s.slug)} alt={s.name} className="w-full h-full object-cover" />}
+                      {serviceImageFor(s.slug) && <img src={serviceImageFor(s.slug)} alt={tField(s, 'name')} className="w-full h-full object-cover" />}
                       <button onClick={() => remove(s.slug)} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center"><Heart className="h-4 w-4 text-white fill-white" /></button>
                     </div>
                     <div className="p-3 flex-1">
-                      <p className="text-sm font-semibold truncate">{s.name}</p>
+                      <p className="text-sm font-semibold truncate">{tField(s, 'name')}</p>
                       <p className="text-[10px] text-ink-tertiary">{s.category}</p>
                       <div className="flex items-center justify-between mt-1.5">
                         <span className="text-sm font-semibold text-brand">from {formatMYR(s.price)}</span>
@@ -76,7 +76,7 @@ export default function Wishlist() {
             <div>
               <p className="text-[11px] font-semibold text-ink-tertiary mb-2">{t('SAVED CATEGORIES')}</p>
               <div className="flex flex-wrap gap-2">
-                {data.categories.map(c => <button key={c.slug} onClick={() => navigate(`/catalog/${c.slug}`)} className="text-xs font-semibold bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-full px-3.5 py-2">{c.name}</button>)}
+                {data.categories.map(c => <button key={c.slug} onClick={() => navigate(`/catalog/${c.slug}`)} className="text-xs font-semibold bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-full px-3.5 py-2">{tField(c, 'name')}</button>)}
               </div>
             </div>
           )}
@@ -84,7 +84,7 @@ export default function Wishlist() {
             <div>
               <p className="text-[11px] font-semibold text-ink-tertiary mb-2">{t('RECENTLY VIEWED')}</p>
               <div className="flex flex-wrap gap-2">
-                {data.recentlyViewed.map(r => <button key={r.slug} onClick={() => navigate(`/book-service/${r.slug}`)} className="text-xs font-semibold bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-full px-3.5 py-2">{r.name}</button>)}
+                {data.recentlyViewed.map(r => <button key={r.slug} onClick={() => navigate(`/book-service/${r.slug}`)} className="text-xs font-semibold bg-surface shadow-[inset_0_0_0_1px_rgb(var(--hairline))] rounded-full px-3.5 py-2">{tField(r, 'name')}</button>)}
               </div>
             </div>
           )}

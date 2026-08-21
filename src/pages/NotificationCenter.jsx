@@ -56,17 +56,20 @@ function NotifItem({ n, onRead, onDelete }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
+          {/* dual-field-exempt: notifications are localized server-side by mapOut (SWAP) */}
           <p className={`text-sm leading-snug ${!n.is_read ? 'font-semibold' : 'font-medium'}`}>{n.title}</p>
           <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
             <span className="text-[9.5px] text-ink-secondary">{relativeTime(n.created_date, locale)}</span>
             {!n.is_read && <div className="w-1.5 h-1.5 bg-brand rounded-full" />}
           </div>
         </div>
+        {/* dual-field-exempt: notifications are localized server-side by mapOut (SWAP) */}
         <p className="text-xs text-ink-secondary mt-1 leading-relaxed line-clamp-2">{n.body}</p>
         <span className={`inline-block text-[9px] font-semibold mt-2 px-2 py-0.5 rounded-full ${meta.color}`}>{t(meta.label)}</span>
       </div>
       <button
         onClick={e => { e.stopPropagation(); onDelete(n); }}
+        // dual-field-exempt: notifications are localized server-side by mapOut (SWAP)
         aria-label={`Delete notification: ${n.title}`}
         className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-danger-tint transition-all shrink-0 mt-0.5">
         <Trash2 className="h-3 w-3 text-ink-secondary" />

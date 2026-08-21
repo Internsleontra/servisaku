@@ -1,15 +1,17 @@
 import Stepper from './Stepper';
 import { rm } from '../optionPrice';
+import { useTranslation } from '@/lib/useTranslation';
 
 // QUANTITY — single stepper; line = config.pricePerUnit × qty.
 export default function QuantitySelector({ question, value, onChange }) {
+  const { t } = useTranslation();
   const cfg = question.config || {};
   const qty = Number(value) || 0;
   const unit = Number(cfg.pricePerUnit) || 0;
 
   return (
     <div className="flex items-center justify-between rounded-xl border border-hairline bg-surface px-4 py-3">
-      <div className="text-sm text-ink-secondary">{unit > 0 ? `${rm(unit)} each` : 'Quantity'}</div>
+      <div className="text-sm text-ink-secondary">{unit > 0 ? t('{price} each', { price: rm(unit) }) : t('Quantity')}</div>
       <div className="flex items-center gap-3">
         {unit > 0 && qty > 0 && (
           <span className="font-semibold tabular-nums text-brand">{rm(unit * qty)}</span>

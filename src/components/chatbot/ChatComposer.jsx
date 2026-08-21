@@ -85,6 +85,7 @@ export function ChatComposer({
           {attachment.previewUrl && (
             <img src={attachment.previewUrl} alt="" className="h-10 w-10 rounded object-cover" />
           )}
+          {/* dual-field-exempt: the uploaded file's own name */}
           <span className="flex-1 truncate text-xs text-ink-secondary">{attachment.name}</span>
           {attachment.uploading
             ? <Loader2 className="h-4 w-4 animate-spin text-ink-secondary" aria-label={t('Uploading')} />

@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 import { Check } from 'lucide-react';
 import { optionModifierLabel } from '../optionPrice';
 
 // MULTI_SELECT — checkboxes. Adds each checked option's modifier.
 export default function MultiSelect({ question, value, onChange }) {
+  const { tField } = useTranslation();
   const selected = Array.isArray(value) ? value : [];
   const toggle = (id) =>
     onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
@@ -33,7 +35,7 @@ export default function MultiSelect({ question, value, onChange }) {
               >
                 {on && <Check size={14} strokeWidth={3} />}
               </span>
-              <span className="text-ink">{o.label}</span>
+              <span className="text-ink">{tField(o, 'label')}</span>
             </span>
             {mod && <span className="text-sm font-semibold text-ink-secondary tabular-nums">{mod}</span>}
           </button>

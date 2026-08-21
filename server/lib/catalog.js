@@ -90,6 +90,11 @@ export function mapQuestion(q) {
   return {
     id: q.key, // stable answer key
     label: q.label,
+    // Additive, matching the `name_my` / `description_my` convention used by
+    // mapCategory and mapServiceSummary above. The client picks with tField;
+    // without this the wizard renders English question labels while the server
+    // validates against the Malay ones.
+    label_my: q.labelMy,
     type: q.type,
     required: q.required,
     sort_order: q.sortOrder,
@@ -97,6 +102,7 @@ export function mapQuestion(q) {
     options: (q.options || []).map((o) => ({
       id: o.key,
       label: o.label,
+      label_my: o.labelMy,
       price_modifier: o.priceModifier,
       unit_price: o.unitPrice,
       price_modifier_per_sqft: o.priceModifierPerSqft,

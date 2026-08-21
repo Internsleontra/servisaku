@@ -29,14 +29,14 @@ const IMAGES = {
 };
 
 // Live service summary (GET /services) → the card shape this page renders.
-function mapService(s, catName) {
+function mapService(s, category) {
   const from = s.price_from > 0 ? s.price_from : s.visit_fee;
   return {
     id: s.slug,
     name: s.name,
     nameMy: s.name_my,
-    description: s.description || catName || '',
-    descriptionMy: s.description_my || catName || '',
+    description: s.description || category?.name || '',
+    descriptionMy: s.description_my || category?.name_my || category?.name || '',
     price: from > 0 ? `From ${formatMYR(Math.round(from))}` : 'Get quote',
     duration: formatDuration(s.duration_min, s.duration_max),
     icon: ICONS[s.icon_key] || Wrench,
@@ -99,15 +99,21 @@ export default function Explore() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const catNameBySlug = Object.fromEntries((liveCategories || []).map((c) => [c.slug, c.name]));
-  const services = (liveServices || []).map((s) => mapService(s, catNameBySlug[s.category_slug]));
+  // A service with no description of its own falls back to its category name,
+  // so that fallback needs both languages — otherwise the Malay card carries an
+  // English description.
+  const catBySlug = Object.fromEntries((liveCategories || []).map((c) => [c.slug, c]));
+  const services = (liveServices || []).map((s) => mapService(s, catBySlug[s.category_slug]));
 
+  // Chips carry the resolved display name; "All" stays a dictionary key because
+  // it is UI chrome rather than catalogue data.
   const categoryChips = [
-    { label: 'All', match: 'all' },
-    ...(liveCategories || []).map((c) => ({ label: c.name, match: c.slug })),
+    { label: t('All'), match: 'all' },
+    ...(liveCategories || []).map((c) => ({ label: tField(c, 'name'), match: c.slug })),
   ];
 
   const filtered = services.filter((s) => {
+    // dual-field-exempt: the search index deliberately spans both languages
     const searchable = `${s.name} ${s.description || ''} ${s.nameMy || ''} ${s.descriptionMy || ''}`.toLowerCase();
     const matchesQuery = searchable.includes(query.toLowerCase());
     const matchesCategory =
@@ -177,7 +183,7 @@ export default function Explore() {
               onClick={() => setActiveCategory(cat.match)}
               className="shrink-0"
             >
-              {t(cat.label)}
+              {cat.label}
             </Chip>
           ))}
         </div>
@@ -209,7 +215,7 @@ export default function Explore() {
                       {s.image ? (
                         <img
                           src={s.image}
-                          alt={s.name}
+                          alt={tField(s, 'name')}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -264,7 +270,7 @@ export default function Explore() {
                   >
                     {s.image ? (
                       <div className="w-full aspect-[4/3] bg-raised overflow-hidden relative">
-                        <img src={s.image} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={s.image} alt={tField(s, 'name')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     ) : (
                       <div className={cn('w-full aspect-[4/3] flex items-center justify-center', s.color)}>

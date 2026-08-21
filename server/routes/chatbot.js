@@ -102,7 +102,10 @@ router.get('/faqs', asyncHandler(async (req, res) => {
 
 const startSchema = z.object({
   session_id: z.string().min(8).max(100),
-  locale: z.enum(['en', 'ms']).default('en'),
+  // No default: `.default('en')` made an absent locale indistinguishable from a
+  // deliberate English one, so a Malay Accept-Language could never win and the
+  // bot greeted every customer in English. Absent now means "ask localeOf".
+  locale: z.enum(['en', 'ms']).optional(),
   // Support is not a separate bot — it is this conversation running a
   // troubleshooting tree instead of answering a question.
   mode: z.enum(['assistant', 'support']).default('assistant'),
@@ -115,12 +118,16 @@ const startSchema = z.object({
 });
 router.post('/conversations', validate(startSchema), asyncHandler(async (req, res) => {
   const role = req.user?.role === 'partner' ? 'partner' : 'consumer';
+  // An explicit body locale still wins — it is the client stating the language
+  // the customer is actually reading — but when it is absent this falls back to
+  // the same resolver every other route uses rather than assuming English.
+  const locale = req.body.locale ?? localeOf(req);
   const conversation = await prisma.chatbotConversation.create({
     data: {
       userId: req.user?.id ?? null,
       sessionId: req.body.session_id,
       role,
-      locale: req.body.locale,
+      locale,
       mode: req.body.mode,
       // Captured at the start rather than at escalation: by the time someone is
       // reporting a crash, asking them for their app version is one more thing
@@ -128,7 +135,7 @@ router.post('/conversations', validate(startSchema), asyncHandler(async (req, re
       deviceInfo: req.body.device ?? null,
     },
   });
-  res.status(201).json({ ...mapConversation(conversation), greeting: greeting(req.body.locale) });
+  res.status(201).json({ ...mapConversation(conversation), greeting: greeting(locale) });
 }));
 
 router.get('/conversations', asyncHandler(async (req, res) => {

@@ -2,11 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { cn, formatMYR } from '@/lib/utils';
 import { avatarFor, tintFor } from '@/lib/categoryAvatars';
 import { House } from 'lucide-react';
+import { useTranslation } from '@/lib/useTranslation';
 
 // Urban-Company-style category tiles: an avatar on a soft tile, name beneath.
 // `onPick(slug)` overrides the default navigation to /catalog/:slug.
 export default function CategoryTiles({ categories = [], onPick, className }) {
   const navigate = useNavigate();
+  const { tField } = useTranslation();
   const pick = onPick || ((slug) => navigate(`/catalog/${slug}`));
 
   return (
@@ -29,7 +31,7 @@ export default function CategoryTiles({ categories = [], onPick, className }) {
               {avatar ? (
                 <img
                   src={avatar}
-                  alt={c.name}
+                  alt={tField(c, 'name')}
                   loading="lazy"
                   className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
@@ -43,7 +45,7 @@ export default function CategoryTiles({ categories = [], onPick, className }) {
               )}
             </div>
             <p className="line-clamp-2 text-center text-[11px] font-semibold leading-tight text-ink group-hover:text-brand md:text-xs">
-              {c.name}
+              {tField(c, 'name')}
             </p>
           </button>
         );

@@ -29,6 +29,12 @@ export function useChatbot({ role = 'consumer', mode = 'assistant', locale = 'en
   };
   useEffect(() => clearTimers, []);
 
+  // `locale` seeds the reducer once, so a language switch after mount would
+  // otherwise leave the conversation on the language it started in.
+  useEffect(() => {
+    dispatch({ type: 'LOCALE_CHANGED', locale });
+  }, [locale]);
+
   /** Create the conversation on demand and return its id. */
   const ensureSession = useCallback(async () => {
     if (state.conversationId) return state.conversationId;

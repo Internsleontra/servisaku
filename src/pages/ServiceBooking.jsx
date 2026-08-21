@@ -48,7 +48,7 @@ function stepAComplete(service, answers) {
 export default function ServiceBooking() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t, locale } = useTranslation();
+  const { t, tField, locale } = useTranslation();
 
   const { data: service, isLoading, error } = useQuery({
     queryKey: ['booking-service', slug],
@@ -195,7 +195,7 @@ export default function ServiceBooking() {
             <ArrowLeft className="size-[15px]" /> {step === 0 ? t('Back') : t(STEPS[step - 1])}
           </button>
 
-          <h1 className="text-display-2 text-white">{service.name}</h1>
+          <h1 className="text-display-2 text-white">{tField(service, 'name')}</h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4" /> {t('30-day warranty')}</span>

@@ -94,6 +94,7 @@ export function SegmentedTabs({ items = [], value, onChange, className }) {
                 : 'border-b-2 border-transparent text-ink-secondary hover:text-ink',
             )}
           >
+            {/* dual-field-exempt: design-system primitive; the caller supplies a resolved label */}
             {it.label}
           </button>
         );
@@ -214,6 +215,7 @@ export function ServiceCard({
 export function PriceSummary({ lines = [], total, totalLabel = 'Total payable', note, className }) {
   return (
     <div className={cn('flex flex-col gap-2.5', className)}>
+        {/* dual-field-exempt: design-system primitive; the caller supplies a resolved label */}
       {lines.map((l, i) => (
         <div key={`${l.label}-${i}`} className="flex items-center gap-2 text-caption font-normal">
           <span
@@ -223,6 +225,7 @@ export function PriceSummary({ lines = [], total, totalLabel = 'Total payable', 
             )}
           >
             {l.tone === 'discount' && <TicketPercent className="size-3.5" />}
+            {/* dual-field-exempt: design-system primitive; the caller supplies a resolved label */}
             {l.label}
           </span>
           <span
@@ -289,6 +292,7 @@ export function TimeSlotPicker({ days = [], slots = [], day, slot, onDayChange, 
                   : cn('bg-surface text-ink', RING),
               )}
             >
+              {/* dual-field-exempt: design-system primitive; the caller supplies a resolved label */}
               {s.label}
             </button>
           );

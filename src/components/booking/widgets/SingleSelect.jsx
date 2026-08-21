@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 import { optionModifierLabel } from '../optionPrice';
 
 // SINGLE_SELECT — radio list. Adds the chosen option's modifier (flat, per-unit,
 // or per-sqft depending on the question config).
 export default function SingleSelect({ question, value, onChange }) {
+  const { tField } = useTranslation();
   return (
     <div className="flex flex-col gap-2">
       {question.options.map((o) => {
@@ -29,7 +31,7 @@ export default function SingleSelect({ question, value, onChange }) {
                   selected ? 'border-brand bg-brand' : 'border-hairline',
                 )}
               />
-              <span className="text-ink">{o.label}</span>
+              <span className="text-ink">{tField(o, 'label')}</span>
             </span>
             {mod && <span className="text-sm font-semibold text-ink-secondary tabular-nums">{mod}</span>}
           </button>

@@ -23,9 +23,14 @@ export function ChatbotWidget({
   title,
   className,
 }) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [open, setOpen] = useState(false);
-  const chat = useChatbot({ role, mode });
+  // The conversation locale is sent as the `explicit` locale, which outranks
+  // Accept-Language in resolveLocale. Left unset it defaulted to 'en' and
+  // overrode the Malay header for the whole conversation — answers localized,
+  // the greeting did not. Reuses the existing language context; no second
+  // chatbot locale mechanism.
+  const chat = useChatbot({ role, mode, locale: lang });
 
   // Escape closes, which is the one keyboard behaviour people try without being
   // told.

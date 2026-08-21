@@ -1638,7 +1638,7 @@
                 {
                   "id": "s",
                   "label": "Below 1000 sqft",
-                  "labelMy": "Below 1000 sqft",
+                  "labelMy": "Bawah 1000 sqft",
                   "priceModifier": 180
                 },
                 {
@@ -1695,7 +1695,7 @@
                 {
                   "id": "s",
                   "label": "Below 1000 sqft",
-                  "labelMy": "Below 1000 sqft",
+                  "labelMy": "Bawah 1000 sqft",
                   "priceModifier": 150
                 },
                 {
@@ -1758,7 +1758,7 @@
                 {
                   "id": "s",
                   "label": "Below 1000 sqft",
-                  "labelMy": "Below 1000 sqft",
+                  "labelMy": "Bawah 1000 sqft",
                   "priceModifier": 160
                 },
                 {
@@ -1839,7 +1839,7 @@
                 {
                   "id": "s",
                   "label": "Below 1500 sqft",
-                  "labelMy": "Below 1500 sqft",
+                  "labelMy": "Bawah 1500 sqft",
                   "priceModifier": 450
                 },
                 {
@@ -2749,7 +2749,7 @@
                 {
                   "id": "s",
                   "label": "32\" and below",
-                  "labelMy": "32\" and below",
+                  "labelMy": "32\" dan ke bawah",
                   "priceModifier": 0
                 },
                 {
@@ -2843,7 +2843,7 @@
                 {
                   "id": "bldc",
                   "label": "BLDC / with remote",
-                  "labelMy": "BLDC / with remote",
+                  "labelMy": "BLDC / dengan alat kawalan jauh",
                   "unitPrice": 60
                 }
               ]
@@ -4294,7 +4294,7 @@
                 {
                   "id": "s",
                   "label": "32\" and below",
-                  "labelMy": "32\" and below",
+                  "labelMy": "32\" dan ke bawah",
                   "priceModifier": 60
                 },
                 {

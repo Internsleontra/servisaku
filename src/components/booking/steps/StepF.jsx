@@ -6,12 +6,12 @@ import { useTranslation } from '@/lib/useTranslation';
 
 // Step F — Review & Pay. Itemised breakdown from the authoritative quote + payment.
 export default function StepF({ service, quote, quoteError, payment, setPayment }) {
-  const { t } = useTranslation();
+  const { t, tField } = useTranslation();
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-hairline bg-surface p-4">
-        <div className="mb-3 font-semibold text-ink">{service.name}</div>
+        <div className="mb-3 font-semibold text-ink">{tField(service, 'name')}</div>
 
         {quoteError && <p className="text-sm text-danger">{quoteError}</p>}
 
@@ -20,6 +20,7 @@ export default function StepF({ service, quote, quoteError, payment, setPayment 
             {quote.breakdown.map((li, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
                 <span className={cn('text-ink-secondary', li.type === 'DISCOUNT' && 'text-brand')}>
+                  {/* dual-field-exempt: quote breakdown is localized server-side (SWAP) */}
                   {li.label}{li.qty > 1 ? ` ×${li.qty}` : ''}
                 </span>
                 <span className={cn('tabular-nums', li.amount < 0 ? 'text-brand' : 'text-ink')}>

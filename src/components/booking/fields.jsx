@@ -72,6 +72,7 @@ export function Segmented({ options, value, onChange }) {
               on ? 'border-brand bg-brand-tint text-brand ring-1 ring-brand' : 'border-hairline bg-surface text-ink hover:bg-raised',
             )}
           >
+            {/* dual-field-exempt: callers build these options with t(); not API data */}
             {opt.label}
           </button>
         );
