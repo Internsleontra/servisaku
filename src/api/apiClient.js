@@ -3,6 +3,7 @@
  * Maintains the EXACT same interface as mockClient.js so all UI code
  * continues to work without any changes.
  */
+import { STORAGE_KEY as LANG_STORAGE_KEY, SUPPORTED_LANGS, DEFAULT_LANG } from '@/lib/LanguageContext';
 
 // Relative '/api' in the browser (Vite/Netlify proxy); set VITE_API_BASE to an
 // absolute URL when building for the Capacitor app (the native webview can't use
@@ -39,8 +40,27 @@ async function bearerToken() {
   return getToken();
 }
 
+// The server localizes its business-rule errors and its catalog/notification
+// text from Accept-Language. Without this the UI can be in Malay while every
+// message the API produces arrives in English.
+//
+// Consumer build only. The partner app shares this client but is not localized
+// — it renders server text as-is (no tField), so asking the API for Malay would
+// translate half of its screens and none of its own chrome. VITE_APP is a
+// compile-time literal, so the partner bundle keeps only the English branch.
+function acceptLanguage() {
+  if (import.meta.env.VITE_APP === 'partner') return 'en-US,en;q=0.9';
+  try {
+    const stored = localStorage.getItem(LANG_STORAGE_KEY);
+    const lang = SUPPORTED_LANGS.includes(stored) ? stored : DEFAULT_LANG;
+    return lang === 'ms' ? 'ms-MY,ms;q=0.9,en;q=0.8' : 'en-US,en;q=0.9';
+  } catch {
+    return 'en-US,en;q=0.9'; // storage blocked (private mode) — server default
+  }
+}
+
 async function request(method, path, body) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json', 'Accept-Language': acceptLanguage() };
   const token = await bearerToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -62,6 +82,11 @@ async function request(method, path, body) {
     // as a bad session silently signs people out mid-login.
     const error = new Error(err.error || 'Request failed');
     error.status = res.status;
+    // The server's stable error code (e.g. 'booking_not_found') travels in the
+    // additive details array. Carried through so a caller can branch on the
+    // code instead of matching the localized prose, which changes by language.
+    error.details = err.details;
+    error.code = Array.isArray(err.details) ? err.details[0]?.code : undefined;
     throw error;
   }
   return res.status === 204 ? null : res.json();

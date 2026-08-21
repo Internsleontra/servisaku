@@ -8,7 +8,9 @@ export const SUPPORTED_LANGS = ['ms', 'en'];
 // anyone who has not chosen otherwise. A stored preference always wins.
 export const DEFAULT_LANG = 'ms';
 
-const STORAGE_KEY = 'servisaku-lang';
+// Exported so the API client can read the same key rather than repeating the
+// literal — the request layer is not a component and cannot use the context.
+export const STORAGE_KEY = 'servisaku-lang';
 
 function normalise(value) {
   return SUPPORTED_LANGS.includes(value) ? value : DEFAULT_LANG;

@@ -4,6 +4,7 @@ import { prisma } from '../db.js';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, findUserByEmail } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
 import { CATEGORIES } from '../lib/notifications/catalog.js';
 import { mapOut } from '../lib/notifications/dispatcher.js';
 import { localeOf } from '../lib/locale.js';
@@ -178,23 +179,23 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
 }));
 
 // ─── Single-notification helpers ─────────────────────────────────────────────
-async function ownedOr404(id, userId) {
+async function ownedOr404(id, userId, locale) {
   const n = await prisma.notification.findUnique({ where: { id } });
-  if (!n) throw new ApiError(404, 'Not found');
-  if (n.userId !== userId) throw new ApiError(403, 'Forbidden');
+  if (!n) throw localizedError(404, 'not_found', locale);
+  if (n.userId !== userId) throw localizedError(403, 'forbidden', locale);
   return n;
 }
 
 // GET /api/notifications/:id
 router.get('/:id', asyncHandler(async (req, res) => {
-  const n = await ownedOr404(req.params.id, req.user.id);
+  const n = await ownedOr404(req.params.id, req.user.id, localeOf(req));
   res.json(mapOut(n, { locale: localeOf(req) }));
 }));
 
 // PATCH /api/notifications/:id/read  { is_read? } — defaults to marking read.
 const readSchema = z.object({ is_read: z.boolean().default(true) });
 router.patch('/:id/read', validate(readSchema), asyncHandler(async (req, res) => {
-  const n = await ownedOr404(req.params.id, req.user.id);
+  const n = await ownedOr404(req.params.id, req.user.id, localeOf(req));
   const item = await prisma.notification.update({ where: { id: n.id }, data: { isRead: req.body.is_read } });
   const unread = await pushUnread(req.user.id);
   emitNotificationUpdate(req.user.id, { action: 'read', id: n.id, is_read: item.isRead, unread });
@@ -204,7 +205,7 @@ router.patch('/:id/read', validate(readSchema), asyncHandler(async (req, res) =>
 // PATCH /api/notifications/:id/archive  { is_archived? } — defaults to archiving.
 const archiveSchema = z.object({ is_archived: z.boolean().default(true) });
 router.patch('/:id/archive', validate(archiveSchema), asyncHandler(async (req, res) => {
-  const n = await ownedOr404(req.params.id, req.user.id);
+  const n = await ownedOr404(req.params.id, req.user.id, localeOf(req));
   const item = await prisma.notification.update({ where: { id: n.id }, data: { isArchived: req.body.is_archived } });
   const unread = await pushUnread(req.user.id);
   emitNotificationUpdate(req.user.id, { action: 'archive', id: n.id, is_archived: item.isArchived, unread });
@@ -217,7 +218,7 @@ const patchSchema = z.object({
   is_archived: z.boolean().optional(),
 }).refine((v) => v.is_read !== undefined || v.is_archived !== undefined, { message: 'nothing to update' });
 router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
-  const n = await ownedOr404(req.params.id, req.user.id);
+  const n = await ownedOr404(req.params.id, req.user.id, localeOf(req));
   const data = {};
   if (req.body.is_read !== undefined) data.isRead = req.body.is_read;
   if (req.body.is_archived !== undefined) data.isArchived = req.body.is_archived;
@@ -229,7 +230,7 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
 
 // DELETE /api/notifications/:id
 router.delete('/:id', asyncHandler(async (req, res) => {
-  const n = await ownedOr404(req.params.id, req.user.id);
+  const n = await ownedOr404(req.params.id, req.user.id, localeOf(req));
   await prisma.notification.delete({ where: { id: n.id } });
   const unread = await pushUnread(req.user.id);
   emitNotificationUpdate(req.user.id, { action: 'delete', id: n.id, unread });

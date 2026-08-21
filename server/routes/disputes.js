@@ -6,6 +6,8 @@ import { validate } from '../middleware/validate.js';
 import {
   asyncHandler, ApiError, isAdmin, getBookingOr404, isBookingParticipant, bookingScope,
 } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 import { buildStatusChange } from '../lib/bookings/status.js';
 import { eligibleRefund } from '../lib/refunds/policy.js';
 import { executeRefund } from '../lib/refunds/execute.js';
@@ -49,8 +51,8 @@ function mapOut(d) {
 
 async function getDisputeFor(req, id) {
   const dispute = await prisma.dispute.findUnique({ where: { id }, include: { booking: true } });
-  if (!dispute) throw new ApiError(404, 'Dispute not found');
-  if (!isAdmin(req.user) && !isBookingParticipant(req.user, dispute.booking)) throw new ApiError(403, 'Forbidden');
+  if (!dispute) throw localizedError(404, 'dispute_not_found', localeOf(req));
+  if (!isAdmin(req.user) && !isBookingParticipant(req.user, dispute.booking)) throw localizedError(403, 'forbidden', localeOf(req));
   return dispute;
 }
 
@@ -75,16 +77,16 @@ const createSchema = z.object({
 
 // POST /api/disputes — either side of a booking may raise one.
 router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.body.booking_id);
-  if (!isBookingParticipant(req.user, booking)) throw new ApiError(403, 'You can only dispute your own bookings');
+  const booking = await getBookingOr404(req.body.booking_id, localeOf(req));
+  if (!isBookingParticipant(req.user, booking)) throw localizedError(403, 'dispute_own_bookings_only', localeOf(req));
   if (!['completed', 'cancelled', 'disputed', 'started'].includes(booking.status)) {
-    throw new ApiError(400, 'A dispute can only be raised once the service has started or finished');
+    throw localizedError(400, 'dispute_too_early', localeOf(req));
   }
 
   const open = await prisma.dispute.findFirst({
     where: { bookingId: booking.id, status: { in: ['open', 'investigating', 'awaiting_response', 'escalated'] } },
   });
-  if (open) throw new ApiError(409, 'An open dispute already exists for this booking');
+  if (open) throw localizedError(409, 'dispute_already_open', localeOf(req));
 
   const raisedByRole = booking.partnerId === req.user.id ? 'partner' : 'consumer';
   const againstId = raisedByRole === 'consumer' ? booking.partnerId : booking.consumerId;
@@ -147,8 +149,8 @@ const respondSchema = z.object({
 });
 router.post('/:id/respond', validate(respondSchema), asyncHandler(async (req, res) => {
   const dispute = await getDisputeFor(req, req.params.id);
-  if (dispute.raisedById === req.user.id) throw new ApiError(400, 'You raised this dispute — add evidence instead of responding to yourself');
-  if (['resolved', 'closed'].includes(dispute.status)) throw new ApiError(409, 'This dispute is already closed');
+  if (dispute.raisedById === req.user.id) throw localizedError(400, 'dispute_self_response', localeOf(req));
+  if (['resolved', 'closed'].includes(dispute.status)) throw localizedError(409, 'dispute_closed', localeOf(req));
 
   const existing = Array.isArray(dispute.evidence) ? dispute.evidence : [];
   const updated = await prisma.dispute.update({
@@ -171,7 +173,7 @@ const evidenceSchema = z.object({
 });
 router.post('/:id/evidence', validate(evidenceSchema), asyncHandler(async (req, res) => {
   const dispute = await getDisputeFor(req, req.params.id);
-  if (['resolved', 'closed'].includes(dispute.status)) throw new ApiError(409, 'This dispute is already closed');
+  if (['resolved', 'closed'].includes(dispute.status)) throw localizedError(409, 'dispute_closed', localeOf(req));
   const existing = Array.isArray(dispute.evidence) ? dispute.evidence : [];
   const updated = await prisma.dispute.update({
     where: { id: dispute.id },
@@ -212,7 +214,7 @@ const resolveSchema = z.object({
 });
 router.post('/:id/resolve', requireRole('admin', 'super_admin'), validate(resolveSchema), asyncHandler(async (req, res) => {
   const dispute = await prisma.dispute.findUnique({ where: { id: req.params.id }, include: { booking: true } });
-  if (!dispute) throw new ApiError(404, 'Dispute not found');
+  if (!dispute) throw localizedError(404, 'dispute_not_found', localeOf(req));
   if (['resolved', 'closed'].includes(dispute.status)) throw new ApiError(409, 'This dispute is already resolved');
 
   const wantsRefund = ['full_refund', 'partial_refund'].includes(req.body.resolution_type);

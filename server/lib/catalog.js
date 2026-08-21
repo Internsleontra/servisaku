@@ -243,7 +243,7 @@ export function mapServiceDetail(s) {
 // Validate service-specific answers against the category workflowConfig.
 // Enforces required params and (for select widgets) option membership.
 // Throws ApiError(400) listing every problem found. Returns the cleaned params.
-export function validateServiceParams(workflowConfig, params = {}) {
+export function validateServiceParams(workflowConfig, params = {}, locale) {
   const wf = workflowConfig || {};
   const required = Array.isArray(wf.requiredParams) ? wf.requiredParams : [];
   const fields = collectParamFields(wf);
@@ -265,7 +265,7 @@ export function validateServiceParams(workflowConfig, params = {}) {
     }
   }
 
-  if (errors.length) throw new ApiError(400, `Invalid service details: ${errors.join('; ')}`);
+  if (errors.length) throw localizedError(400, 'invalid_service_details', locale, errors.join('; '));
   return params;
 }
 

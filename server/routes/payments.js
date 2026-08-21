@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isBookingParticipant } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 import { getProvider, providerForMethod, listMethods, PAYMENT_METHODS, toSen, fromSen } from '../lib/payments/index.js';
 import { split } from '../lib/payments/commission.js';
 import { creditEscrowHold, debitCommission, ensureEscrowHold } from '../lib/wallet/index.js';
@@ -126,15 +128,15 @@ const createSchema = z.object({
 // stop them recording money they have already physically taken.
 router.post('/create', authenticate, requireAcceptance(), validate(createSchema), asyncHandler(async (req, res) => {
   const method = req.body.method || 'fpx';
-  if (method === 'cash') throw new ApiError(400, 'Cash payments are recorded at completion, not through checkout');
+  if (method === 'cash') throw localizedError(400, 'cash_not_via_checkout', localeOf(req));
 
   const provider = providerForMethod(method);
-  if (!provider) throw new ApiError(503, `Payment method "${method}" is not available. Configure a provider that supports it.`);
+  if (!provider) throw localizedError(503, 'payment_method_unavailable', localeOf(req), method);
 
   const booking = await prisma.booking.findUnique({ where: { id: req.body.booking_id }, include: { consumer: true } });
-  if (!booking) throw new ApiError(404, 'Booking not found');
-  if (!isBookingParticipant(req.user, booking)) throw new ApiError(403, 'Forbidden');
-  if (['escrowed', 'paid'].includes(booking.paymentStatus)) throw new ApiError(409, 'This booking is already paid');
+  if (!booking) throw localizedError(404, 'booking_not_found', localeOf(req));
+  if (!isBookingParticipant(req.user, booking)) throw localizedError(403, 'forbidden', localeOf(req));
+  if (['escrowed', 'paid'].includes(booking.paymentStatus)) throw localizedError(409, 'booking_already_paid', localeOf(req));
 
   const amountSen = toSen(booking.price);
   const payment = await prisma.payment.create({
@@ -161,7 +163,7 @@ router.post('/create', authenticate, requireAcceptance(), validate(createSchema)
     });
   } catch (err) {
     await prisma.payment.update({ where: { id: payment.id }, data: { status: 'failed', raw: { error: String(err.message) } } });
-    throw new ApiError(502, `Gateway error: ${err.message}`);
+    throw localizedError(502, 'payment_gateway_error', localeOf(req), err.message);
   }
 
   const saved = await prisma.payment.update({
@@ -187,7 +189,7 @@ router.post('/cash/collect', authenticate, validate(cashSchema), asyncHandler(as
     where: { id: req.body.booking_id },
     include: { consumer: true, partner: true },
   });
-  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (!booking) throw localizedError(404, 'booking_not_found', localeOf(req));
   if (booking.partnerId !== req.user.id) throw new ApiError(403, 'You are not assigned to this booking');
   if (booking.status !== 'completed') throw new ApiError(400, 'Record the cash payment after completing the job');
 
@@ -202,7 +204,7 @@ router.post('/cash/collect', authenticate, validate(cashSchema), asyncHandler(as
 
   // Paid by some other route (online checkout, admin) — genuinely a conflict.
   if (['paid', 'escrowed', 'refunded'].includes(booking.paymentStatus)) {
-    throw new ApiError(409, 'This booking is already paid');
+    throw localizedError(409, 'booking_already_paid', localeOf(req));
   }
 
   // The amount is not the partner's to decide — under-reporting cash would
@@ -299,13 +301,13 @@ router.post('/webhook/stripe', raw({ type: 'application/json' }), asyncHandler(a
 // gateway. Needed in local dev where the webhook can't reach us.
 router.post('/:id/sync', authenticate, asyncHandler(async (req, res) => {
   const payment = await prisma.payment.findUnique({ where: { id: req.params.id }, include: { booking: true } });
-  if (!payment) throw new ApiError(404, 'Payment not found');
+  if (!payment) throw localizedError(404, 'payment_not_found', localeOf(req));
   // A settlement payment belongs to the paying partner; a booking payment to its
   // participants.
   const allowed = payment.type === 'commission_settlement'
     ? payment.partnerId === req.user.id || req.user.role === 'admin' || req.user.role === 'super_admin'
     : isBookingParticipant(req.user, payment.booking);
-  if (!allowed) throw new ApiError(403, 'Forbidden');
+  if (!allowed) throw localizedError(403, 'forbidden', localeOf(req));
 
   const provider = getProvider(payment.provider);
   if (payment.status !== 'paid' && payment.gatewayRef && provider?.isReady()) {
@@ -319,11 +321,11 @@ router.post('/:id/sync', authenticate, asyncHandler(async (req, res) => {
 // GET /api/payments/:id — payment status.
 router.get('/:id', authenticate, asyncHandler(async (req, res) => {
   const payment = await prisma.payment.findUnique({ where: { id: req.params.id }, include: { booking: true } });
-  if (!payment) throw new ApiError(404, 'Payment not found');
+  if (!payment) throw localizedError(404, 'payment_not_found', localeOf(req));
   const allowed = payment.type === 'commission_settlement'
     ? payment.partnerId === req.user.id || req.user.role === 'admin' || req.user.role === 'super_admin'
     : isBookingParticipant(req.user, payment.booking);
-  if (!allowed) throw new ApiError(403, 'Forbidden');
+  if (!allowed) throw localizedError(403, 'forbidden', localeOf(req));
   res.json(mapOut(payment));
 }));
 

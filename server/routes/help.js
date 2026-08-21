@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 
 const router = Router();
 
@@ -73,7 +75,7 @@ router.get('/help/search', asyncHandler(async (req, res) => {
 
 router.get('/help/articles/:slug', asyncHandler(async (req, res) => {
   const article = await prisma.helpArticle.findUnique({ where: { slug: req.params.slug } });
-  if (!article || !article.isPublished) throw new ApiError(404, 'Article not found');
+  if (!article || !article.isPublished) throw localizedError(404, 'article_not_found', localeOf(req));
   // Fire-and-forget: a failed counter must never break the read.
   prisma.helpArticle.update({
     where: { id: article.id }, data: { viewCount: { increment: 1 } },
@@ -84,7 +86,7 @@ router.get('/help/articles/:slug', asyncHandler(async (req, res) => {
 const feedbackSchema = z.object({ helpful: z.boolean() });
 router.post('/help/articles/:slug/feedback', validate(feedbackSchema), asyncHandler(async (req, res) => {
   const article = await prisma.helpArticle.findUnique({ where: { slug: req.params.slug } });
-  if (!article) throw new ApiError(404, 'Article not found');
+  if (!article) throw localizedError(404, 'article_not_found', localeOf(req));
   const updated = await prisma.helpArticle.update({
     where: { id: article.id },
     data: req.body.helpful

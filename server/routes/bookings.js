@@ -4,6 +4,7 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { ApiError, asyncHandler, findUserByEmail, getBookingOr404, isAdmin, assertBookingParticipant } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
 import { priceBooking } from '../lib/pricing.js';
 import { split } from '../lib/payments/commission.js';
 import { resolveService, resolveServiceDetailOr404, validateServiceParams, toEngineService } from '../lib/catalog.js';
@@ -159,8 +160,8 @@ router.get('/:id', asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     include: { consumer: true, partner: true, items: true, escrow: true },
   });
-  if (!booking) throw new ApiError(404, 'Booking not found');
-  assertBookingParticipant(req.user, booking);
+  if (!booking) throw localizedError(404, 'booking_not_found', localeOf(req));
+  assertBookingParticipant(req.user, booking, localeOf(req));
   res.json(mapBookingOut(booking));
 }));
 
@@ -193,24 +194,24 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
   if (body.partner_email) {
     partner = await findUserByEmail(body.partner_email);
     if (!partner || partner.role !== 'partner' || !partner.partnerVerified) {
-      throw new ApiError(400, 'Selected partner is not available');
+      throw localizedError(400, 'partner_unavailable', localeOf(req));
     }
   }
 
   // Resolve the catalog service so we can validate service-specific answers against
   // its workflowConfig. Legacy callers send `bedrooms`; map it to `propertySize`.
   const service = await resolveService(body.service_id);
-  if (!service) throw new ApiError(400, `Unknown service: ${body.service_id}`);
+  if (!service) throw localizedError(400, 'unknown_service', localeOf(req), body.service_id);
 
   const serviceData = { ...(body.service_specific_data || {}) };
   if (body.bedrooms && serviceData.propertySize === undefined) {
     serviceData.propertySize = body.bedrooms;
   }
-  validateServiceParams(service.category?.workflowConfig, serviceData);
+  validateServiceParams(service.category?.workflowConfig, serviceData, localeOf(req));
 
   // A requested partner must be admin-verified for this specific service.
   if (partner && !(await isPartnerEligible(partner.id, service.id))) {
-    throw new ApiError(400, 'Selected partner is not qualified for this service');
+    throw localizedError(400, 'partner_not_qualified', localeOf(req));
   }
 
   const pricing = await priceBooking(prisma, {
@@ -220,6 +221,7 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
     bedrooms: body.bedrooms,
     serviceSpecificData: serviceData,
     couponCode: body.coupon_code || undefined,
+    locale: localeOf(req),
   });
 
   const booking = await prisma.$transaction(async (tx) => {
@@ -316,7 +318,7 @@ router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, 
   const body = req.body;
 
   const service = await resolveServiceDetailOr404(body.service_slug, localeOf(req));
-  if (!service.pricingType) throw new ApiError(400, `Service "${service.slug}" is not a dynamic-engine service`);
+  if (!service.pricingType) throw localizedError(400, 'not_dynamic_service', localeOf(req), service.slug);
 
   const engineService = toEngineService(service);
   const { ok, errors, details } = validateAnswers(engineService, body.answers, { locale: localeOf(req) });
@@ -326,10 +328,10 @@ router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, 
   if (body.partner_email) {
     partner = await findUserByEmail(body.partner_email);
     if (!partner || partner.role !== 'partner' || !partner.partnerVerified) {
-      throw new ApiError(400, 'Selected partner is not available');
+      throw localizedError(400, 'partner_unavailable', localeOf(req));
     }
     if (!(await isPartnerEligible(partner.id, service.id))) {
-      throw new ApiError(400, 'Selected partner is not qualified for this service');
+      throw localizedError(400, 'partner_not_qualified', localeOf(req));
     }
   }
 
@@ -426,8 +428,8 @@ const CONSUMER_STATUSES = ['cancelled', 'disputed'];
 
 // PATCH /api/bookings/:id — field whitelist depends on the caller's role.
 router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.params.id);
-  assertBookingParticipant(req.user, booking);
+  const booking = await getBookingOr404(req.params.id, localeOf(req));
+  assertBookingParticipant(req.user, booking, localeOf(req));
   const body = req.body;
   const data = {};
 
@@ -442,7 +444,7 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
         data.partnerId = null;
       } else {
         const p = await findUserByEmail(body.partner_email);
-        if (!p || p.role !== 'partner') throw new ApiError(400, 'Partner not found');
+        if (!p || p.role !== 'partner') throw localizedError(400, 'partner_not_found', localeOf(req));
         data.partnerId = p.id;
       }
     }
@@ -459,7 +461,7 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
       // job — applied below for every role alike.
       const allowed = isAssignedPartner ? PARTNER_STATUSES : CONSUMER_STATUSES;
       if (!allowed.includes(body.status)) {
-        throw new ApiError(403, `You are not allowed to set status "${body.status}"`);
+        throw localizedError(403, 'status_not_allowed', localeOf(req), body.status);
       }
     }
 
@@ -484,7 +486,7 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
     }));
   }
 
-  if (Object.keys(data).length === 0) throw new ApiError(400, 'No permitted fields to update');
+  if (Object.keys(data).length === 0) throw localizedError(400, 'no_permitted_fields', localeOf(req));
 
   const updated = await prisma.booking.update({
     where: { id: booking.id },
@@ -521,16 +523,16 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
 // Idempotent: confirming twice keeps the first timestamp, so a double tap
 // cannot extend the timer.
 router.post('/:id/confirm-completion', asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.params.id);
-  assertBookingParticipant(req.user, booking);
+  const booking = await getBookingOr404(req.params.id, localeOf(req));
+  assertBookingParticipant(req.user, booking, localeOf(req));
 
   // The customer confirms their own booking. Admins may act on their behalf for
   // support cases; a partner confirming their own work would defeat the point.
   if (!isAdmin(req.user) && booking.consumerId !== req.user.id) {
-    throw new ApiError(403, 'Only the customer can confirm completion');
+    throw localizedError(403, 'only_customer_confirms', localeOf(req));
   }
   if (booking.status !== 'completed') {
-    throw new ApiError(400, `Cannot confirm a booking that is "${booking.status}"`);
+    throw localizedError(400, 'cannot_confirm_status', localeOf(req), booking.status);
   }
   if (booking.completionConfirmedAt) {
     return res.json(mapBookingOut(booking));
@@ -558,7 +560,7 @@ router.post('/:id/confirm-completion', asyncHandler(async (req, res) => {
 // from the open job pool (lightweight dispatch: first to accept gets it).
 router.post('/:id/claim', asyncHandler(async (req, res) => {
   if (req.user.role !== 'partner') throw new ApiError(403, 'Only partners can accept jobs');
-  const booking = await getBookingOr404(req.params.id);
+  const booking = await getBookingOr404(req.params.id, localeOf(req));
   if (booking.partnerId) throw new ApiError(409, 'This job has already been taken');
   if (booking.status !== 'pending') throw new ApiError(400, 'This job is no longer open');
   // Through the shared helper so the claim writes a lifecycle entry like every
@@ -594,8 +596,8 @@ const photosSchema = z.object({
   })).min(1).max(12),
 });
 router.post('/:id/photos', validate(photosSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.params.id);
-  assertBookingParticipant(req.user, booking);
+  const booking = await getBookingOr404(req.params.id, localeOf(req));
+  assertBookingParticipant(req.user, booking, localeOf(req));
   if (!isAdmin(req.user) && booking.partnerId !== req.user.id) {
     throw new ApiError(403, 'Only the assigned partner can upload service photos');
   }
@@ -624,8 +626,8 @@ const extraSchema = z.object({
   qty: z.number().int().min(1).max(99).optional(),
 });
 router.post('/:id/extras', validate(extraSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.params.id);
-  assertBookingParticipant(req.user, booking);
+  const booking = await getBookingOr404(req.params.id, localeOf(req));
+  assertBookingParticipant(req.user, booking, localeOf(req));
   if (!isAdmin(req.user) && booking.partnerId !== req.user.id) {
     throw new ApiError(403, 'Only the assigned partner can add extras');
   }
@@ -645,14 +647,14 @@ router.post('/:id/extras', validate(extraSchema), asyncHandler(async (req, res) 
 // On approval the addon is folded into the booking price + breakdown.
 const extraDecisionSchema = z.object({ status: z.enum(['approved', 'rejected']) });
 router.patch('/:id/extras/:itemId', validate(extraDecisionSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.params.id);
-  assertBookingParticipant(req.user, booking);
+  const booking = await getBookingOr404(req.params.id, localeOf(req));
+  assertBookingParticipant(req.user, booking, localeOf(req));
   if (!isAdmin(req.user) && booking.consumerId !== req.user.id) {
-    throw new ApiError(403, 'Only the customer can approve or reject extras');
+    throw localizedError(403, 'only_customer_decides_extras', localeOf(req));
   }
   const item = await prisma.bookingItem.findUnique({ where: { id: req.params.itemId } });
-  if (!item || item.bookingId !== booking.id || item.kind !== 'addon') throw new ApiError(404, 'Extra not found');
-  if (item.status !== 'pending') throw new ApiError(400, 'This extra has already been decided');
+  if (!item || item.bookingId !== booking.id || item.kind !== 'addon') throw localizedError(404, 'extra_not_found', localeOf(req));
+  if (item.status !== 'pending') throw localizedError(400, 'extra_already_decided', localeOf(req));
 
   const bookingData = {};
   if (req.body.status === 'approved') {

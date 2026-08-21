@@ -6,6 +6,8 @@ import { validate } from '../middleware/validate.js';
 import {
   asyncHandler, ApiError, isAdmin, getBookingOr404, emailsByIds, bookingScope,
 } from '../lib/access.js';
+import { localizedError, refundPolicyReason } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 import { eligibleRefund, isAutoApprovable, round2 } from '../lib/refunds/policy.js';
 import { executeRefund } from '../lib/refunds/execute.js';
 import { notify } from '../lib/notifications/index.js';
@@ -79,8 +81,8 @@ router.get('/', asyncHandler(async (req, res) => {
 router.get('/policy', asyncHandler(async (req, res) => {
   const bookingId = String(req.query.booking_id || '');
   if (!bookingId) throw new ApiError(400, 'booking_id is required');
-  const booking = await getBookingOr404(bookingId);
-  if (booking.consumerId !== req.user.id && !isAdmin(req.user)) throw new ApiError(403, 'Forbidden');
+  const booking = await getBookingOr404(bookingId, localeOf(req));
+  if (booking.consumerId !== req.user.id && !isAdmin(req.user)) throw localizedError(403, 'forbidden', localeOf(req));
 
   const alreadyRefunded = await alreadyRefundedOn(booking.id);
   const verdict = eligibleRefund(booking, { alreadyRefunded, reason: req.query.reason });
@@ -92,7 +94,7 @@ router.get('/policy', asyncHandler(async (req, res) => {
     refund_type: verdict.type,
     percent: verdict.percent,
     policy: verdict.policy,
-    explanation: verdict.reason,
+    explanation: refundPolicyReason(verdict.policy, localeOf(req), verdict.reason),
     hours_notice: verdict.hoursNotice,
     auto_approved: isAutoApprovable(verdict.policy),
   });
@@ -112,18 +114,20 @@ const createSchema = z.object({
 
 // POST /api/refunds — the consumer requests; the server decides the amount.
 router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.body.booking_id);
+  const booking = await getBookingOr404(req.body.booking_id, localeOf(req));
   if (booking.consumerId !== req.user.id && !isAdmin(req.user)) {
-    throw new ApiError(403, 'You can only request refunds for your own bookings');
+    throw localizedError(403, 'refund_own_bookings_only', localeOf(req));
   }
   const existing = await prisma.refundRequest.findFirst({
     where: { bookingId: booking.id, status: { in: ['pending', 'under_review', 'approved', 'processing'] } },
   });
-  if (existing) throw new ApiError(409, 'A refund request already exists for this booking');
+  if (existing) throw localizedError(409, 'refund_already_exists', localeOf(req));
 
   const alreadyRefunded = await alreadyRefundedOn(booking.id);
   const verdict = eligibleRefund(booking, { alreadyRefunded, reason: req.body.reason });
-  if (verdict.amount <= 0) throw new ApiError(400, verdict.reason);
+  if (verdict.amount <= 0) {
+    throw new ApiError(400, refundPolicyReason(verdict.policy, localeOf(req), verdict.reason), [{ code: verdict.policy }]);
+  }
 
   const autoApprove = isAutoApprovable(verdict.policy);
   const created = await prisma.refundRequest.create({
@@ -163,21 +167,21 @@ router.get('/:id', asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     include: { booking: true },
   });
-  if (!item) throw new ApiError(404, 'Refund request not found');
+  if (!item) throw localizedError(404, 'refund_not_found', localeOf(req));
   const allowed = isAdmin(req.user)
     || item.consumerId === req.user.id
     || item.booking?.partnerId === req.user.id;
-  if (!allowed) throw new ApiError(403, 'Forbidden');
+  if (!allowed) throw localizedError(403, 'forbidden', localeOf(req));
   res.json((await mapManyOut([item]))[0]);
 }));
 
 // POST /api/refunds/:id/cancel — the consumer withdraws while still pending.
 router.post('/:id/cancel', asyncHandler(async (req, res) => {
   const item = await prisma.refundRequest.findUnique({ where: { id: req.params.id } });
-  if (!item) throw new ApiError(404, 'Refund request not found');
-  if (item.consumerId !== req.user.id && !isAdmin(req.user)) throw new ApiError(403, 'Forbidden');
+  if (!item) throw localizedError(404, 'refund_not_found', localeOf(req));
+  if (item.consumerId !== req.user.id && !isAdmin(req.user)) throw localizedError(403, 'forbidden', localeOf(req));
   if (!['pending', 'under_review'].includes(item.status)) {
-    throw new ApiError(409, `A ${item.status} refund cannot be cancelled`);
+    throw localizedError(409, 'refund_cannot_cancel', localeOf(req), item.status);
   }
   const updated = await prisma.refundRequest.update({
     where: { id: item.id }, data: { status: 'cancelled' },
@@ -198,7 +202,7 @@ const patchSchema = z.object({
 // PATCH /api/refunds/:id — admin decision. Approving now EXECUTES the refund.
 router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema), asyncHandler(async (req, res) => {
   const existing = await prisma.refundRequest.findUnique({ where: { id: req.params.id } });
-  if (!existing) throw new ApiError(404, 'Refund request not found');
+  if (!existing) throw localizedError(404, 'refund_not_found', localeOf(req));
   if (['completed', 'processing'].includes(existing.status)) {
     throw new ApiError(409, `This refund is already ${existing.status}`);
   }
@@ -244,7 +248,7 @@ router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema),
 // POST /api/refunds/:id/retry — a failed gateway refund, retried.
 router.post('/:id/retry', requireRole('admin', 'super_admin'), asyncHandler(async (req, res) => {
   const item = await prisma.refundRequest.findUnique({ where: { id: req.params.id } });
-  if (!item) throw new ApiError(404, 'Refund request not found');
+  if (!item) throw localizedError(404, 'refund_not_found', localeOf(req));
   if (item.status !== 'failed') throw new ApiError(409, `Only a failed refund can be retried (this one is ${item.status})`);
   const executed = await executeRefund({ ...item, status: 'approved' });
   res.json((await mapManyOut([executed]))[0]);

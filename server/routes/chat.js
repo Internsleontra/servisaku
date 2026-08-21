@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, getBookingOr404, isBookingParticipant, emailsByIds } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 
 const router = Router();
 router.use(authenticate);
@@ -30,8 +32,8 @@ async function mapManyOut(items) {
 router.get('/', asyncHandler(async (req, res) => {
   const bookingId = req.query.booking_id;
   if (!bookingId) throw new ApiError(400, 'booking_id is required');
-  const booking = await getBookingOr404(String(bookingId));
-  if (!isBookingParticipant(req.user, booking)) throw new ApiError(403, 'Forbidden');
+  const booking = await getBookingOr404(String(bookingId), localeOf(req));
+  if (!isBookingParticipant(req.user, booking)) throw localizedError(403, 'forbidden', localeOf(req));
 
   const take = req.query._limit ? Math.min(Number(req.query._limit) || 100, 500) : 100;
   const items = await prisma.chatMessage.findMany({
@@ -51,8 +53,8 @@ const createSchema = z.object({
 
 // POST /api/chat — sender identity always comes from the token, never the body
 router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.body.booking_id);
-  if (!isBookingParticipant(req.user, booking)) throw new ApiError(403, 'Forbidden');
+  const booking = await getBookingOr404(req.body.booking_id, localeOf(req));
+  if (!isBookingParticipant(req.user, booking)) throw localizedError(403, 'forbidden', localeOf(req));
 
   const sender = await prisma.user.findUnique({ where: { id: req.user.id } });
   const item = await prisma.chatMessage.create({
@@ -76,9 +78,9 @@ const patchSchema = z.object({
 // PATCH /api/chat/:id — recipients may mark messages read; nothing else is mutable
 router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
   const message = await prisma.chatMessage.findUnique({ where: { id: req.params.id } });
-  if (!message) throw new ApiError(404, 'Not found');
-  const booking = await getBookingOr404(message.bookingId);
-  if (!isBookingParticipant(req.user, booking)) throw new ApiError(403, 'Forbidden');
+  if (!message) throw localizedError(404, 'not_found', localeOf(req));
+  const booking = await getBookingOr404(message.bookingId, localeOf(req));
+  if (!isBookingParticipant(req.user, booking)) throw localizedError(403, 'forbidden', localeOf(req));
 
   const item = await prisma.chatMessage.update({
     where: { id: message.id },

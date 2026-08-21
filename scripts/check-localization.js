@@ -17,9 +17,11 @@
 //   node scripts/check-localization.js
 // ─────────────────────────────────────────────────────────────────────────────
 import { PrismaClient } from '@prisma/client';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
+import { localizedMessage, refundPolicyReason, ERROR_CODES, ERROR_MESSAGES, REFUND_POLICY_CODES } from '../server/lib/errors.js';
+import { POLICIES } from '../server/lib/refunds/policy.js';
 
 const prisma = new PrismaClient();
 
@@ -104,6 +106,158 @@ function report(label, rows, keyField = 'slug', neutral = null) {
   return failed;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Code-side checks: the localized error catalog and the wiring around it.
+
+   The DB checks above catch fake translations in DATA. These catch the two
+   ways the ERROR path breaks instead — a message that was never translated,
+   and a route that holds a translated message but never passes the locale in.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const ROOT = join(here, '..');
+
+function walk(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    if (name === 'node_modules' || name === '__tests__' || name.startsWith('.')) continue;
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) walk(p, out);
+    else if (name.endsWith('.js')) out.push(p);
+  }
+  return out;
+}
+
+function checkErrorCatalog() {
+  const problems = [];
+  const probe = ['«a»', '«b»'];
+
+  for (const code of ERROR_CODES) {
+    const set = ERROR_MESSAGES[code];
+    if (!set.en || !set.ms) { problems.push(`${code}: missing ${set.en ? 'ms' : 'en'}`); continue; }
+
+    const en = String(localizedMessage(code, 'en', ...probe));
+    const ms = String(localizedMessage(code, 'ms', ...probe));
+
+    if (!ms.trim()) problems.push(`${code}: Malay is empty`);
+    else if (ms === en) problems.push(`${code}: Malay identical to English — "${en}"`);
+    else if (normalise(ms) === normalise(en)) problems.push(`${code}: differs only by punctuation`);
+
+    // A placeholder that vanished in translation silently drops the id,
+    // amount or status the sentence exists to communicate.
+    for (const [lang, text] of [['en', en], ['ms', ms]]) {
+      if (/undefined|\[object |\bNaN\b|\$\{/.test(text)) problems.push(`${code}[${lang}]: broken placeholder → ${text}`);
+      for (const token of probe) {
+        const inEn = en.includes(token);
+        if (inEn && !text.includes(token)) problems.push(`${code}[${lang}]: dropped the ${token} argument`);
+      }
+    }
+  }
+
+  console.log(`\n  Error catalog: ${ERROR_CODES.length} codes`);
+  console.log(`    problems             : ${problems.length}`);
+  for (const p of problems.slice(0, 20)) console.log(`      ${p}`);
+  return problems.length;
+}
+
+function checkRefundPolicies() {
+  const problems = [];
+  for (const policy of Object.values(POLICIES)) {
+    if (!REFUND_POLICY_CODES.includes(policy)) { problems.push(`${policy}: engine returns it, no Malay explanation`); continue; }
+    if (refundPolicyReason(policy, 'ms') === refundPolicyReason(policy, 'en')) problems.push(`${policy}: Malay identical to English`);
+  }
+  console.log(`\n  Refund policy explanations: ${Object.values(POLICIES).length} engine policies`);
+  console.log(`    problems             : ${problems.length}`);
+  for (const p of problems) console.log(`      ${p}`);
+  return problems.length;
+}
+
+/* `localizedError(..., localeOf(req))` pasted into a helper that has no `req`
+   throws "req is not defined" — a 500 in place of the business rule. This is
+   not hypothetical: three such sites shipped into this branch before it ran. */
+function checkLocaleInScope() {
+  const declRe = /^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/;
+  const scopeRe = /async\s*\(([^)]*)\)|\(([^)]*)\)\s*=>/;
+  const problems = [];
+
+  for (const file of walk(join(ROOT, 'server'))) {
+    const lines = readFileSync(file, 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      if (!line.includes('localeOf(req)')) return;
+      for (let j = i; j >= 0; j--) {
+        const scope = scopeRe.exec(lines[j]);
+        if (scope) {
+          const params = scope[1] ?? scope[2] ?? '';
+          // `.map((x) => …)` closes over the handler's `req`; only a scope that
+          // itself introduces parameters and omits `req` is suspect, and an
+          // enclosing handler further up may still supply it.
+          if (!/\breq\b/.test(params) && !lines.slice(0, j).some((l) => /async\s*\(\s*req\b/.test(l))) {
+            problems.push(`${relative(ROOT, file)}:${i + 1} — no \`req\` in scope`);
+          }
+          return;
+        }
+        const decl = declRe.exec(lines[j]);
+        if (decl) {
+          if (!/\breq\b/.test(decl[2])) problems.push(`${relative(ROOT, file)}:${i + 1} — \`req\` is not a parameter of ${decl[1]}()`);
+          return;
+        }
+      }
+    });
+  }
+
+  console.log('\n  localeOf(req) scope');
+  console.log(`    out-of-scope uses    : ${problems.length}`);
+  for (const p of problems.slice(0, 12)) console.log(`      ${p}`);
+  return problems.length;
+}
+
+/* A helper that takes a locale it never receives is worse than one that does
+   not take it at all: the message looks localized in the catalog and arrives
+   in English. Every caller must pass the argument. */
+const LOCALE_PARAM_INDEX = {
+  getBookingOr404: 1, assertBookingParticipant: 2, resolveServiceOr404: 1,
+  resolveServiceDetailOr404: 1, resolveCoupon: 4, sizeMultiplierFor: 2,
+};
+
+function checkLocaleThreaded() {
+  const problems = [];
+  const splitArgs = (s) => {
+    const out = []; let depth = 0; let cur = '';
+    for (const ch of s) {
+      if ('([{'.includes(ch)) depth++;
+      if (')]}'.includes(ch)) depth--;
+      if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  };
+
+  for (const file of walk(join(ROOT, 'server'))) {
+    const src = readFileSync(file, 'utf8');
+    for (const [name, idx] of Object.entries(LOCALE_PARAM_INDEX)) {
+      const re = new RegExp(`(?<![\\w.])${name}\\(`, 'g');
+      let m;
+      while ((m = re.exec(src))) {
+        if (/function\s+$/.test(src.slice(Math.max(0, m.index - 30), m.index))) continue;
+        let depth = 1; let j = m.index + m[0].length;
+        const start = j;
+        while (j < src.length && depth) {
+          if ('([{'.includes(src[j])) depth++;
+          else if (')]}'.includes(src[j])) depth--;
+          j++;
+        }
+        if (splitArgs(src.slice(start, j - 1)).length <= idx) {
+          problems.push(`${relative(ROOT, file)}:${src.slice(0, m.index).split('\n').length} — ${name}() called without a locale`);
+        }
+      }
+    }
+  }
+
+  console.log('\n  locale threading');
+  console.log(`    callers omitting it  : ${problems.length}`);
+  for (const p of problems.slice(0, 12)) console.log(`      ${p}`);
+  return problems.length;
+}
+
 async function main() {
   let failures = 0;
 
@@ -152,6 +306,11 @@ async function main() {
     failures += badMy.length;
   }
 
+
+  failures += checkErrorCatalog();
+  failures += checkRefundPolicies();
+  failures += checkLocaleInScope();
+  failures += checkLocaleThreaded();
 
   console.log(`\n  RESULT: ${failures === 0 ? 'PASS — no fake or missing translations' : `FAIL — ${failures} record(s)`}`);
   await prisma.$disconnect();

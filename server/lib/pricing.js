@@ -3,6 +3,7 @@
 // (seeded from the legacy JS catalog), so the catalog is the single source of
 // truth.
 import { ApiError } from './access.js';
+import { localizedError } from './errors.js';
 import { resolveService } from './catalog.js';
 
 // Package-pricing arithmetic. Self-contained here so the server has no
@@ -24,26 +25,26 @@ function calculatePrice(basePrice, pkgMultiplier, addons, coupon, surge = 1, siz
 }
 
 // area_based services carry pricingConfig.tiers = [{ id, label, multiplier }].
-function sizeMultiplierFor(service, sizeId) {
+function sizeMultiplierFor(service, sizeId, locale) {
   const tiers = service.pricingConfig?.tiers;
   if (!Array.isArray(tiers) || tiers.length === 0) return 1.0;
   if (!sizeId) return 1.0; // no size chosen → base (2BR-equivalent) price
   const tier = tiers.find((t) => t.id === sizeId);
-  if (!tier) throw new ApiError(400, `Unknown property size "${sizeId}" for ${service.slug}`);
+  if (!tier) throw localizedError(400, 'unknown_property_size', locale, sizeId, service.slug);
   return tier.multiplier ?? 1.0;
 }
 
-async function resolveCoupon(prisma, couponCode, subtotal, serviceKey) {
+async function resolveCoupon(prisma, couponCode, subtotal, serviceKey, locale) {
   const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
-  if (!coupon || !coupon.isActive) throw new ApiError(400, 'Invalid coupon');
-  if (coupon.validUntil && coupon.validUntil < new Date()) throw new ApiError(400, 'Coupon expired');
-  if (coupon.maxUsage != null && coupon.usageCount >= coupon.maxUsage) throw new ApiError(400, 'Coupon usage limit reached');
+  if (!coupon || !coupon.isActive) throw localizedError(400, 'coupon_invalid', locale);
+  if (coupon.validUntil && coupon.validUntil < new Date()) throw localizedError(400, 'coupon_expired', locale);
+  if (coupon.maxUsage != null && coupon.usageCount >= coupon.maxUsage) throw localizedError(400, 'coupon_usage_limit', locale);
   if (coupon.minOrderAmount != null && subtotal < coupon.minOrderAmount) {
-    throw new ApiError(400, `Coupon requires a minimum order of RM${coupon.minOrderAmount}`);
+    throw localizedError(400, 'coupon_min_order', locale, coupon.minOrderAmount);
   }
   if (Array.isArray(coupon.applicableServices) && coupon.applicableServices.length) {
     const allowed = coupon.applicableServices.map((s) => String(s).trim());
-    if (!allowed.includes(serviceKey)) throw new ApiError(400, 'Coupon not valid for this service');
+    if (!allowed.includes(serviceKey)) throw localizedError(400, 'coupon_wrong_service', locale);
   }
   return coupon;
 }
@@ -77,22 +78,22 @@ function buildLineItems(pkg, addons, pricing, coupon, discount) {
  * @param {string} [args.couponCode]
  * @returns full pricing breakdown + resolved catalog ids + line items
  */
-export async function priceBooking(prisma, { serviceId, packageId, addonIds = [], bedrooms, serviceSpecificData, couponCode }) {
+export async function priceBooking(prisma, { serviceId, packageId, addonIds = [], bedrooms, serviceSpecificData, couponCode, locale }) {
   const service = await resolveService(serviceId);
-  if (!service) throw new ApiError(400, `Unknown service: ${serviceId}`);
+  if (!service) throw localizedError(400, 'unknown_service', locale, serviceId);
   const serviceKey = service.slug;
 
   const pkg = service.packages.find((p) => p.tier === packageId || p.id === packageId);
-  if (!pkg) throw new ApiError(400, `Unknown package "${packageId}" for service "${serviceKey}"`);
+  if (!pkg) throw localizedError(400, 'unknown_package', locale, packageId, serviceKey);
 
   const addons = addonIds.map((id) => {
     const addon = service.addons.find((a) => a.slug === id || a.id === id);
-    if (!addon) throw new ApiError(400, `Unknown addon "${id}" for service "${serviceKey}"`);
+    if (!addon) throw localizedError(400, 'unknown_addon', locale, id, serviceKey);
     return addon;
   });
 
   const sizeId = bedrooms || serviceSpecificData?.propertySize || serviceSpecificData?.bedrooms || null;
-  const sizeMultiplier = service.pricingModel === 'area_based' ? sizeMultiplierFor(service, sizeId) : 1.0;
+  const sizeMultiplier = service.pricingModel === 'area_based' ? sizeMultiplierFor(service, sizeId, locale) : 1.0;
   const basePrice = packageBasePrice(service, pkg);
 
   // Pass 1 (no coupon) yields the subtotal coupon rules are validated against.
@@ -100,7 +101,7 @@ export async function priceBooking(prisma, { serviceId, packageId, addonIds = []
 
   let coupon = null;
   if (couponCode) {
-    coupon = await resolveCoupon(prisma, couponCode, base.subtotal, serviceKey);
+    coupon = await resolveCoupon(prisma, couponCode, base.subtotal, serviceKey, locale);
   }
 
   const pricing = calculatePrice(

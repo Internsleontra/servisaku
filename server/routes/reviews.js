@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, getBookingOr404, emailsByIds, isAdmin } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 
 const router = Router();
 
@@ -56,26 +58,26 @@ router.get('/mine', authenticate, asyncHandler(async (req, res) => {
 
 router.get('/:id', asyncHandler(async (req, res) => {
   const item = await prisma.review.findUnique({ where: { id: req.params.id } });
-  if (!item) throw new ApiError(404, 'Not found');
+  if (!item) throw localizedError(404, 'not_found', localeOf(req));
   res.json((await mapManyOut([item]))[0]);
 }));
 
 // Partner reply / report (only the booking's assigned partner).
-async function reviewForPartner(id, user) {
+async function reviewForPartner(id, user, locale) {
   const review = await prisma.review.findUnique({ where: { id }, include: { booking: { select: { partnerId: true } } } });
-  if (!review) throw new ApiError(404, 'Review not found');
-  if (review.booking?.partnerId !== user.id && !isAdmin(user)) throw new ApiError(403, 'Forbidden');
+  if (!review) throw localizedError(404, 'review_not_found', locale);
+  if (review.booking?.partnerId !== user.id && !isAdmin(user)) throw localizedError(403, 'forbidden', locale);
   return review;
 }
 
 router.post('/:id/reply', authenticate, validate(z.object({ reply: z.string().min(1).max(1000) })), asyncHandler(async (req, res) => {
-  const review = await reviewForPartner(req.params.id, req.user);
+  const review = await reviewForPartner(req.params.id, req.user, localeOf(req));
   const updated = await prisma.review.update({ where: { id: review.id }, data: { reply: req.body.reply, repliedAt: new Date() } });
   res.json({ id: updated.id, reply: updated.reply, replied_at: updated.repliedAt });
 }));
 
 router.post('/:id/report', authenticate, validate(z.object({ reason: z.string().min(1).max(500) })), asyncHandler(async (req, res) => {
-  const review = await reviewForPartner(req.params.id, req.user);
+  const review = await reviewForPartner(req.params.id, req.user, localeOf(req));
   const updated = await prisma.review.update({ where: { id: review.id }, data: { reported: true, reportReason: req.body.reason } });
   res.json({ id: updated.id, reported: updated.reported });
 }));
@@ -89,15 +91,15 @@ const createSchema = z.object({
 
 // POST /api/reviews — only the booking's consumer, only after completion, only once
 router.post('/', authenticate, validate(createSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.body.booking_id);
+  const booking = await getBookingOr404(req.body.booking_id, localeOf(req));
   if (booking.consumerId !== req.user.id) {
-    throw new ApiError(403, 'You can only review your own bookings');
+    throw localizedError(403, 'review_own_bookings_only', localeOf(req));
   }
   if (booking.status !== 'completed') {
-    throw new ApiError(400, 'You can only review completed bookings');
+    throw localizedError(400, 'review_completed_only', localeOf(req));
   }
   const existing = await prisma.review.findUnique({ where: { bookingId: booking.id } });
-  if (existing) throw new ApiError(409, 'This booking has already been reviewed');
+  if (existing) throw localizedError(409, 'review_already_exists', localeOf(req));
 
   const item = await prisma.review.create({
     data: {

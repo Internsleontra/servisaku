@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isAdmin, getBookingOr404 } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 import {
   dueDates, compensationDueAt, isWithinWindow, splitLiability, breaches,
   MAX_CLAIM_AMOUNT, REPORTING_WINDOW_HOURS, round2,
@@ -117,8 +119,8 @@ async function getClaimFor(req, id, { includeChildren = false } = {}) {
       ? { evidence: { orderBy: { createdAt: 'asc' } }, events: { orderBy: { createdAt: 'asc' } } }
       : undefined,
   });
-  if (!claim) throw new ApiError(404, 'Damage claim not found');
-  if (!roleOf(req.user, claim)) throw new ApiError(403, 'Forbidden');
+  if (!claim) throw localizedError(404, 'claim_not_found', localeOf(req));
+  if (!roleOf(req.user, claim)) throw localizedError(403, 'forbidden', localeOf(req));
   return claim;
 }
 
@@ -162,20 +164,20 @@ const createSchema = z.object({
 
 // POST /api/damage-claims — the customer files a claim.
 router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
-  const booking = await getBookingOr404(req.body.booking_id);
-  if (booking.consumerId !== req.user.id) throw new ApiError(403, 'You can only claim on your own bookings');
-  if (booking.status !== 'completed') throw new ApiError(400, 'A damage claim can only be filed after the job is completed');
+  const booking = await getBookingOr404(req.body.booking_id, localeOf(req));
+  if (booking.consumerId !== req.user.id) throw localizedError(403, 'claim_own_bookings_only', localeOf(req));
+  if (booking.status !== 'completed') throw localizedError(400, 'claim_before_completion', localeOf(req));
 
   const existing = await prisma.damageClaim.findFirst({
     where: { bookingId: booking.id, status: { notIn: ['rejected', 'closed'] } },
   });
   // A second claim on the same booking is an appeal or more evidence, not a new
   // case — otherwise the same incident gets investigated twice.
-  if (existing) throw new ApiError(409, 'An open claim already exists for this booking — add evidence to it instead');
+  if (existing) throw localizedError(409, 'claim_already_open', localeOf(req));
 
   // At least one photo. A written description alone cannot be investigated.
   if (!req.body.evidence.some((e) => e.kind === 'photo')) {
-    throw new ApiError(400, 'At least one photo of the damage is required');
+    throw localizedError(400, 'claim_photo_required', localeOf(req));
   }
 
   const now = new Date();
@@ -251,7 +253,7 @@ router.post('/:id/evidence', validate(addEvidenceSchema), asyncHandler(async (re
   const role = roleOf(req.user, claim);
   // Evidence is frozen once a decision is made — otherwise the record behind
   // that decision changes after the fact.
-  if (claim.decidedAt) throw new ApiError(409, 'Evidence cannot be added after a decision has been made');
+  if (claim.decidedAt) throw localizedError(409, 'claim_evidence_after_decision', localeOf(req));
 
   const created = await prisma.$transaction(async (tx) => {
     const rows = [];
@@ -275,7 +277,7 @@ const respondSchema = z.object({ response: z.string().min(10).max(5000) });
 router.post('/:id/respond', validate(respondSchema), asyncHandler(async (req, res) => {
   const claim = await getClaimFor(req, req.params.id);
   if (claim.partnerId !== req.user.id) throw new ApiError(403, 'Only the assigned partner can respond to this claim');
-  if (claim.decidedAt) throw new ApiError(409, 'This claim has already been decided');
+  if (claim.decidedAt) throw localizedError(409, 'claim_already_decided', localeOf(req));
 
   const updated = await prisma.damageClaim.update({
     where: { id: claim.id },
@@ -300,7 +302,7 @@ const patchSchema = z.object({
 });
 router.patch('/:id', requireRole('admin', 'super_admin'), validate(patchSchema), asyncHandler(async (req, res) => {
   const claim = await prisma.damageClaim.findUnique({ where: { id: req.params.id } });
-  if (!claim) throw new ApiError(404, 'Damage claim not found');
+  if (!claim) throw localizedError(404, 'claim_not_found', localeOf(req));
 
   const data = {};
   if (req.body.status) data.status = req.body.status;
@@ -333,8 +335,8 @@ const decideSchema = z.object({
 });
 router.post('/:id/decide', requireRole('admin', 'super_admin'), validate(decideSchema), asyncHandler(async (req, res) => {
   const claim = await prisma.damageClaim.findUnique({ where: { id: req.params.id } });
-  if (!claim) throw new ApiError(404, 'Damage claim not found');
-  if (claim.decidedAt) throw new ApiError(409, 'This claim has already been decided');
+  if (!claim) throw localizedError(404, 'claim_not_found', localeOf(req));
+  if (claim.decidedAt) throw localizedError(409, 'claim_already_decided', localeOf(req));
 
   if (req.body.decision === 'reject') {
     const rejected = await prisma.damageClaim.update({
@@ -397,7 +399,7 @@ const compensateSchema = z.object({
 });
 router.post('/:id/compensate', requireRole('admin', 'super_admin'), validate(compensateSchema), asyncHandler(async (req, res) => {
   const claim = await prisma.damageClaim.findUnique({ where: { id: req.params.id } });
-  if (!claim) throw new ApiError(404, 'Damage claim not found');
+  if (!claim) throw localizedError(404, 'claim_not_found', localeOf(req));
   if (!['approved', 'partially_approved', 'compensating'].includes(claim.status)) {
     throw new ApiError(409, `A ${claim.status} claim cannot be compensated`);
   }
@@ -451,9 +453,9 @@ router.post('/:id/compensate', requireRole('admin', 'super_admin'), validate(com
 const appealSchema = z.object({ reason: z.string().min(20).max(2000) });
 router.post('/:id/appeal', validate(appealSchema), asyncHandler(async (req, res) => {
   const claim = await getClaimFor(req, req.params.id);
-  if (claim.consumerId !== req.user.id) throw new ApiError(403, 'Only the claimant can appeal');
-  if (!claim.decidedAt) throw new ApiError(400, 'There is no decision to appeal yet');
-  if (claim.appealCount >= 1) throw new ApiError(409, 'This claim has already been appealed once — the decision is final');
+  if (claim.consumerId !== req.user.id) throw localizedError(403, 'claim_appeal_owner_only', localeOf(req));
+  if (!claim.decidedAt) throw localizedError(400, 'claim_no_decision_yet', localeOf(req));
+  if (claim.appealCount >= 1) throw localizedError(409, 'claim_already_appealed', localeOf(req));
 
   const updated = await prisma.damageClaim.update({
     where: { id: claim.id },

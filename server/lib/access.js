@@ -3,26 +3,15 @@
 //   partner  → records tied to bookings assigned to them
 //   admin/super_admin → everything
 import { prisma } from '../db.js';
+import { ApiError } from './apiError.js';
+import { localizedError } from './errors.js';
 
 export const ADMIN_ROLES = ['admin', 'super_admin'];
 
 export const isAdmin = (user) => ADMIN_ROLES.includes(user?.role);
 
-export class ApiError extends Error {
-  /**
-   * @param {number} status
-   * @param {string} message  customer-facing, already localized by the caller
-   * @param {Array}  [details] optional stable machine-readable causes, e.g.
-   *   [{ code: 'required', questionId: 'size', label: 'Saiz rumah' }]. Emitted
-   *   only when present, so the `{ error }` shape existing clients rely on is
-   *   unchanged — this is additive, not a new contract.
-   */
-  constructor(status, message, details) {
-    super(message);
-    this.status = status;
-    if (details && details.length) this.details = details;
-  }
-}
+// Re-exported for the ~28 modules that import it from here.
+export { ApiError };
 
 export function asyncHandler(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -33,13 +22,13 @@ export async function findUserByEmail(email) {
   return prisma.user.findUnique({ where: { email } });
 }
 
-export async function getBookingOr404(id) {
+export async function getBookingOr404(id, locale) {
   // `payments` is included because the completion payment guard follows the
   // money, not just the intention: a booking whose `paymentMethod` says online
   // can still have been settled in cash, and vice versa. Additive — callers that
   // ignore it are unaffected. See lib/bookings/status.js#isCashBooking.
   const booking = await prisma.booking.findUnique({ where: { id }, include: { payments: true } });
-  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (!booking) throw localizedError(404, 'booking_not_found', locale);
   return booking;
 }
 
@@ -47,8 +36,8 @@ export function isBookingParticipant(user, booking) {
   return isAdmin(user) || booking.consumerId === user.id || booking.partnerId === user.id;
 }
 
-export function assertBookingParticipant(user, booking) {
-  if (!isBookingParticipant(user, booking)) throw new ApiError(403, 'Forbidden');
+export function assertBookingParticipant(user, booking, locale) {
+  if (!isBookingParticipant(user, booking)) throw localizedError(403, 'forbidden', locale);
 }
 
 // Prisma where-fragment limiting a booking-joined query to the caller's bookings.

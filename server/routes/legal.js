@@ -5,6 +5,7 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
 import {
   SLUGS, activeDocuments, activeBySlug, pendingFor, accept, publish,
   reacceptanceImpact, mapDocumentOut, mapAcceptanceOut,
@@ -22,9 +23,9 @@ router.get('/legal/documents', asyncHandler(async (req, res) => {
 }));
 
 router.get('/legal/documents/:slug', asyncHandler(async (req, res) => {
-  if (!SLUGS.includes(req.params.slug)) throw new ApiError(404, 'Unknown document');
+  if (!SLUGS.includes(req.params.slug)) throw localizedError(404, 'legal_document_unknown', localeOf(req));
   const doc = await activeBySlug(req.params.slug);
-  if (!doc) throw new ApiError(404, 'This document has not been published yet');
+  if (!doc) throw localizedError(404, 'legal_document_unpublished', localeOf(req));
   res.json(mapDocumentOut(doc, { full: true, locale: localeOf(req) }));
 }));
 

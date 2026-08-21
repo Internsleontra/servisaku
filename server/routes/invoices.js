@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isAdmin } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 import { issueCreditNote, mapInvoiceOut } from '../lib/tax/invoice.js';
 import { sstReport, sstReportRows, toCsv } from '../lib/tax/report.js';
 import { taxSummary, supersede, TAX_CODES } from '../lib/tax/index.js';
@@ -12,11 +14,11 @@ const router = Router();
 router.use(authenticate);
 
 // An invoice is readable by the party it names, plus admin. Nobody else.
-function assertInvoiceAccess(user, invoice) {
+function assertInvoiceAccess(user, invoice, locale) {
   if (isAdmin(user)) return;
   if (invoice.consumerId === user.id) return;
   if (invoice.partnerId === user.id) return;
-  throw new ApiError(403, 'Forbidden');
+  throw localizedError(403, 'forbidden', locale);
 }
 
 // GET /api/invoices — scoped: consumer sees their own, partner sees commission
@@ -63,8 +65,8 @@ router.get('/admin/tax-report/export', requireRole('admin', 'super_admin'), asyn
 // GET /api/invoices/:id
 router.get('/:id', asyncHandler(async (req, res) => {
   const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id } });
-  if (!invoice) throw new ApiError(404, 'Invoice not found');
-  assertInvoiceAccess(req.user, invoice);
+  if (!invoice) throw localizedError(404, 'invoice_not_found', localeOf(req));
+  assertInvoiceAccess(req.user, invoice, localeOf(req));
   res.json(mapInvoiceOut(invoice));
 }));
 
@@ -76,7 +78,7 @@ const creditSchema = z.object({
 });
 router.post('/:id/credit-note', requireRole('admin', 'super_admin'), validate(creditSchema), asyncHandler(async (req, res) => {
   const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id } });
-  if (!invoice) throw new ApiError(404, 'Invoice not found');
+  if (!invoice) throw localizedError(404, 'invoice_not_found', localeOf(req));
   if (invoice.type !== 'tax_invoice') throw new ApiError(400, 'Credit notes may only be issued against a tax invoice');
 
   try {

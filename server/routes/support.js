@@ -4,6 +4,8 @@ import { prisma } from '../db.js';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, isAdmin } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
+import { localeOf } from '../lib/locale.js';
 import {
   dueDates, priorityFor, breaches, canReopen, queueComparator,
   ESCALATION_LEVELS, REOPEN_WINDOW_DAYS,
@@ -22,6 +24,9 @@ const requireAgent = (req) => { if (!isAgent(req.user)) throw new ApiError(403, 
 const reference = () => `TKT-${Math.random().toString(36).slice(2, 8).toUpperCase()}${Date.now().toString(36).slice(-3).toUpperCase()}`;
 
 const MAX_OPEN_TICKETS = 10;
+// Named so the limit in the guard and the limit quoted in the error message
+// cannot drift apart when one of them is changed.
+const CALLBACK_MAX_DAYS_AHEAD = 30;
 
 function mapOut(t, { forAgent = false } = {}) {
   return {
@@ -68,8 +73,8 @@ function mapMessage(m) {
 
 async function getTicketFor(req, id) {
   const ticket = await prisma.supportTicket.findUnique({ where: { id } });
-  if (!ticket) throw new ApiError(404, 'Ticket not found');
-  if (!isAgent(req.user) && ticket.userId !== req.user.id) throw new ApiError(403, 'Forbidden');
+  if (!ticket) throw localizedError(404, 'ticket_not_found', localeOf(req));
+  if (!isAgent(req.user) && ticket.userId !== req.user.id) throw localizedError(403, 'forbidden', localeOf(req));
   return ticket;
 }
 
@@ -142,7 +147,7 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
     where: { userId: req.user.id, status: { notIn: ['resolved', 'closed'] } },
   });
   if (openCount >= MAX_OPEN_TICKETS) {
-    throw new ApiError(429, `You already have ${MAX_OPEN_TICKETS} open tickets — please continue in one of those`);
+    throw localizedError(429, 'ticket_limit_reached', localeOf(req), MAX_OPEN_TICKETS);
   }
 
   const priority = priorityFor(req.body.category);
@@ -249,7 +254,7 @@ const patchSchema = z.object({
 router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
   requireAgent(req);
   const ticket = await prisma.supportTicket.findUnique({ where: { id: req.params.id } });
-  if (!ticket) throw new ApiError(404, 'Ticket not found');
+  if (!ticket) throw localizedError(404, 'ticket_not_found', localeOf(req));
 
   const data = {};
   if (req.body.status) data.status = req.body.status;
@@ -285,7 +290,7 @@ const escalateSchema = z.object({ reason: z.string().min(5).max(500) });
 router.post('/:id/escalate', validate(escalateSchema), asyncHandler(async (req, res) => {
   requireAgent(req);
   const ticket = await prisma.supportTicket.findUnique({ where: { id: req.params.id } });
-  if (!ticket) throw new ApiError(404, 'Ticket not found');
+  if (!ticket) throw localizedError(404, 'ticket_not_found', localeOf(req));
   if (ticket.escalationLevel >= ESCALATION_LEVELS.MANAGER) {
     throw new ApiError(409, 'This ticket is already at the highest escalation level');
   }
@@ -314,7 +319,7 @@ const resolveSchema = z.object({ resolution: z.string().min(5).max(2000) });
 router.post('/:id/resolve', validate(resolveSchema), asyncHandler(async (req, res) => {
   requireAgent(req);
   const ticket = await prisma.supportTicket.findUnique({ where: { id: req.params.id } });
-  if (!ticket) throw new ApiError(404, 'Ticket not found');
+  if (!ticket) throw localizedError(404, 'ticket_not_found', localeOf(req));
 
   const now = new Date();
   const updated = await prisma.supportTicket.update({
@@ -333,9 +338,9 @@ router.post('/:id/resolve', validate(resolveSchema), asyncHandler(async (req, re
 // POST /api/support/:id/reopen — the owner reopens within the window.
 router.post('/:id/reopen', asyncHandler(async (req, res) => {
   const ticket = await getTicketFor(req, req.params.id);
-  if (ticket.userId !== req.user.id) throw new ApiError(403, 'Only the ticket owner can reopen it');
+  if (ticket.userId !== req.user.id) throw localizedError(403, 'ticket_reopen_owner_only', localeOf(req));
   if (!canReopen(ticket)) {
-    throw new ApiError(409, `This ticket can no longer be reopened (limit ${REOPEN_WINDOW_DAYS} days and 3 reopens) — please raise a new one`);
+    throw localizedError(409, 'ticket_reopen_limit', localeOf(req), REOPEN_WINDOW_DAYS);
   }
   const priority = ticket.priority;
   const updated = await prisma.supportTicket.update({
@@ -358,9 +363,9 @@ const csatSchema = z.object({
 });
 router.post('/:id/csat', validate(csatSchema), asyncHandler(async (req, res) => {
   const ticket = await getTicketFor(req, req.params.id);
-  if (ticket.userId !== req.user.id) throw new ApiError(403, 'Only the ticket owner can rate it');
-  if (ticket.csatRating != null) throw new ApiError(409, 'You have already rated this ticket');
-  if (!['resolved', 'closed'].includes(ticket.status)) throw new ApiError(400, 'Rate the ticket once it has been resolved');
+  if (ticket.userId !== req.user.id) throw localizedError(403, 'ticket_rate_owner_only', localeOf(req));
+  if (ticket.csatRating != null) throw localizedError(409, 'ticket_already_rated', localeOf(req));
+  if (!['resolved', 'closed'].includes(ticket.status)) throw localizedError(400, 'ticket_rate_after_resolved', localeOf(req));
 
   const updated = await prisma.supportTicket.update({
     where: { id: ticket.id },
@@ -411,9 +416,11 @@ const callbackSchema = z.object({
 });
 router.post('/callbacks', validate(callbackSchema), asyncHandler(async (req, res) => {
   const { preferred_from: from, preferred_to: to } = req.body;
-  if (from >= to) throw new ApiError(400, 'The end of the window must be after its start');
-  if (from < new Date()) throw new ApiError(400, 'Pick a window in the future');
-  if (from > new Date(Date.now() + 30 * 86400000)) throw new ApiError(400, 'Callbacks can be scheduled up to 30 days ahead');
+  if (from >= to) throw localizedError(400, 'callback_window_order', localeOf(req));
+  if (from < new Date()) throw localizedError(400, 'callback_window_past', localeOf(req));
+  if (from > new Date(Date.now() + CALLBACK_MAX_DAYS_AHEAD * 86400000)) {
+    throw localizedError(400, 'callback_window_too_far', localeOf(req), CALLBACK_MAX_DAYS_AHEAD);
+  }
 
   const item = await prisma.callbackRequest.create({
     data: {

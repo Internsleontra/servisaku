@@ -12,6 +12,7 @@ import { prisma } from '../db.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler, ApiError } from '../lib/access.js';
+import { localizedError } from '../lib/errors.js';
 import {
   listServices, resolveServiceOr404, resolveServiceDetailOr404, mapServiceSummary, mapServiceDetail, buildSla,
   listCategories, getCategoryServicesOr404, mapCategory, toEngineService,
@@ -57,7 +58,7 @@ router.get('/services/:id', asyncHandler(async (req, res) => {
 // Phase 1 derives slots from the schedule step (leadTimeHours, granularity);
 // Phase 2 will intersect with real partner availability.
 router.get('/services/:id/availability', asyncHandler(async (req, res) => {
-  const service = await resolveServiceOr404(req.params.id);
+  const service = await resolveServiceOr404(req.params.id, localeOf(req));
   const sla = buildSla(service.category);
   const days = Math.min(Math.max(Number(req.query.days) || 7, 1), 30);
   const leadMs = (sla.lead_time_hours ?? 0) * 3600 * 1000;
@@ -131,6 +132,7 @@ router.post('/pricing/calculate', validate(calcSchema), asyncHandler(async (req,
     bedrooms: b.bedrooms,
     serviceSpecificData: b.service_specific_data,
     couponCode: b.coupon_code || undefined,
+    locale: localeOf(req),
   });
   res.json(mapPricing(pricing));
 }));
@@ -149,7 +151,7 @@ const dynamicCalcSchema = z.object({
 router.post('/bookings/calculate', validate(dynamicCalcSchema), asyncHandler(async (req, res) => {
   const service = await resolveServiceDetailOr404(req.body.service_slug, localeOf(req));
   if (!service.pricingType) {
-    throw new ApiError(400, `Service "${service.slug}" is not a dynamic-engine service`);
+    throw localizedError(400, 'not_dynamic_service', localeOf(req), service.slug);
   }
   const engineService = toEngineService(service);
   const { ok, errors, details } = validateAnswers(engineService, req.body.answers, { locale: localeOf(req) });
