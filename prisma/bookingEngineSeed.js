@@ -115,6 +115,7 @@ async function seedService(prisma, categoryId, svc, sortOrder) {
         serviceId: service.id,
         key: q.id,
         label: q.label,
+        labelMy: q.labelMy || '',
         type: q.type,
         required: q.required ?? true,
         sortOrder: qOrder++,
@@ -123,6 +124,7 @@ async function seedService(prisma, categoryId, svc, sortOrder) {
           create: (q.options || []).map((o, i) => ({
             key: o.id,
             label: o.label,
+            labelMy: o.labelMy || '',
             priceModifier: o.priceModifier ?? 0,
             unitPrice: o.unitPrice ?? null,
             priceModifierPerSqft: o.priceModifierPerSqft ?? null,

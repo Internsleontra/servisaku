@@ -24,17 +24,17 @@ datasource db {
 // ─── §1 Existing models ──────────────────────────────────────────────────────
 
 model User {
-  id              String   @id @default(cuid())
-  email           String?  @unique
-  firebaseUid     String?  @unique
+  id              String    @id @default(cuid())
+  email           String?   @unique
+  firebaseUid     String?   @unique
   passwordHash    String?
   fullName        String
-  role            String   @default("consumer") // consumer | partner | admin | super_admin
+  role            String    @default("consumer") // consumer | partner | admin | super_admin
   phone           String?
   city            String?
   bio             String?
   avatarUrl       String?
-  partnerVerified Boolean  @default(false)
+  partnerVerified Boolean   @default(false)
   partnerRating   Float?
   partnerCategory String?
   bankAccount     String?
@@ -42,15 +42,15 @@ model User {
   partnerProfile  Json? // extended onboarding profile (gender, dob, experience, languages, vehicle, business, portfolio, tax)
   onboardingDraft Json? // in-progress onboarding form (autosaved)
   onboardedAt     DateTime?
-  consumerProfile Json?    // consumer onboarding: { gender, birthday, referralCode, referredBy }
-  addresses       Json?    // saved service addresses: [{ id, label, ...fields, lat, lng, isDefault }]
-  profileComplete Boolean  @default(false) // false after phone-only signup until profile is completed
-  tokenVersion    Int      @default(0)     // bump to revoke all refresh tokens (logout everywhere)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  consumerProfile Json? // consumer onboarding: { gender, birthday, referralCode, referredBy }
+  addresses       Json? // saved service addresses: [{ id, label, ...fields, lat, lng, isDefault }]
+  profileComplete Boolean   @default(false) // false after phone-only signup until profile is completed
+  tokenVersion    Int       @default(0) // bump to revoke all refresh tokens (logout everywhere)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  bookingsAsConsumer Booking[]      @relation("ConsumerBookings")
-  bookingsAsPartner  Booking[]      @relation("PartnerBookings")
+  bookingsAsConsumer Booking[]               @relation("ConsumerBookings")
+  bookingsAsPartner  Booking[]               @relation("PartnerBookings")
   reviews            Review[]
   notifications      Notification[]
   notificationPref   NotificationPreference?
@@ -71,35 +71,35 @@ model User {
 
 // Support tickets raised by consumers or partners.
 model SupportTicket {
-  id        String   @id @default(cuid())
-  userId    String
-  category  String // technical | payment | booking | report_customer | refund | damage | account | complaint | other
-  subject   String
-  message   String
+  id                    String    @id @default(cuid())
+  userId                String
+  category              String // technical | payment | booking | report_customer | refund | damage | account | complaint | other
+  subject               String
+  message               String
   // open | in_progress | awaiting_customer | escalated | resolved | closed | reopened
   // (`open` and `resolved` keep their original meaning — this is a widening)
-  status    String   @default("open")
-  bookingId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status                String    @default("open")
+  bookingId             String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
   // ── Queue management ──────────────────────────────────────────────────────
-  reference          String?   @unique // "TKT-3F9A2B"
-  priority           String    @default("normal") // low | normal | high | urgent
-  channel            String    @default("app") // app | email | phone | chatbot | whatsapp
-  assignedToId       String?
-  escalationLevel    Int       @default(1) // 1 agent | 2 specialist | 3 manager
-  slaFirstResponseAt DateTime?
-  slaResolutionAt    DateTime?
-  firstResponseAt    DateTime?
-  resolvedAt         DateTime?
-  closedAt           DateTime?
-  reopenCount        Int       @default(0)
-  csatRating         Int? // 1–5
-  csatComment        String?
-  tags               Json?
+  reference             String?   @unique // "TKT-3F9A2B"
+  priority              String    @default("normal") // low | normal | high | urgent
+  channel               String    @default("app") // app | email | phone | chatbot | whatsapp
+  assignedToId          String?
+  escalationLevel       Int       @default(1) // 1 agent | 2 specialist | 3 manager
+  slaFirstResponseAt    DateTime?
+  slaResolutionAt       DateTime?
+  firstResponseAt       DateTime?
+  resolvedAt            DateTime?
+  closedAt              DateTime?
+  reopenCount           Int       @default(0)
+  csatRating            Int? // 1–5
+  csatComment           String?
+  tags                  Json?
   chatbotConversationId String?
-  relatedClaimId     String?
-  relatedDisputeId   String?
+  relatedClaimId        String?
+  relatedDisputeId      String?
 
   user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages SupportTicketMessage[]
@@ -296,7 +296,7 @@ model ChatbotAction {
 model LegalDocument {
   id                 String    @id @default(cuid())
   slug               String // customer_terms | partner_terms | privacy_policy
-                            // | refund_policy | cancellation_policy | damage_policy
+  // | refund_policy | cancellation_policy | damage_policy
   version            String // "1.0", "1.1", "2.0"
   title              String
   titleMy            String
@@ -464,38 +464,38 @@ model PartnerDocument {
 }
 
 model Booking {
-  id             String    @id @default(cuid())
-  serviceType    String // display label (legacy)
-  serviceId      String? // legacy column: carries package display name (Phase 1 cleans up)
-  status         String    @default("pending")
-  price          Float
-  date           DateTime
-  timeSlot       String?
-  address        String?
-  city           String?
+  id                    String    @id @default(cuid())
+  serviceType           String // display label (legacy)
+  serviceId             String? // legacy column: carries package display name (Phase 1 cleans up)
+  status                String    @default("pending")
+  price                 Float
+  date                  DateTime
+  timeSlot              String?
+  address               String?
+  city                  String?
   // Service-address coordinates, for partner route suggestion. Nullable and
   // currently unpopulated: filling them needs a geocoder, which is a separate
   // decision. Route suggestion degrades cleanly to "no locations" until then
   // rather than guessing from the address string.
-  lat            Float?
-  lng            Float?
-  notes          String?
-  couponCode     String?
-  discountAmount Float     @default(0)
-  paymentMethod  String?
-  paymentStatus  String    @default("pending")
-  consumerId     String
-  partnerId      String?
+  lat                   Float?
+  lng                   Float?
+  notes                 String?
+  couponCode            String?
+  discountAmount        Float     @default(0)
+  paymentMethod         String?
+  paymentStatus         String    @default("pending")
+  consumerId            String
+  partnerId             String?
   // §2 service-abstraction extensions
-  categoryId     String?
-  catalogServiceId String?
-  packageId      String?
-  details        Json? // service-specific answers from workflow params (BHK, unit count, …) — also the dynamic Step-A answer snapshot
-  priceBreakdown Json? // computePrice() snapshot (line items + fees) — invoices never recalc from current config
-  configVersion  String? // servisaku-services-config.json version in force at booking time
-  scheduledStart DateTime?
-  scheduledEnd   DateTime?
-  lifecycle      Json? // timestamped status transitions
+  categoryId            String?
+  catalogServiceId      String?
+  packageId             String?
+  details               Json? // service-specific answers from workflow params (BHK, unit count, …) — also the dynamic Step-A answer snapshot
+  priceBreakdown        Json? // computePrice() snapshot (line items + fees) — invoices never recalc from current config
+  configVersion         String? // servisaku-services-config.json version in force at booking time
+  scheduledStart        DateTime?
+  scheduledEnd          DateTime?
+  lifecycle             Json? // timestamped status transitions
   // Escrow release timers (T&C 7.9(b)) key off these two, so they are real
   // indexed columns rather than a scan of the `lifecycle` JSON: the release
   // worker queries "completed more than 48h ago" on every tick, and a JSON blob
@@ -505,13 +505,13 @@ model Booking {
   //                           shorter 24h timer
   completedAt           DateTime?
   completionConfirmedAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  consumer       User            @relation("ConsumerBookings", fields: [consumerId], references: [id])
-  partner        User?           @relation("PartnerBookings", fields: [partnerId], references: [id])
+  consumer       User             @relation("ConsumerBookings", fields: [consumerId], references: [id])
+  partner        User?            @relation("PartnerBookings", fields: [partnerId], references: [id])
   category       ServiceCategory? @relation(fields: [categoryId], references: [id])
-  catalogService Service?        @relation(fields: [catalogServiceId], references: [id])
+  catalogService Service?         @relation(fields: [catalogServiceId], references: [id])
   items          BookingItem[]
   escrow         EscrowLedger?
   review         Review?
@@ -569,31 +569,31 @@ model Review {
 // gateways transact in; `amountMyr` mirrors it in ringgit, matching Booking.price
 // and every model in §5. Only the provider adapters convert between the two.
 model Payment {
-  id          String    @id @default(cuid())
-  bookingId   String
-  amount      Float // sen
-  amountMyr   Float? // ringgit mirror of `amount`
-  currency    String    @default("MYR")
-  method      String // fpx | duitnow | card | applepay | googlepay | tng | grabpay | boost | cash
-  provider    String    @default("mock") // mock | billplz | stripe | cash
-  status      String    @default("pending") // pending | paid | failed | refunded
+  id             String    @id @default(cuid())
+  bookingId      String
+  amount         Float // sen
+  amountMyr      Float? // ringgit mirror of `amount`
+  currency       String    @default("MYR")
+  method         String // fpx | duitnow | card | applepay | googlepay | tng | grabpay | boost | cash
+  provider       String    @default("mock") // mock | billplz | stripe | cash
+  status         String    @default("pending") // pending | paid | failed | refunded
   // What this payment settles. `booking` is a consumer paying for a service;
   // `commission_settlement` is a partner paying ServisAku what they owe on cash jobs.
-  type        String    @default("booking") // booking | commission_settlement | damage_compensation
-  partnerId   String? // payer, when the payer is a partner rather than the consumer
-  settlementId String?
-  gatewayRef  String? // gateway bill / transaction id
-  checkoutUrl String? // hosted checkout URL (real gateways)
-  refundedAmount Float  @default(0) // MYR, cumulative — supports repeated partial refunds
-  sstAmount   Float     @default(0) // MYR
-  platformFee Float     @default(0) // MYR — commission snapshot at payment time
-  netToPartner Float    @default(0) // MYR
-  collectedById String? // partner user id who recorded a cash collection
-  idempotencyKey String? @unique
-  paidAt      DateTime?
-  raw         Json? // gateway payload snapshot
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  type           String    @default("booking") // booking | commission_settlement | damage_compensation
+  partnerId      String? // payer, when the payer is a partner rather than the consumer
+  settlementId   String?
+  gatewayRef     String? // gateway bill / transaction id
+  checkoutUrl    String? // hosted checkout URL (real gateways)
+  refundedAmount Float     @default(0) // MYR, cumulative — supports repeated partial refunds
+  sstAmount      Float     @default(0) // MYR
+  platformFee    Float     @default(0) // MYR — commission snapshot at payment time
+  netToPartner   Float     @default(0) // MYR
+  collectedById  String? // partner user id who recorded a cash collection
+  idempotencyKey String?   @unique
+  paidAt         DateTime?
+  raw            Json? // gateway payload snapshot
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -616,9 +616,9 @@ model WebhookEvent {
 }
 
 model EscrowLedger {
-  id            String    @id @default(cuid())
-  bookingId     String    @unique
-  grossAmount   Float
+  id               String    @id @default(cuid())
+  bookingId        String    @unique
+  grossAmount      Float
   // ServisAku's commission on the partner, from payments/commission.js split().
   // Renamed from `platformFee`: that name was shared with the CUSTOMER-facing
   // booking fee, and the booking fee was being written here — recording a flat
@@ -626,29 +626,29 @@ model EscrowLedger {
   commissionAmount Float
   // Rate in force when the booking was created, snapshotted so a later tier
   // change cannot retroactively alter a settled split.
-  commissionRate   Float  @default(0.20)
-  partnerPayout Float
-  status        String    @default("held")
-  freezeReason  String?
-  releasedAt    DateTime?
-  createdAt     DateTime  @default(now())
+  commissionRate   Float     @default(0.20)
+  partnerPayout    Float
+  status           String    @default("held")
+  freezeReason     String?
+  releasedAt       DateTime?
+  createdAt        DateTime  @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id])
 }
 
 model RefundRequest {
-  id             String   @id @default(cuid())
-  bookingId      String
-  consumerId     String
-  originalAmount Float
-  refundAmount   Float
-  refundType     String
-  reason         String
+  id                     String    @id @default(cuid())
+  bookingId              String
+  consumerId             String
+  originalAmount         Float
+  refundAmount           Float
+  refundType             String
+  reason                 String
   // pending | under_review | approved | processing | completed | rejected | failed | cancelled
-  status         String   @default("pending")
-  adminNote      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  status                 String    @default("pending")
+  adminNote              String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
   // ── Execution ─────────────────────────────────────────────────────────────
   paymentId              String?
   refundMethod           String    @default("original") // original | wallet_credit | bank_transfer | manual
@@ -718,17 +718,17 @@ model Dispute {
 // exactly that misreading; `commissionAmount` is retired because commission is
 // taken at booking time, never on a withdrawal.
 model PayoutRecord {
-  id               String    @id @default(cuid())
-  partnerId        String
-  partnerName      String
-  amountRequested  Float
-  amountPaid       Float
-  payoutMethod     String    @default("Bank Transfer")
+  id                 String    @id @default(cuid())
+  partnerId          String
+  partnerName        String
+  amountRequested    Float
+  amountPaid         Float
+  payoutMethod       String    @default("Bank Transfer")
   // pending | scheduled | processing | completed | failed | cancelled
-  status           String    @default("pending")
-  failureReason    String?
-  scheduledDate    DateTime?
-  createdAt        DateTime  @default(now())
+  status             String    @default("pending")
+  failureReason      String?
+  scheduledDate      DateTime?
+  createdAt          DateTime  @default(now())
   // ── Batch / period context ────────────────────────────────────────────────
   batchId            String?
   cycle              String    @default("manual") // weekly | monthly | manual
@@ -842,30 +842,30 @@ model PartnerWallet {
 // pointing at what they undo. `balanceAfter` makes any historical balance
 // reproducible without replaying the whole table.
 model WalletLedgerEntry {
-  id           String   @id @default(cuid())
-  walletId     String
-  partnerId    String
-  type         String // earning_credit | commission_debit | payout_debit | settlement_credit
+  id             String   @id @default(cuid())
+  walletId       String
+  partnerId      String
+  type           String // earning_credit | commission_debit | payout_debit | settlement_credit
   // | escrow_hold | escrow_release | refund_debit | damage_deduction | penalty | bonus
   // | adjustment | reversal | opening_balance
-  direction    String // credit | debit
-  bucket       String // available | pending | outstanding
-  amount       Float
-  balanceAfter Float // the bucket's balance immediately after this entry
-  description  String
-  bookingId    String?
-  paymentId    String?
-  payoutId     String?
-  settlementId String?
-  claimId      String?
-  reversalOf   String? // WalletLedgerEntry.id this entry reverses
-  createdById  String? // admin user id, for manual adjustments
+  direction      String // credit | debit
+  bucket         String // available | pending | outstanding
+  amount         Float
+  balanceAfter   Float // the bucket's balance immediately after this entry
+  description    String
+  bookingId      String?
+  paymentId      String?
+  payoutId       String?
+  settlementId   String?
+  claimId        String?
+  reversalOf     String? // WalletLedgerEntry.id this entry reverses
+  createdById    String? // admin user id, for manual adjustments
   // Guards against double-crediting when a gateway redelivers a webhook. Composed
   // by the caller (e.g. "earning:<bookingId>") so the DB — not application logic —
   // enforces once-only semantics.
-  idempotencyKey String? @unique
-  metadata     Json?
-  createdAt    DateTime @default(now())
+  idempotencyKey String?  @unique
+  metadata       Json?
+  createdAt      DateTime @default(now())
 
   wallet PartnerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
@@ -965,7 +965,7 @@ model DamageClaim {
 }
 
 model DamageClaimEvidence {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   claimId        String
   uploadedById   String
   uploadedByRole String // consumer | partner | admin
@@ -977,7 +977,7 @@ model DamageClaimEvidence {
   durationSec    Int?
   caption        String?
   capturedAt     DateTime? // EXIF timestamp where available
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   claim DamageClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
@@ -992,7 +992,7 @@ model DamageClaimEvent {
   actorId    String?
   actorRole  String // consumer | partner | admin | system
   action     String // submitted | acknowledged | evidence_added | partner_responded
-                    // | note_added | status_changed | decided | compensated | appealed
+  // | note_added | status_changed | decided | compensated | appealed
   fromStatus String?
   toStatus   String?
   note       String?
@@ -1124,29 +1124,36 @@ model PartnerLocation {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  role      String   @default("consumer") // recipient role snapshot: consumer | partner
-  title     String
-  body      String
-  type      String   @default("info") // legacy coarse type; `category` is the canonical bucket
-  category  String   @default("system") // bookings | jobs | payments | wallet | promotions | support | security | reviews | system
-  priority  String   @default("normal") // low | normal | high | urgent
-  icon      String? // emoji or icon key rendered on the card
-  image     String? // optional hero image URL
-  actionUrl String? // deep link / route the CTA opens (canonical; `link` kept as alias)
-  link      String? // legacy alias of actionUrl
-  bookingId String?
-  paymentId String?
-  metadata  Json? // arbitrary structured payload (serviceName, otp, amount, ctaLabel, …)
-  channel   String   @default("in_app") // in_app | email | sms | push (primary delivery channel of this record)
-  isRead    Boolean  @default(false)
-  isArchived Boolean @default(false)
-  deliveryStatus String @default("sent") // queued | sent | delivered | failed
-  scheduledAt DateTime? // set for future-dated notifications not yet released
-  sentAt    DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(cuid())
+  userId         String
+  role           String    @default("consumer") // recipient role snapshot: consumer | partner
+  title          String
+  body           String
+  // Malay rendering of the same event, produced at creation time from the same
+  // catalog template. Nullable on purpose: rows created before this existed
+  // cannot be reconstructed (buildMetadata never stored 24 of the fields the
+  // templates interpolate), and a null correctly falls back to English rather
+  // than emitting a half-filled sentence.
+  titleMy        String?
+  bodyMy         String?
+  type           String    @default("info") // legacy coarse type; `category` is the canonical bucket
+  category       String    @default("system") // bookings | jobs | payments | wallet | promotions | support | security | reviews | system
+  priority       String    @default("normal") // low | normal | high | urgent
+  icon           String? // emoji or icon key rendered on the card
+  image          String? // optional hero image URL
+  actionUrl      String? // deep link / route the CTA opens (canonical; `link` kept as alias)
+  link           String? // legacy alias of actionUrl
+  bookingId      String?
+  paymentId      String?
+  metadata       Json? // arbitrary structured payload (serviceName, otp, amount, ctaLabel, …)
+  channel        String    @default("in_app") // in_app | email | sms | push (primary delivery channel of this record)
+  isRead         Boolean   @default(false)
+  isArchived     Boolean   @default(false)
+  deliveryStatus String    @default("sent") // queued | sent | delivered | failed
+  scheduledAt    DateTime? // set for future-dated notifications not yet released
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   user       User                   @relation(fields: [userId], references: [id])
   deliveries NotificationDelivery[]
@@ -1220,14 +1227,14 @@ model NotificationPreference {
 
 // Registered device/browser push tokens (FCM / Web Push). One user → many devices.
 model PushToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  platform  String   @default("web") // web | ios | android
-  provider  String   @default("fcm") // fcm | webpush | expo
-  deviceId  String? // optional stable device identifier for dedupe
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  platform   String   @default("web") // web | ios | android
+  provider   String   @default("fcm") // fcm | webpush | expo
+  deviceId   String? // optional stable device identifier for dedupe
   lastSeenAt DateTime @default(now())
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
@@ -1296,17 +1303,17 @@ model Subcategory {
 }
 
 model Service {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  categoryId    String
-  subcategoryId String?
-  name          String
-  nameMy        String
-  description   String   @default("")
-  descriptionMy String   @default("")
-  basePrice     Float
-  pricingModel  String   @default("flat") // flat | per_unit | area_based | hourly | quote (legacy package engine)
-  pricingConfig Json? // model-specific params (tier table, unit price, hourly rate…)
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  categoryId      String
+  subcategoryId   String?
+  name            String
+  nameMy          String
+  description     String   @default("")
+  descriptionMy   String   @default("")
+  basePrice       Float
+  pricingModel    String   @default("flat") // flat | per_unit | area_based | hourly | quote (legacy package engine)
+  pricingConfig   Json? // model-specific params (tier table, unit price, hourly rate…)
   // ── Dynamic booking-engine fields (booking-flows.md) ──────────────────────
   // pricingType drives computePrice() in server/lib/dynamicPricing.js; questions
   // below define Step A. Nullable so legacy package/addon services are unaffected.
@@ -1317,16 +1324,16 @@ model Service {
   minQty          Int      @default(1)
   sstEnabled      Boolean  @default(false)
   convertsToQuote Boolean  @default(false) // large jobs may convert to a custom site quote
-  durationMin   Int      @default(60)
-  durationMax   Int      @default(120)
-  image         String?
-  attributes    Json? // propertyTypes, bookingModes, cities, partnerSkills, safetyChecks
-  isActive      Boolean  @default(true)
-  sortOrder     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  durationMin     Int      @default(60)
+  durationMax     Int      @default(120)
+  image           String?
+  attributes      Json? // propertyTypes, bookingModes, cities, partnerSkills, safetyChecks
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  category        ServiceCategory  @relation(fields: [categoryId], references: [id])
+  category        ServiceCategory         @relation(fields: [categoryId], references: [id])
   packages        ServicePackage[]
   addons          ServiceAddon[]
   questions       BookingQuestion[]
@@ -1340,14 +1347,15 @@ model Service {
 // A service's Step A is a list of these; everything else (Steps B–F) is universal.
 // `key` is the stable answer key used in Booking.details / price snapshots.
 model BookingQuestion {
-  id         String  @id @default(cuid())
-  serviceId  String
-  key        String // answer key ("length", "qty", "units")
-  label      String
-  type       String // TIER_SELECT | SINGLE_SELECT | MULTI_SELECT | QUANTITY | TIER_QUANTITY | AREA_INPUT | HOURS_INPUT | INFO
-  required   Boolean @default(true)
-  sortOrder  Int     @default(0)
-  config     Json? // { min, max, step, unit, pricePerUnit, ratePerSqft, ratePerHour, perUnit, perSqft }
+  id        String  @id @default(cuid())
+  serviceId String
+  key       String // answer key ("length", "qty", "units")
+  label     String
+  labelMy   String  @default("") // Malay label; "" means not yet translated
+  type      String // TIER_SELECT | SINGLE_SELECT | MULTI_SELECT | QUANTITY | TIER_QUANTITY | AREA_INPUT | HOURS_INPUT | INFO
+  required  Boolean @default(true)
+  sortOrder Int     @default(0)
+  config    Json? // { min, max, step, unit, pricePerUnit, ratePerSqft, ratePerHour, perUnit, perSqft }
 
   service Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   options QuestionOption[]
@@ -1361,6 +1369,7 @@ model QuestionOption {
   questionId           String
   key                  String // option key ("short", "1_5hp")
   label                String
+  labelMy              String  @default("") // Malay label; "" means not yet translated
   priceModifier        Float   @default(0) // SELECT/TIER_SELECT flat add (TIER_SELECT sets base)
   unitPrice            Float? // TIER_QUANTITY per-option unit price
   priceModifierPerSqft Float? // AREA_INPUT companion SELECTs: per-sqft add/subtract
@@ -1373,21 +1382,21 @@ model QuestionOption {
 }
 
 model ServicePackage {
-  id           String  @id @default(cuid())
-  serviceId    String
-  tier         String // essential | signature | premium | custom slug
-  name         String
-  nameMy       String
-  description  String  @default("")
-  descriptionMy String @default("")
-  price        Float? // absolute price (packageData style) …
-  multiplier   Float? // … or multiplier on Service.basePrice (catalog style); one required
-  inclusions   Json    @default("[]")
-  inclusionsMy Json    @default("[]")
-  exclusions   Json?
-  warrantyDays Int?
-  isPopular    Boolean @default(false)
-  sortOrder    Int     @default(0)
+  id            String  @id @default(cuid())
+  serviceId     String
+  tier          String // essential | signature | premium | custom slug
+  name          String
+  nameMy        String
+  description   String  @default("")
+  descriptionMy String  @default("")
+  price         Float? // absolute price (packageData style) …
+  multiplier    Float? // … or multiplier on Service.basePrice (catalog style); one required
+  inclusions    Json    @default("[]")
+  inclusionsMy  Json    @default("[]")
+  exclusions    Json?
+  warrantyDays  Int?
+  isPopular     Boolean @default(false)
+  sortOrder     Int     @default(0)
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
@@ -1395,13 +1404,13 @@ model ServicePackage {
 }
 
 model ServiceAddon {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   serviceId   String
   slug        String
   name        String
   nameMy      String
   price       Float
-  durationMin Int    @default(0)
+  durationMin Int     @default(0)
   isActive    Boolean @default(true)
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)

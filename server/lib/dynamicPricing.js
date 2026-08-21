@@ -90,11 +90,46 @@ function areaValueFor(questions, answers) {
  * @param {object}  [context]            { globalConfig, afterHours, urgent, sstEnabled, promoDiscount }
  * @returns {object} full breakdown (snapshot this onto the booking at confirmation)
  */
+/* ── Line-item labels ────────────────────────────────────────────────────────
+   The engine stays pure: Malay travels with the data (labelMy/nameMy, supplied
+   by toEngineService) and the seven engine-owned labels live in this map. Only
+   the STRINGS are localized — every number below is computed identically for
+   both languages. */
+const ENGINE_LABELS = {
+  en: {
+    base: 'Base price',
+    visitFee: 'Visit / call-out fee',
+    afterHours: 'After-hours surcharge',
+    urgent: 'Urgent (same-day) surcharge',
+    bookingFee: 'Booking fee',
+    sst: (pct) => `SST (${pct}%)`,
+    promo: 'Promo discount',
+  },
+  ms: {
+    base: 'Harga asas',
+    visitFee: 'Yuran lawatan / panggilan keluar',
+    afterHours: 'Caj tambahan luar waktu',
+    urgent: 'Caj tambahan segera (hari sama)',
+    bookingFee: 'Yuran tempahan',
+    sst: (pct) => `SST (${pct}%)`,
+    promo: 'Diskaun promosi',
+  },
+};
+
+/** Pick the localized label for a question/option/service, falling back to
+ *  English when the Malay column is empty. Never returns undefined. */
+const pick = (node, locale) => (
+  locale === 'ms' && node?.labelMy ? node.labelMy : (node?.label ?? '')
+);
+
 export function computePrice(service, answers = {}, context = {}) {
   if (!service || !PRICING_TYPES.includes(service.pricingType)) {
     throw new Error(`computePrice: unknown pricingType "${service?.pricingType}"`);
   }
   const cfg = { ...DEFAULT_GLOBAL_CONFIG, ...(context.globalConfig || {}) };
+  // Unknown/absent locale falls back to English — existing clients are unaffected.
+  const locale = context.locale === 'ms' ? 'ms' : 'en';
+  const L = ENGINE_LABELS[locale];
   const questions = service.questions || [];
   const perUnitBasis = perUnitBasisFor(questions, answers);
   const area = areaValueFor(questions, answers);
@@ -104,7 +139,7 @@ export function computePrice(service, answers = {}, context = {}) {
   // serviceTotal starts at 0 (the on-site quote is appended later, see API).
   let serviceTotal = service.pricingType === 'DIAGNOSTIC' ? 0 : num(service.basePrice);
   if (serviceTotal !== 0) {
-    lines.push({ questionId: null, label: service.name || 'Base price', type: 'BASE', amount: round2(serviceTotal) });
+    lines.push({ questionId: null, label: (locale === 'ms' && service.nameMy) || service.name || L.base, type: 'BASE', amount: round2(serviceTotal) });
   }
 
   for (const q of questions) {
@@ -127,7 +162,7 @@ export function computePrice(service, answers = {}, context = {}) {
         amount = round2(amount);
         serviceTotal += amount;
         lines.push({
-          questionId: q.id, label: q.label, type: q.type, optionId: opt.id, optionLabel: opt.label,
+          questionId: q.id, label: pick(q, locale), type: q.type, optionId: opt.id, optionLabel: pick(opt, locale),
           ...(qcfg.perSqft ? { perSqft: num(opt.priceModifierPerSqft), area } : {}),
           ...(qcfg.perUnit ? { perUnit: num(opt.priceModifier), units: perUnitBasis } : {}),
           amount,
@@ -146,7 +181,7 @@ export function computePrice(service, answers = {}, context = {}) {
           else amount = num(opt.priceModifier);
           amount = round2(amount);
           serviceTotal += amount;
-          lines.push({ questionId: q.id, label: q.label, type: q.type, optionId: opt.id, optionLabel: opt.label, amount });
+          lines.push({ questionId: q.id, label: pick(q, locale), type: q.type, optionId: opt.id, optionLabel: pick(opt, locale), amount });
         }
         break;
       }
@@ -158,7 +193,7 @@ export function computePrice(service, answers = {}, context = {}) {
         const amount = round2(unit * qty);
         if (amount === 0 && unit === 0) break; // e.g. diagnostic "units affected" (pricePerUnit 0)
         serviceTotal += amount;
-        lines.push({ questionId: q.id, label: q.label, type: q.type, qty, unitPrice: unit, amount });
+        lines.push({ questionId: q.id, label: pick(q, locale), type: q.type, qty, unitPrice: unit, amount });
         break;
       }
 
@@ -170,7 +205,7 @@ export function computePrice(service, answers = {}, context = {}) {
           const unit = num(opt.unitPrice);
           const amount = round2(unit * qty);
           serviceTotal += amount;
-          lines.push({ questionId: q.id, label: `${q.label} — ${opt.label}`, type: q.type, optionId: opt.id, qty, unitPrice: unit, amount });
+          lines.push({ questionId: q.id, label: `${pick(q, locale)} — ${pick(opt, locale)}`, type: q.type, optionId: opt.id, qty, unitPrice: unit, amount });
         }
         break;
       }
@@ -179,7 +214,7 @@ export function computePrice(service, answers = {}, context = {}) {
         const rate = num(qcfg.ratePerSqft, num(service.rate));
         const amount = round2(rate * area);
         serviceTotal += amount;
-        lines.push({ questionId: q.id, label: q.label, type: q.type, area, ratePerSqft: rate, amount });
+        lines.push({ questionId: q.id, label: pick(q, locale), type: q.type, area, ratePerSqft: rate, amount });
         break;
       }
 
@@ -189,7 +224,7 @@ export function computePrice(service, answers = {}, context = {}) {
         const rate = num(qcfg.ratePerHour, num(service.rate));
         const amount = round2(rate * hours);
         serviceTotal += amount;
-        lines.push({ questionId: q.id, label: q.label, type: q.type, hours, ratePerHour: rate, amount });
+        lines.push({ questionId: q.id, label: pick(q, locale), type: q.type, hours, ratePerHour: rate, amount });
         break;
       }
 
@@ -222,12 +257,12 @@ export function computePrice(service, answers = {}, context = {}) {
 
   // Fee/surcharge lines complete the breakdown shown on Step F.
   const breakdown = [...lines];
-  if (visitFee) breakdown.push({ questionId: null, label: 'Visit / call-out fee', type: 'VISIT_FEE', amount: visitFee });
-  if (afterHours) breakdown.push({ questionId: null, label: 'After-hours surcharge', type: 'SURCHARGE', amount: afterHours });
-  if (urgent) breakdown.push({ questionId: null, label: 'Urgent (same-day) surcharge', type: 'SURCHARGE', amount: urgent });
-  breakdown.push({ questionId: null, label: 'Booking fee', type: 'BOOKING_FEE', amount: bookingFee });
-  if (tax) breakdown.push({ questionId: null, label: `SST (${(num(cfg.sstRate) * 100).toFixed(0)}%)`, type: 'TAX', amount: tax });
-  if (promoDiscount) breakdown.push({ questionId: null, label: 'Promo discount', type: 'DISCOUNT', amount: -promoDiscount });
+  if (visitFee) breakdown.push({ questionId: null, label: L.visitFee, type: 'VISIT_FEE', amount: visitFee });
+  if (afterHours) breakdown.push({ questionId: null, label: L.afterHours, type: 'SURCHARGE', amount: afterHours });
+  if (urgent) breakdown.push({ questionId: null, label: L.urgent, type: 'SURCHARGE', amount: urgent });
+  breakdown.push({ questionId: null, label: L.bookingFee, type: 'BOOKING_FEE', amount: bookingFee });
+  if (tax) breakdown.push({ questionId: null, label: L.sst((num(cfg.sstRate) * 100).toFixed(0)), type: 'TAX', amount: tax });
+  if (promoDiscount) breakdown.push({ questionId: null, label: L.promo, type: 'DISCOUNT', amount: -promoDiscount });
 
   return {
     currency: cfg.currency || 'MYR',

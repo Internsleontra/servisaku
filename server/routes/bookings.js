@@ -8,6 +8,7 @@ import { priceBooking } from '../lib/pricing.js';
 import { split } from '../lib/payments/commission.js';
 import { resolveService, resolveServiceDetailOr404, validateServiceParams, toEngineService } from '../lib/catalog.js';
 import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
+import { localeOf } from '../lib/locale.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
 import { withLiveSstRate } from '../lib/tax/index.js';
 import { isPartnerEligible } from '../lib/matching.js';
@@ -339,6 +340,8 @@ router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, 
     globalConfig: await withLiveSstRate(GLOBAL_CONFIG),
     afterHours: body.after_hours,
     urgent: body.urgent,
+      // Frozen in the language the customer booked in; amounts are locale-independent.
+      locale: localeOf(req),
   });
 
   const booking = await prisma.$transaction(async (tx) => {

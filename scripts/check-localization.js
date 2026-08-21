@@ -17,8 +17,19 @@
 //   node scripts/check-localization.js
 // ─────────────────────────────────────────────────────────────────────────────
 import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 const prisma = new PrismaClient();
+
+/* Strings that are deliberately the same in both languages. Declared in a
+   version-controlled file rather than inferred by a regex, so every
+   untranslated string is a conscious, reviewable entry. */
+const here = dirname(fileURLToPath(import.meta.url));
+const NEUTRAL = new Set(
+  JSON.parse(readFileSync(join(here, '../prisma/data/localization-neutral.json'), 'utf8')).neutral,
+);
 
 /* Words that mark a string as plausibly Malay. Deliberately small and boring:
    the point is to catch English left in a Malay column, not to grade prose. */
@@ -62,9 +73,20 @@ function classify(en, my) {
 
 const FAIL = new Set(['empty', 'identical', 'punctuation-only']);
 
-function report(label, rows, keyField = 'slug') {
+function report(label, rows, keyField = 'slug', neutral = null) {
   const buckets = { ok: [], empty: [], identical: [], 'punctuation-only': [], 'no-malay-token': [] };
-  for (const r of rows) buckets[classify(r.en, r.my)].push(r[keyField]);
+  for (const r of rows) {
+    let kind = classify(r.en, r.my);
+    if (neutral) {
+      // Declared-neutral strings are allowed to match English exactly. For the
+      // rest, "differs from English" is the real signal — the Malay-marker
+      // heuristic is too coarse across 566 short domain labels and only
+      // produces noise here.
+      if (neutral.has(r.en)) kind = kind === 'empty' ? 'empty' : 'ok';
+      else if (kind === 'no-malay-token') kind = 'ok';
+    }
+    buckets[kind].push(r[keyField]);
+  }
 
   const failed = [...FAIL].reduce((n, k) => n + buckets[k].length, 0);
   console.log(`\n  ${label}: ${rows.length} records`);
@@ -101,14 +123,39 @@ async function main() {
     failures += report('HelpArticle.titleMy', help.map((a) => ({ slug: a.slug, en: a.title, my: a.titleMy })));
   }
 
+  // Question and option labels feed the quote breakdown, so English here leaks
+  // straight into a customer-visible price. Strings that are legitimately the
+  // same in both languages (units, refrigerant grades, room codes, brand or
+  // product identifiers) are allowed through explicitly rather than silently.
+
+  const qs = await prisma.bookingQuestion.findMany({ select: { id: true, key: true, label: true, labelMy: true } });
+  failures += report('BookingQuestion.labelMy',
+    qs.map((q) => ({ slug: q.key, en: q.label, my: q.labelMy })), 'slug', NEUTRAL);
+
+  const opts = await prisma.questionOption.findMany({ select: { id: true, key: true, label: true, labelMy: true } });
+  failures += report('QuestionOption.labelMy',
+    opts.map((o) => ({ slug: o.key, en: o.label, my: o.labelMy })), 'slug', NEUTRAL);
+
+  // Notifications: Malay is written at creation from the same catalog template.
+  // Historical rows are NULL by design (see the migration) and are not failures.
+  const notes = await prisma.notification.findMany({ select: { id: true, title: true, titleMy: true, createdAt: true } });
+  const withMy = notes.filter((n) => n.titleMy);
+  const noMy = notes.filter((n) => !n.titleMy);
+  const badMy = withMy.filter((n) => n.titleMy === n.title || /undefined|null|\[object/.test(n.titleMy));
+  console.log(`
+  Notification.titleMy: ${notes.length} rows`);
+  console.log(`    localized            : ${withMy.length}`);
+  console.log(`    historical (NULL, ok): ${noMy.length}`);
+  console.log(`    broken placeholders  : ${badMy.length}`);
+  if (badMy.length) {
+    console.log(`      ${badMy.slice(0, 8).map((n) => n.id).join(', ')}`);
+    failures += badMy.length;
+  }
+
   // Surfaces that have no Malay column at all — reported, not failed, because
   // fixing them is a schema change rather than a data fix.
   console.log('\n  Surfaces with no Malay column (schema-level gaps):');
-  const q = await prisma.bookingQuestion.count();
-  const o = await prisma.questionOption.count();
   const n = await prisma.notification.count();
-  console.log(`    BookingQuestion.label : ${q} rows, no labelMy`);
-  console.log(`    QuestionOption.label  : ${o} rows, no labelMy`);
   console.log(`    Notification title/body: ${n} rows, no titleMy/bodyMy`);
 
   console.log(`\n  RESULT: ${failures === 0 ? 'PASS — no fake or missing translations' : `FAIL — ${failures} record(s)`}`);

@@ -111,6 +111,7 @@ export function toEngineService(s) {
   return {
     slug: s.slug,
     name: s.name,
+    nameMy: s.nameMy,
     pricingType: s.pricingType,
     basePrice: s.basePrice,
     visitFee: s.visitFee,
@@ -121,12 +122,14 @@ export function toEngineService(s) {
     questions: (s.questions || []).map((q) => ({
       id: q.key,
       label: q.label,
+      labelMy: q.labelMy || '',
       type: q.type,
       required: q.required,
       config: q.config ?? null,
       options: (q.options || []).map((o) => ({
         id: o.key,
         label: o.label,
+        labelMy: o.labelMy || '',
         priceModifier: o.priceModifier,
         unitPrice: o.unitPrice,
         priceModifierPerSqft: o.priceModifierPerSqft,

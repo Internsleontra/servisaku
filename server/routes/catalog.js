@@ -18,6 +18,7 @@ import {
 } from '../lib/catalog.js';
 import { priceBooking } from '../lib/pricing.js';
 import { computePrice, validateAnswers } from '../lib/dynamicPricing.js';
+import { localeOf } from '../lib/locale.js';
 import { GLOBAL_CONFIG, CONFIG_VERSION } from '../lib/bookingEngineConfig.js';
 import { withLiveSstRate, taxSummary } from '../lib/tax/index.js';
 import { findEligiblePartners } from '../lib/matching.js';
@@ -158,6 +159,8 @@ router.post('/bookings/calculate', validate(dynamicCalcSchema), asyncHandler(asy
     globalConfig: await withLiveSstRate(GLOBAL_CONFIG),
     afterHours: req.body.after_hours,
     urgent: req.body.urgent,
+      // Labels only — every figure below is identical in both languages.
+      locale: localeOf(req),
   });
   res.json({ ...mapDynamicPricing(service, pricing), tax: await taxSummary() });
 }));

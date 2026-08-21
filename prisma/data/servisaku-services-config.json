@@ -36,23 +36,27 @@
             {
               "id": "length",
               "label": "Hair length",
+              "labelMy": "Panjang rambut",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "short",
                   "label": "Short",
+                  "labelMy": "Pendek",
                   "priceModifier": 45,
                   "isDefault": true
                 },
                 {
                   "id": "medium",
                   "label": "Medium",
+                  "labelMy": "Sederhana",
                   "priceModifier": 65
                 },
                 {
                   "id": "long",
                   "label": "Long",
+                  "labelMy": "Panjang",
                   "priceModifier": 85
                 }
               ]
@@ -60,22 +64,26 @@
             {
               "id": "service",
               "label": "Service",
+              "labelMy": "Perkhidmatan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "cut",
                   "label": "Cut only",
+                  "labelMy": "Potong sahaja",
                   "priceModifier": 0
                 },
                 {
                   "id": "cut_blow",
                   "label": "Cut + Blow-dry",
+                  "labelMy": "Potong + Blow-dry",
                   "priceModifier": 25
                 },
                 {
                   "id": "cut_wash_style",
                   "label": "Cut + Wash + Style",
+                  "labelMy": "Potong + Cuci + Gaya",
                   "priceModifier": 40
                 }
               ]
@@ -83,6 +91,7 @@
             {
               "id": "ref",
               "label": "Reference style photo?",
+              "labelMy": "Gambar gaya rujukan?",
               "type": "INFO",
               "required": false
             }
@@ -98,22 +107,26 @@
             {
               "id": "length",
               "label": "Hair length",
+              "labelMy": "Panjang rambut",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "short",
                   "label": "Short",
+                  "labelMy": "Pendek",
                   "priceModifier": 70
                 },
                 {
                   "id": "medium",
                   "label": "Medium",
+                  "labelMy": "Sederhana",
                   "priceModifier": 95
                 },
                 {
                   "id": "long",
                   "label": "Long",
+                  "labelMy": "Panjang",
                   "priceModifier": 130
                 }
               ]
@@ -121,22 +134,26 @@
             {
               "id": "type",
               "label": "Treatment type",
+              "labelMy": "Jenis rawatan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "moisture",
                   "label": "Moisture",
+                  "labelMy": "Kelembapan",
                   "priceModifier": 0
                 },
                 {
                   "id": "dandruff",
                   "label": "Anti-dandruff",
+                  "labelMy": "Anti-kelemumur",
                   "priceModifier": 10
                 },
                 {
                   "id": "hairfall",
                   "label": "Anti-hairfall",
+                  "labelMy": "Anti-gugur rambut",
                   "priceModifier": 20
                 }
               ]
@@ -153,22 +170,26 @@
             {
               "id": "length",
               "label": "Hair length",
+              "labelMy": "Panjang rambut",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "short",
                   "label": "Short",
+                  "labelMy": "Pendek",
                   "priceModifier": 120
                 },
                 {
                   "id": "medium",
                   "label": "Medium",
+                  "labelMy": "Sederhana",
                   "priceModifier": 180
                 },
                 {
                   "id": "long",
                   "label": "Long",
+                  "labelMy": "Panjang",
                   "priceModifier": 250
                 }
               ]
@@ -176,22 +197,26 @@
             {
               "id": "coverage",
               "label": "Coverage",
+              "labelMy": "Liputan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "full",
                   "label": "Full colour",
+                  "labelMy": "Warna penuh",
                   "priceModifier": 0
                 },
                 {
                   "id": "highlights",
                   "label": "Highlights",
+                  "labelMy": "Highlight",
                   "priceModifier": 40
                 },
                 {
                   "id": "global_high",
                   "label": "Global + highlights",
+                  "labelMy": "Warna penuh + highlight",
                   "priceModifier": 90
                 }
               ]
@@ -199,17 +224,20 @@
             {
               "id": "grade",
               "label": "Colour grade",
+              "labelMy": "Gred warna",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "standard",
                   "label": "Standard",
+                  "labelMy": "Standard",
                   "priceModifier": 0
                 },
                 {
                   "id": "premium",
                   "label": "Premium / ammonia-free",
+                  "labelMy": "Premium / tanpa ammonia",
                   "priceModifier": 50
                 }
               ]
@@ -226,22 +254,26 @@
             {
               "id": "length",
               "label": "Hair length",
+              "labelMy": "Panjang rambut",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "short",
                   "label": "Short",
+                  "labelMy": "Pendek",
                   "priceModifier": 250
                 },
                 {
                   "id": "medium",
                   "label": "Medium",
+                  "labelMy": "Sederhana",
                   "priceModifier": 380
                 },
                 {
                   "id": "long",
                   "label": "Long",
+                  "labelMy": "Panjang",
                   "priceModifier": 520
                 }
               ]
@@ -249,6 +281,7 @@
             {
               "id": "last_treat",
               "label": "Last chemical treatment date",
+              "labelMy": "Tarikh rawatan kimia terakhir",
               "type": "INFO",
               "required": false
             }
@@ -264,22 +297,26 @@
             {
               "id": "length",
               "label": "Hair length",
+              "labelMy": "Panjang rambut",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "short",
                   "label": "Short",
+                  "labelMy": "Pendek",
                   "priceModifier": 300
                 },
                 {
                   "id": "medium",
                   "label": "Medium",
+                  "labelMy": "Sederhana",
                   "priceModifier": 450
                 },
                 {
                   "id": "long",
                   "label": "Long",
+                  "labelMy": "Panjang",
                   "priceModifier": 600
                 }
               ]
@@ -287,17 +324,20 @@
             {
               "id": "addon",
               "label": "Add-on",
+              "labelMy": "Tambahan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "none",
                   "label": "None",
+                  "labelMy": "Tiada",
                   "priceModifier": 0
                 },
                 {
                   "id": "kit",
                   "label": "Take-home aftercare kit",
+                  "labelMy": "Kit penjagaan untuk dibawa pulang",
                   "priceModifier": 60
                 }
               ]
@@ -314,22 +354,26 @@
             {
               "id": "length",
               "label": "Hair length",
+              "labelMy": "Panjang rambut",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "short",
                   "label": "Short",
+                  "labelMy": "Pendek",
                   "priceModifier": 280
                 },
                 {
                   "id": "medium",
                   "label": "Medium",
+                  "labelMy": "Sederhana",
                   "priceModifier": 420
                 },
                 {
                   "id": "long",
                   "label": "Long",
+                  "labelMy": "Panjang",
                   "priceModifier": 560
                 }
               ]
@@ -346,27 +390,32 @@
             {
               "id": "facial",
               "label": "Facial",
+              "labelMy": "Rawatan muka",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "cleanup",
                   "label": "Cleanup",
+                  "labelMy": "Pembersihan",
                   "priceModifier": 60
                 },
                 {
                   "id": "fruit",
                   "label": "Fruit",
+                  "labelMy": "Buah",
                   "priceModifier": 90
                 },
                 {
                   "id": "gold",
                   "label": "Gold",
+                  "labelMy": "Gold",
                   "priceModifier": 130
                 },
                 {
                   "id": "antiage",
                   "label": "Anti-ageing",
+                  "labelMy": "Anti-penuaan",
                   "priceModifier": 160
                 }
               ]
@@ -374,22 +423,26 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "detan",
                   "label": "De-tan",
+                  "labelMy": "Buang tan",
                   "priceModifier": 25
                 },
                 {
                   "id": "undereye",
                   "label": "Under-eye treatment",
+                  "labelMy": "Rawatan bawah mata",
                   "priceModifier": 20
                 },
                 {
                   "id": "massage",
                   "label": "Face massage 15min",
+                  "labelMy": "Urutan muka 15 minit",
                   "priceModifier": 15
                 }
               ]
@@ -406,22 +459,26 @@
             {
               "id": "tier",
               "label": "Tier",
+              "labelMy": "Tahap",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "express",
                   "label": "Express",
+                  "labelMy": "Ekspres",
                   "priceModifier": 180
                 },
                 {
                   "id": "signature",
                   "label": "Signature",
+                  "labelMy": "Signature",
                   "priceModifier": 280
                 },
                 {
                   "id": "deluxe",
                   "label": "Deluxe (+booster)",
+                  "labelMy": "Deluxe (+penggalak)",
                   "priceModifier": 400
                 }
               ]
@@ -429,22 +486,26 @@
             {
               "id": "concern",
               "label": "Skin concern",
+              "labelMy": "Masalah kulit",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "hydration",
                   "label": "Hydration",
+                  "labelMy": "Penghidratan",
                   "priceModifier": 0
                 },
                 {
                   "id": "brightening",
                   "label": "Brightening",
+                  "labelMy": "Pencerahan",
                   "priceModifier": 30
                 },
                 {
                   "id": "acne",
                   "label": "Acne / pore",
+                  "labelMy": "Jerawat / liang roma",
                   "priceModifier": 30
                 }
               ]
@@ -461,17 +522,20 @@
             {
               "id": "area",
               "label": "Area",
+              "labelMy": "Kawasan",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "full_leg",
                   "label": "Full leg",
+                  "labelMy": "Seluruh kaki",
                   "priceModifier": 80
                 },
                 {
                   "id": "half_leg",
                   "label": "Half leg",
+                  "labelMy": "Separuh kaki",
                   "priceModifier": 50
                 }
               ]
@@ -479,27 +543,32 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "full_arm",
                   "label": "Full arm",
+                  "labelMy": "Seluruh lengan",
                   "priceModifier": 45
                 },
                 {
                   "id": "underarm",
                   "label": "Underarm",
+                  "labelMy": "Ketiak",
                   "priceModifier": 25
                 },
                 {
                   "id": "bikini",
                   "label": "Bikini",
+                  "labelMy": "Bikini",
                   "priceModifier": 60
                 },
                 {
                   "id": "full_body",
                   "label": "Full body upgrade",
+                  "labelMy": "Naik taraf seluruh badan",
                   "priceModifier": 120
                 }
               ]
@@ -516,17 +585,20 @@
             {
               "id": "service",
               "label": "Service",
+              "labelMy": "Perkhidmatan",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "full_face",
                   "label": "Full face",
+                  "labelMy": "Seluruh muka",
                   "priceModifier": 40
                 },
                 {
                   "id": "eyebrow",
                   "label": "Eyebrow only",
+                  "labelMy": "Kening sahaja",
                   "priceModifier": 12
                 }
               ]
@@ -534,22 +606,26 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "upperlip",
                   "label": "Upper lip",
+                  "labelMy": "Bibir atas",
                   "priceModifier": 8
                 },
                 {
                   "id": "chin",
                   "label": "Chin",
+                  "labelMy": "Dagu",
                   "priceModifier": 8
                 },
                 {
                   "id": "forehead",
                   "label": "Forehead",
+                  "labelMy": "Dahi",
                   "priceModifier": 8
                 }
               ]
@@ -566,22 +642,26 @@
             {
               "id": "service",
               "label": "Service",
+              "labelMy": "Perkhidmatan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "gel_mani",
                   "label": "Gel Manicure",
+                  "labelMy": "Gel Manicure",
                   "priceModifier": 80
                 },
                 {
                   "id": "gel_pedi",
                   "label": "Gel Pedicure",
+                  "labelMy": "Gel Pedicure",
                   "priceModifier": 95
                 },
                 {
                   "id": "combo",
                   "label": "Mani + Pedi combo",
+                  "labelMy": "Kombo manikur + pedikur",
                   "priceModifier": 160
                 }
               ]
@@ -589,22 +669,26 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "art",
                   "label": "Nail art (per set)",
+                  "labelMy": "Seni kuku (setiap set)",
                   "priceModifier": 30
                 },
                 {
                   "id": "removal",
                   "label": "Gel removal",
+                  "labelMy": "Buang gel",
                   "priceModifier": 20
                 },
                 {
                   "id": "french",
                   "label": "French tip",
+                  "labelMy": "Hujung French",
                   "priceModifier": 15
                 }
               ]
@@ -622,22 +706,26 @@
             {
               "id": "package",
               "label": "Package",
+              "labelMy": "Pakej",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "engagement",
                   "label": "Engagement",
+                  "labelMy": "Pertunangan",
                   "priceModifier": 450
                 },
                 {
                   "id": "reception",
                   "label": "Reception",
+                  "labelMy": "Majlis resepsi",
                   "priceModifier": 650
                 },
                 {
                   "id": "full_hd",
                   "label": "Full bridal (HD)",
+                  "labelMy": "Pengantin penuh (HD)",
                   "priceModifier": 950
                 }
               ]
@@ -645,17 +733,20 @@
             {
               "id": "trial",
               "label": "Trial session",
+              "labelMy": "Sesi percubaan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes",
+                  "labelMy": "Ya",
                   "priceModifier": 150
                 }
               ]
@@ -663,6 +754,7 @@
             {
               "id": "members",
               "label": "Additional family members' makeup",
+              "labelMy": "Solekan ahli keluarga tambahan",
               "type": "QUANTITY",
               "required": false,
               "config": {
@@ -675,22 +767,26 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "draping",
                   "label": "Saree/dress draping",
+                  "labelMy": "Sarung saree/gaun",
                   "priceModifier": 50
                 },
                 {
                   "id": "lashes",
                   "label": "Lashes",
+                  "labelMy": "Bulu mata",
                   "priceModifier": 30
                 },
                 {
                   "id": "early",
                   "label": "Early call (<7am)",
+                  "labelMy": "Panggilan awal (<7 pagi)",
                   "priceModifier": 80
                 }
               ]
@@ -707,22 +803,26 @@
             {
               "id": "duration",
               "label": "Duration",
+              "labelMy": "Tempoh",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "60",
                   "label": "60 min",
+                  "labelMy": "60 min",
                   "priceModifier": 130
                 },
                 {
                   "id": "90",
                   "label": "90 min",
+                  "labelMy": "90 min",
                   "priceModifier": 180
                 },
                 {
                   "id": "120",
                   "label": "120 min",
+                  "labelMy": "120 min",
                   "priceModifier": 230
                 }
               ]
@@ -730,17 +830,20 @@
             {
               "id": "gender",
               "label": "Therapist gender preference",
+              "labelMy": "Keutamaan jantina ahli terapi",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "any",
                   "label": "Any",
+                  "labelMy": "Mana-mana",
                   "priceModifier": 0
                 },
                 {
                   "id": "specific",
                   "label": "Specific",
+                  "labelMy": "Khusus",
                   "priceModifier": 10
                 }
               ]
@@ -748,6 +851,7 @@
             {
               "id": "health",
               "label": "Pregnant / medical conditions?",
+              "labelMy": "Mengandung / masalah kesihatan?",
               "type": "INFO",
               "required": false
             }
@@ -770,22 +874,26 @@
             {
               "id": "style",
               "label": "Style",
+              "labelMy": "Gaya",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "standard",
                   "label": "Standard",
+                  "labelMy": "Standard",
                   "priceModifier": 35
                 },
                 {
                   "id": "fade",
                   "label": "Fade / skin fade",
+                  "labelMy": "Fade / skin fade",
                   "priceModifier": 45
                 },
                 {
                   "id": "kids",
                   "label": "Kids (<12)",
+                  "labelMy": "Kanak-kanak (<12)",
                   "priceModifier": 28
                 }
               ]
@@ -793,17 +901,20 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "wash",
                   "label": "Wash + style",
+                  "labelMy": "Cuci + gaya",
                   "priceModifier": 15
                 },
                 {
                   "id": "massage",
                   "label": "Head massage 10min",
+                  "labelMy": "Urutan kepala 10 minit",
                   "priceModifier": 15
                 }
               ]
@@ -820,22 +931,26 @@
             {
               "id": "service",
               "label": "Service",
+              "labelMy": "Perkhidmatan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "trim",
                   "label": "Trim & shape",
+                  "labelMy": "Kemas & bentuk",
                   "priceModifier": 25
                 },
                 {
                   "id": "shave",
                   "label": "Hot-towel shave",
+                  "labelMy": "Cukur tuala panas",
                   "priceModifier": 40
                 },
                 {
                   "id": "colour",
                   "label": "Beard colour",
+                  "labelMy": "Warna janggut",
                   "priceModifier": 55
                 }
               ]
@@ -852,17 +967,20 @@
             {
               "id": "coverage",
               "label": "Coverage",
+              "labelMy": "Liputan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "touchup",
                   "label": "Touch-up (greys)",
+                  "labelMy": "Sentuhan semula (uban)",
                   "priceModifier": 50
                 },
                 {
                   "id": "full",
                   "label": "Full colour",
+                  "labelMy": "Warna penuh",
                   "priceModifier": 80
                 }
               ]
@@ -870,17 +988,20 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "beard",
                   "label": "Beard colour",
+                  "labelMy": "Warna janggut",
                   "priceModifier": 25
                 },
                 {
                   "id": "premium",
                   "label": "Premium ammonia-free",
+                  "labelMy": "Premium tanpa ammonia",
                   "priceModifier": 30
                 }
               ]
@@ -897,22 +1018,26 @@
             {
               "id": "facial",
               "label": "Facial",
+              "labelMy": "Rawatan muka",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "cleanup",
                   "label": "Cleanup",
+                  "labelMy": "Pembersihan",
                   "priceModifier": 55
                 },
                 {
                   "id": "detan",
                   "label": "De-tan",
+                  "labelMy": "Buang tan",
                   "priceModifier": 80
                 },
                 {
                   "id": "antiage",
                   "label": "Anti-ageing",
+                  "labelMy": "Anti-penuaan",
                   "priceModifier": 120
                 }
               ]
@@ -929,22 +1054,26 @@
             {
               "id": "duration",
               "label": "Duration",
+              "labelMy": "Tempoh",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "60",
                   "label": "60 min",
+                  "labelMy": "60 min",
                   "priceModifier": 120
                 },
                 {
                   "id": "90",
                   "label": "90 min",
+                  "labelMy": "90 min",
                   "priceModifier": 170
                 },
                 {
                   "id": "120",
                   "label": "120 min",
+                  "labelMy": "120 min",
                   "priceModifier": 220
                 }
               ]
@@ -952,17 +1081,20 @@
             {
               "id": "focus",
               "label": "Focus",
+              "labelMy": "Fokus",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "full",
                   "label": "Full body",
+                  "labelMy": "Seluruh badan",
                   "priceModifier": 0
                 },
                 {
                   "id": "back",
                   "label": "Back & shoulder only",
+                  "labelMy": "Belakang & bahu sahaja",
                   "priceModifier": -20
                 }
               ]
@@ -979,22 +1111,26 @@
             {
               "id": "duration",
               "label": "Duration",
+              "labelMy": "Tempoh",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "60",
                   "label": "60 min",
+                  "labelMy": "60 min",
                   "priceModifier": 150
                 },
                 {
                   "id": "90",
                   "label": "90 min",
+                  "labelMy": "90 min",
                   "priceModifier": 200
                 },
                 {
                   "id": "120",
                   "label": "120 min",
+                  "labelMy": "120 min",
                   "priceModifier": 250
                 }
               ]
@@ -1002,6 +1138,7 @@
             {
               "id": "injury",
               "label": "Injury / pain area",
+              "labelMy": "Kawasan kecederaan / sakit",
               "type": "INFO",
               "required": false
             }
@@ -1024,32 +1161,38 @@
             {
               "id": "size",
               "label": "Home size",
+              "labelMy": "Saiz rumah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "studio",
                   "label": "Studio / 1BR",
+                  "labelMy": "Studio / 1BR",
                   "priceModifier": 120
                 },
                 {
                   "id": "2br",
                   "label": "2BR",
+                  "labelMy": "2BR",
                   "priceModifier": 160
                 },
                 {
                   "id": "3br",
                   "label": "3BR",
+                  "labelMy": "3BR",
                   "priceModifier": 210
                 },
                 {
                   "id": "4br",
                   "label": "4BR",
+                  "labelMy": "4BR",
                   "priceModifier": 270
                 },
                 {
                   "id": "5br",
                   "label": "Bungalow / 5BR+",
+                  "labelMy": "Banglo / 5BR+",
                   "priceModifier": 350
                 }
               ]
@@ -1057,17 +1200,20 @@
             {
               "id": "furnished",
               "label": "Furnished?",
+              "labelMy": "Berperabot?",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "yes",
                   "label": "Furnished",
+                  "labelMy": "Berperabot",
                   "priceModifier": 0
                 },
                 {
                   "id": "empty",
                   "label": "Empty (faster)",
+                  "labelMy": "Kosong (lebih cepat)",
                   "priceModifier": -20
                 }
               ]
@@ -1084,27 +1230,32 @@
             {
               "id": "size",
               "label": "Home size",
+              "labelMy": "Saiz rumah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "1br",
                   "label": "1BR",
+                  "labelMy": "1BR",
                   "priceModifier": 220
                 },
                 {
                   "id": "2br",
                   "label": "2BR",
+                  "labelMy": "2BR",
                   "priceModifier": 300
                 },
                 {
                   "id": "3br",
                   "label": "3BR",
+                  "labelMy": "3BR",
                   "priceModifier": 400
                 },
                 {
                   "id": "4br",
                   "label": "4BR",
+                  "labelMy": "4BR",
                   "priceModifier": 520
                 }
               ]
@@ -1112,27 +1263,32 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "fridge",
                   "label": "Inside fridge",
+                  "labelMy": "Dalam peti sejuk",
                   "priceModifier": 40
                 },
                 {
                   "id": "oven",
                   "label": "Inside oven",
+                  "labelMy": "Dalam ketuhar",
                   "priceModifier": 40
                 },
                 {
                   "id": "balcony",
                   "label": "Balcony",
+                  "labelMy": "Balkoni",
                   "priceModifier": 30
                 },
                 {
                   "id": "windows",
                   "label": "Windows (interior)",
+                  "labelMy": "Tingkap (dalaman)",
                   "priceModifier": 50
                 }
               ]
@@ -1149,27 +1305,32 @@
             {
               "id": "size",
               "label": "Home size",
+              "labelMy": "Saiz rumah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "1br",
                   "label": "1BR",
+                  "labelMy": "1BR",
                   "priceModifier": 260
                 },
                 {
                   "id": "2br",
                   "label": "2BR",
+                  "labelMy": "2BR",
                   "priceModifier": 360
                 },
                 {
                   "id": "3br",
                   "label": "3BR",
+                  "labelMy": "3BR",
                   "priceModifier": 480
                 },
                 {
                   "id": "4br",
                   "label": "4BR",
+                  "labelMy": "4BR",
                   "priceModifier": 620
                 }
               ]
@@ -1177,17 +1338,20 @@
             {
               "id": "carpet",
               "label": "Carpet shampoo",
+              "labelMy": "Syampu karpet",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes",
+                  "labelMy": "Ya",
                   "priceModifier": 80
                 }
               ]
@@ -1205,6 +1369,7 @@
             {
               "id": "qty",
               "label": "No. of hoods/chimneys",
+              "labelMy": "Bilangan hud/cerobong",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -1217,17 +1382,20 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "wall",
                   "label": "Wall hood",
+                  "labelMy": "Hud dinding",
                   "priceModifier": 0
                 },
                 {
                   "id": "island",
                   "label": "Island / auto-clean",
+                  "labelMy": "Pulau / cuci automatik",
                   "priceModifier": 30
                 }
               ]
@@ -1245,6 +1413,7 @@
             {
               "id": "qty",
               "label": "No. of bathrooms",
+              "labelMy": "Bilangan bilik air",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -1257,6 +1426,7 @@
             {
               "id": "condition",
               "label": "Condition",
+              "labelMy": "Keadaan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -1266,11 +1436,13 @@
                 {
                   "id": "normal",
                   "label": "Normal",
+                  "labelMy": "Biasa",
                   "priceModifier": 0
                 },
                 {
                   "id": "heavy",
                   "label": "Heavy stain / mould (per unit)",
+                  "labelMy": "Kotoran berat / kulat (setiap unit)",
                   "priceModifier": 20
                 }
               ]
@@ -1287,32 +1459,38 @@
             {
               "id": "seats",
               "label": "Sofa pieces",
+              "labelMy": "Bilangan bahagian sofa",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "1s",
                   "label": "1-seater",
+                  "labelMy": "1 tempat duduk",
                   "unitPrice": 30
                 },
                 {
                   "id": "2s",
                   "label": "2-seater",
+                  "labelMy": "2 tempat duduk",
                   "unitPrice": 50
                 },
                 {
                   "id": "3s",
                   "label": "3-seater",
+                  "labelMy": "3 tempat duduk",
                   "unitPrice": 75
                 },
                 {
                   "id": "l",
                   "label": "L-shape",
+                  "labelMy": "L-shape",
                   "unitPrice": 130
                 },
                 {
                   "id": "u",
                   "label": "U-shape",
+                  "labelMy": "U-shape",
                   "unitPrice": 170
                 }
               ]
@@ -1320,6 +1498,7 @@
             {
               "id": "material",
               "label": "Material",
+              "labelMy": "Bahan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -1329,16 +1508,19 @@
                 {
                   "id": "fabric",
                   "label": "Fabric",
+                  "labelMy": "Fabrik",
                   "priceModifier": 0
                 },
                 {
                   "id": "leather",
                   "label": "Leather (per unit)",
+                  "labelMy": "Kulit (setiap unit)",
                   "priceModifier": 15
                 },
                 {
                   "id": "suede",
                   "label": "Suede (per unit)",
+                  "labelMy": "Suede (setiap unit)",
                   "priceModifier": 20
                 }
               ]
@@ -1355,22 +1537,26 @@
             {
               "id": "size",
               "label": "Mattress size",
+              "labelMy": "Saiz tilam",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "single",
                   "label": "Single",
+                  "labelMy": "Tunggal",
                   "unitPrice": 45
                 },
                 {
                   "id": "queen",
                   "label": "Queen",
+                  "labelMy": "Queen",
                   "unitPrice": 65
                 },
                 {
                   "id": "king",
                   "label": "King",
+                  "labelMy": "King",
                   "unitPrice": 85
                 }
               ]
@@ -1378,6 +1564,7 @@
             {
               "id": "treatment",
               "label": "Treatment",
+              "labelMy": "Rawatan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -1387,11 +1574,13 @@
                 {
                   "id": "shampoo",
                   "label": "Vacuum + shampoo",
+                  "labelMy": "Vakum + syampu",
                   "priceModifier": 0
                 },
                 {
                   "id": "uv",
                   "label": "+ UV dust-mite (per unit)",
+                  "labelMy": "+ UV hama habuk (setiap unit)",
                   "priceModifier": 25
                 }
               ]
@@ -1415,22 +1604,26 @@
             {
               "id": "property",
               "label": "Property type",
+              "labelMy": "Jenis hartanah",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "apartment",
                   "label": "Apartment",
+                  "labelMy": "Apartmen",
                   "priceModifier": 0
                 },
                 {
                   "id": "house",
                   "label": "House",
+                  "labelMy": "Rumah",
                   "priceModifier": 0
                 },
                 {
                   "id": "shop",
                   "label": "Shop / F&B",
+                  "labelMy": "Kedai / F&B",
                   "priceModifier": 40
                 }
               ]
@@ -1438,22 +1631,26 @@
             {
               "id": "size",
               "label": "Property size",
+              "labelMy": "Saiz hartanah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "s",
                   "label": "Below 1000 sqft",
+                  "labelMy": "Below 1000 sqft",
                   "priceModifier": 180
                 },
                 {
                   "id": "m",
                   "label": "1000-2000 sqft",
+                  "labelMy": "1000-2000 sqft",
                   "priceModifier": 250
                 },
                 {
                   "id": "l",
                   "label": "2000+ sqft",
+                  "labelMy": "2000+ sqft",
                   "priceModifier": 350
                 }
               ]
@@ -1461,17 +1658,20 @@
             {
               "id": "plan",
               "label": "Plan",
+              "labelMy": "Pelan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "once",
                   "label": "One-time",
+                  "labelMy": "Sekali sahaja",
                   "priceModifier": 0
                 },
                 {
                   "id": "quarterly",
                   "label": "3-visit quarterly",
+                  "labelMy": "3 lawatan setiap suku tahun",
                   "priceModifier": 120
                 }
               ]
@@ -1488,22 +1688,26 @@
             {
               "id": "size",
               "label": "Property size",
+              "labelMy": "Saiz hartanah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "s",
                   "label": "Below 1000 sqft",
+                  "labelMy": "Below 1000 sqft",
                   "priceModifier": 150
                 },
                 {
                   "id": "m",
                   "label": "1000-2000 sqft",
+                  "labelMy": "1000-2000 sqft",
                   "priceModifier": 210
                 },
                 {
                   "id": "l",
                   "label": "2000+ sqft",
+                  "labelMy": "2000+ sqft",
                   "priceModifier": 300
                 }
               ]
@@ -1520,22 +1724,26 @@
             {
               "id": "area",
               "label": "Area",
+              "labelMy": "Kawasan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "indoor",
                   "label": "Indoor",
+                  "labelMy": "Dalaman",
                   "priceModifier": 0
                 },
                 {
                   "id": "outdoor",
                   "label": "Outdoor / compound",
+                  "labelMy": "Luaran / kawasan rumah",
                   "priceModifier": 50
                 },
                 {
                   "id": "both",
                   "label": "Both",
+                  "labelMy": "Kedua-duanya",
                   "priceModifier": 80
                 }
               ]
@@ -1543,22 +1751,26 @@
             {
               "id": "size",
               "label": "Property size",
+              "labelMy": "Saiz hartanah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "s",
                   "label": "Below 1000 sqft",
+                  "labelMy": "Below 1000 sqft",
                   "priceModifier": 160
                 },
                 {
                   "id": "m",
                   "label": "1000-2000 sqft",
+                  "labelMy": "1000-2000 sqft",
                   "priceModifier": 230
                 },
                 {
                   "id": "l",
                   "label": "2000+ sqft",
+                  "labelMy": "2000+ sqft",
                   "priceModifier": 320
                 }
               ]
@@ -1576,6 +1788,7 @@
             {
               "id": "rooms",
               "label": "No. of rooms",
+              "labelMy": "Bilangan bilik",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -1588,17 +1801,20 @@
             {
               "id": "severity",
               "label": "Severity",
+              "labelMy": "Tahap keterukan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "mild",
                   "label": "Mild",
+                  "labelMy": "Ringan",
                   "priceModifier": 0
                 },
                 {
                   "id": "severe",
                   "label": "Severe (2-visit)",
+                  "labelMy": "Teruk (2 lawatan)",
                   "priceModifier": 90
                 }
               ]
@@ -1616,22 +1832,26 @@
             {
               "id": "size",
               "label": "Property size",
+              "labelMy": "Saiz hartanah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "s",
                   "label": "Below 1500 sqft",
+                  "labelMy": "Below 1500 sqft",
                   "priceModifier": 450
                 },
                 {
                   "id": "m",
                   "label": "1500-3000 sqft",
+                  "labelMy": "1500-3000 sqft",
                   "priceModifier": 700
                 },
                 {
                   "id": "l",
                   "label": "3000+ sqft",
+                  "labelMy": "3000+ sqft",
                   "priceModifier": 1000
                 }
               ]
@@ -1639,22 +1859,26 @@
             {
               "id": "method",
               "label": "Method",
+              "labelMy": "Kaedah",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "soil",
                   "label": "Soil treatment",
+                  "labelMy": "Rawatan tanah",
                   "priceModifier": 0
                 },
                 {
                   "id": "bait",
                   "label": "Baiting system",
+                  "labelMy": "Sistem umpan",
                   "priceModifier": 200
                 },
                 {
                   "id": "warranty",
                   "label": "Corrective + warranty",
+                  "labelMy": "Pembetulan + jaminan",
                   "priceModifier": 350
                 }
               ]
@@ -1671,22 +1895,26 @@
             {
               "id": "property",
               "label": "Property type",
+              "labelMy": "Jenis hartanah",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "apartment",
                   "label": "Apartment",
+                  "labelMy": "Apartmen",
                   "priceModifier": 160
                 },
                 {
                   "id": "house",
                   "label": "House",
+                  "labelMy": "Rumah",
                   "priceModifier": 220
                 },
                 {
                   "id": "shop",
                   "label": "Shop / Restaurant",
+                  "labelMy": "Kedai / Restoran",
                   "priceModifier": 320
                 }
               ]
@@ -1694,17 +1922,20 @@
             {
               "id": "plan",
               "label": "Plan",
+              "labelMy": "Pelan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "once",
                   "label": "One-time",
+                  "labelMy": "Sekali sahaja",
                   "priceModifier": 0
                 },
                 {
                   "id": "monthly",
                   "label": "Monthly (3 visits)",
+                  "labelMy": "Bulanan (3 lawatan)",
                   "priceModifier": 150
                 }
               ]
@@ -1728,27 +1959,32 @@
             {
               "id": "units",
               "label": "AC units by HP",
+              "labelMy": "Unit penyaman udara mengikut HP",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "1hp",
                   "label": "1.0 HP",
+                  "labelMy": "1.0 HP",
                   "unitPrice": 89
                 },
                 {
                   "id": "1_5hp",
                   "label": "1.5 HP",
+                  "labelMy": "1.5 HP",
                   "unitPrice": 109
                 },
                 {
                   "id": "2hp",
                   "label": "2.0 HP",
+                  "labelMy": "2.0 HP",
                   "unitPrice": 129
                 },
                 {
                   "id": "3hp",
                   "label": "3.0 HP",
+                  "labelMy": "3.0 HP",
                   "unitPrice": 159
                 }
               ]
@@ -1756,6 +1992,7 @@
             {
               "id": "mount",
               "label": "Mount type",
+              "labelMy": "Jenis lekapan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -1765,11 +2002,13 @@
                 {
                   "id": "wall",
                   "label": "Wall-mounted",
+                  "labelMy": "Lekap dinding",
                   "priceModifier": 0
                 },
                 {
                   "id": "cassette",
                   "label": "Cassette / ceiling (per unit)",
+                  "labelMy": "Kaset / siling (setiap unit)",
                   "priceModifier": 40
                 }
               ]
@@ -1777,6 +2016,7 @@
             {
               "id": "last_service",
               "label": "Last service date",
+              "labelMy": "Tarikh servis terakhir",
               "type": "INFO",
               "required": false
             }
@@ -1792,27 +2032,32 @@
             {
               "id": "units",
               "label": "AC units by HP",
+              "labelMy": "Unit penyaman udara mengikut HP",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "1hp",
                   "label": "1.0 HP",
+                  "labelMy": "1.0 HP",
                   "unitPrice": 150
                 },
                 {
                   "id": "1_5hp",
                   "label": "1.5 HP",
+                  "labelMy": "1.5 HP",
                   "unitPrice": 180
                 },
                 {
                   "id": "2hp",
                   "label": "2.0 HP",
+                  "labelMy": "2.0 HP",
                   "unitPrice": 220
                 },
                 {
                   "id": "3hp",
                   "label": "3.0 HP",
+                  "labelMy": "3.0 HP",
                   "unitPrice": 280
                 }
               ]
@@ -1820,6 +2065,7 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -1829,11 +2075,13 @@
                 {
                   "id": "wash",
                   "label": "Chemical wash",
+                  "labelMy": "Cucian kimia",
                   "priceModifier": 0
                 },
                 {
                   "id": "overhaul",
                   "label": "Chemical overhaul / dismantle (per unit)",
+                  "labelMy": "Baik pulih kimia / tanggal (setiap unit)",
                   "priceModifier": 60
                 }
               ]
@@ -1851,27 +2099,32 @@
             {
               "id": "symptom",
               "label": "Symptom",
+              "labelMy": "Gejala",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no_cool",
                   "label": "Not cooling",
+                  "labelMy": "Tidak menyejuk",
                   "priceModifier": 0
                 },
                 {
                   "id": "weak",
                   "label": "Weak airflow",
+                  "labelMy": "Aliran udara lemah",
                   "priceModifier": 0
                 },
                 {
                   "id": "noisy",
                   "label": "Noisy",
+                  "labelMy": "Bising",
                   "priceModifier": 0
                 },
                 {
                   "id": "trip",
                   "label": "Auto-trip",
+                  "labelMy": "Trip automatik",
                   "priceModifier": 0
                 }
               ]
@@ -1879,6 +2132,7 @@
             {
               "id": "qty",
               "label": "No. of units affected",
+              "labelMy": "Bilangan unit terjejas",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -1891,6 +2145,7 @@
             {
               "id": "brand",
               "label": "Brand & approx. age",
+              "labelMy": "Jenama & anggaran usia",
               "type": "INFO",
               "required": false
             }
@@ -1907,22 +2162,26 @@
             {
               "id": "point",
               "label": "Leak point",
+              "labelMy": "Titik kebocoran",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "indoor",
                   "label": "Indoor unit dripping",
+                  "labelMy": "Unit dalaman menitis",
                   "priceModifier": 0
                 },
                 {
                   "id": "outdoor",
                   "label": "Outdoor",
+                  "labelMy": "Luaran",
                   "priceModifier": 0
                 },
                 {
                   "id": "joint",
                   "label": "Pipe joint",
+                  "labelMy": "Sambungan paip",
                   "priceModifier": 0
                 }
               ]
@@ -1930,6 +2189,7 @@
             {
               "id": "qty",
               "label": "No. of units",
+              "labelMy": "Bilangan unit",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -1951,27 +2211,32 @@
             {
               "id": "hp",
               "label": "HP",
+              "labelMy": "HP",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "1hp",
                   "label": "1.0 HP",
+                  "labelMy": "1.0 HP",
                   "priceModifier": 130
                 },
                 {
                   "id": "1_5hp",
                   "label": "1.5 HP",
+                  "labelMy": "1.5 HP",
                   "priceModifier": 160
                 },
                 {
                   "id": "2hp",
                   "label": "2.0 HP",
+                  "labelMy": "2.0 HP",
                   "priceModifier": 190
                 },
                 {
                   "id": "3hp",
                   "label": "3.0 HP",
+                  "labelMy": "3.0 HP",
                   "priceModifier": 240
                 }
               ]
@@ -1979,22 +2244,26 @@
             {
               "id": "gas",
               "label": "Gas type",
+              "labelMy": "Jenis gas",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "r32",
                   "label": "R32",
+                  "labelMy": "R32",
                   "priceModifier": 0
                 },
                 {
                   "id": "r410a",
                   "label": "R410A",
+                  "labelMy": "R410A",
                   "priceModifier": 20
                 },
                 {
                   "id": "r22",
                   "label": "R22",
+                  "labelMy": "R22",
                   "priceModifier": 30
                 }
               ]
@@ -2002,17 +2271,20 @@
             {
               "id": "leak",
               "label": "Leak test",
+              "labelMy": "Ujian kebocoran",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "std",
                   "label": "Standard",
+                  "labelMy": "Standard",
                   "priceModifier": 0
                 },
                 {
                   "id": "test",
                   "label": "+ Pressure / leak test",
+                  "labelMy": "+ Ujian tekanan / kebocoran",
                   "priceModifier": 40
                 }
               ]
@@ -2029,27 +2301,32 @@
             {
               "id": "units",
               "label": "Units by HP",
+              "labelMy": "Unit mengikut HP",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "1hp",
                   "label": "1.0 HP",
+                  "labelMy": "1.0 HP",
                   "unitPrice": 170
                 },
                 {
                   "id": "1_5hp",
                   "label": "1.5 HP",
+                  "labelMy": "1.5 HP",
                   "unitPrice": 200
                 },
                 {
                   "id": "2hp",
                   "label": "2.0 HP",
+                  "labelMy": "2.0 HP",
                   "unitPrice": 240
                 },
                 {
                   "id": "3hp",
                   "label": "3.0 HP",
+                  "labelMy": "3.0 HP",
                   "unitPrice": 300
                 }
               ]
@@ -2057,17 +2334,20 @@
             {
               "id": "bracket",
               "label": "Bracket",
+              "labelMy": "Pendakap",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "existing",
                   "label": "Existing",
+                  "labelMy": "Sedia ada",
                   "priceModifier": 0
                 },
                 {
                   "id": "new",
                   "label": "New wall bracket",
+                  "labelMy": "Pendakap dinding baharu",
                   "priceModifier": 60
                 }
               ]
@@ -2075,6 +2355,7 @@
             {
               "id": "piping",
               "label": "Extra copper piping (ft beyond 3ft)",
+              "labelMy": "Paip tembaga tambahan (kaki melebihi 3 kaki)",
               "type": "QUANTITY",
               "required": false,
               "config": {
@@ -2087,22 +2368,26 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "trunking",
                   "label": "Conceal / trunking",
+                  "labelMy": "Sembunyi / trunking",
                   "priceModifier": 90
                 },
                 {
                   "id": "dismantle",
                   "label": "Dismantle old unit",
+                  "labelMy": "Tanggalkan unit lama",
                   "priceModifier": 50
                 },
                 {
                   "id": "scaffold",
                   "label": "High-floor / scaffold",
+                  "labelMy": "Tingkat tinggi / perancah",
                   "priceModifier": 100
                 }
               ]
@@ -2127,27 +2412,32 @@
             {
               "id": "symptom",
               "label": "Symptom",
+              "labelMy": "Gejala",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no_heat",
                   "label": "Not heating",
+                  "labelMy": "Tidak memanas",
                   "priceModifier": 0
                 },
                 {
                   "id": "no_power",
                   "label": "No power",
+                  "labelMy": "Tiada kuasa",
                   "priceModifier": 0
                 },
                 {
                   "id": "spark",
                   "label": "Sparking",
+                  "labelMy": "Berpercikan api",
                   "priceModifier": 0
                 },
                 {
                   "id": "turntable",
                   "label": "Turntable fault",
+                  "labelMy": "Kerosakan meja putar",
                   "priceModifier": 0
                 }
               ]
@@ -2155,6 +2445,7 @@
             {
               "id": "model",
               "label": "Brand / model, solo or convection",
+              "labelMy": "Jenama / model, solo atau konveksi",
               "type": "INFO",
               "required": false
             }
@@ -2171,27 +2462,32 @@
             {
               "id": "symptom",
               "label": "Symptom",
+              "labelMy": "Gejala",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no_cool",
                   "label": "Not cooling",
+                  "labelMy": "Tidak menyejuk",
                   "priceModifier": 0
                 },
                 {
                   "id": "leak",
                   "label": "Water leak",
+                  "labelMy": "Kebocoran air",
                   "priceModifier": 0
                 },
                 {
                   "id": "noisy",
                   "label": "Noisy",
+                  "labelMy": "Bising",
                   "priceModifier": 0
                 },
                 {
                   "id": "freezer",
                   "label": "Freezer-only fault",
+                  "labelMy": "Kerosakan peti beku sahaja",
                   "priceModifier": 0
                 }
               ]
@@ -2199,22 +2495,26 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "single",
                   "label": "Single-door",
+                  "labelMy": "Pintu tunggal",
                   "priceModifier": 0
                 },
                 {
                   "id": "double",
                   "label": "Double-door",
+                  "labelMy": "Pintu berkembar",
                   "priceModifier": 0
                 },
                 {
                   "id": "sbs",
                   "label": "Side-by-side",
+                  "labelMy": "Bersebelahan",
                   "priceModifier": 20
                 }
               ]
@@ -2222,6 +2522,7 @@
             {
               "id": "age",
               "label": "Brand & age",
+              "labelMy": "Jenama & usia",
               "type": "INFO",
               "required": false
             }
@@ -2238,22 +2539,26 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "top",
                   "label": "Top-load",
+                  "labelMy": "Muatan atas",
                   "priceModifier": 0
                 },
                 {
                   "id": "front",
                   "label": "Front-load",
+                  "labelMy": "Muatan depan",
                   "priceModifier": 15
                 },
                 {
                   "id": "semi",
                   "label": "Semi-auto",
+                  "labelMy": "Separa automatik",
                   "priceModifier": 0
                 }
               ]
@@ -2261,32 +2566,38 @@
             {
               "id": "symptom",
               "label": "Symptom",
+              "labelMy": "Gejala",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "spin",
                   "label": "Not spinning",
+                  "labelMy": "Tidak berpusing",
                   "priceModifier": 0
                 },
                 {
                   "id": "drain",
                   "label": "Not draining",
+                  "labelMy": "Tidak mengalir keluar",
                   "priceModifier": 0
                 },
                 {
                   "id": "leak",
                   "label": "Leaking",
+                  "labelMy": "Bocor",
                   "priceModifier": 0
                 },
                 {
                   "id": "error",
                   "label": "Error code",
+                  "labelMy": "Kod ralat",
                   "priceModifier": 0
                 },
                 {
                   "id": "noise",
                   "label": "Drum noise",
+                  "labelMy": "Bunyi dram",
                   "priceModifier": 0
                 }
               ]
@@ -2303,22 +2614,26 @@
             {
               "id": "service",
               "label": "Service",
+              "labelMy": "Perkhidmatan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "general",
                   "label": "General service",
+                  "labelMy": "Servis am",
                   "priceModifier": 80
                 },
                 {
                   "id": "filter",
                   "label": "Filter change",
+                  "labelMy": "Tukar penapis",
                   "priceModifier": 120
                 },
                 {
                   "id": "diag",
                   "label": "Not-working diagnosis (call-out then quote)",
+                  "labelMy": "Diagnosis tidak berfungsi (panggilan keluar kemudian sebut harga)",
                   "priceModifier": 0
                 }
               ]
@@ -2326,22 +2641,26 @@
             {
               "id": "addons",
               "label": "Add-ons",
+              "labelMy": "Tambahan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "membrane",
                   "label": "Membrane replacement",
+                  "labelMy": "Penggantian membran",
                   "priceModifier": 150
                 },
                 {
                   "id": "uv",
                   "label": "UV lamp",
+                  "labelMy": "UV lamp",
                   "priceModifier": 90
                 },
                 {
                   "id": "pump",
                   "label": "Pump",
+                  "labelMy": "Pam",
                   "priceModifier": 120
                 }
               ]
@@ -2359,17 +2678,20 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "instant",
                   "label": "Instant",
+                  "labelMy": "Segera",
                   "priceModifier": 0
                 },
                 {
                   "id": "storage",
                   "label": "Storage tank",
+                  "labelMy": "Tangki simpanan",
                   "priceModifier": 0
                 }
               ]
@@ -2377,27 +2699,32 @@
             {
               "id": "symptom",
               "label": "Symptom",
+              "labelMy": "Gejala",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no_hot",
                   "label": "No hot water",
+                  "labelMy": "Tiada air panas",
                   "priceModifier": 0
                 },
                 {
                   "id": "trip",
                   "label": "Tripping (ELCB)",
+                  "labelMy": "Trip (ELCB)",
                   "priceModifier": 0
                 },
                 {
                   "id": "leak",
                   "label": "Leaking",
+                  "labelMy": "Bocor",
                   "priceModifier": 0
                 },
                 {
                   "id": "no_power",
                   "label": "No power",
+                  "labelMy": "Tiada kuasa",
                   "priceModifier": 0
                 }
               ]
@@ -2415,22 +2742,26 @@
             {
               "id": "size",
               "label": "Screen size",
+              "labelMy": "Saiz skrin",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "s",
                   "label": "32\" and below",
+                  "labelMy": "32\" and below",
                   "priceModifier": 0
                 },
                 {
                   "id": "m",
                   "label": "33-50\"",
+                  "labelMy": "33-50\"",
                   "priceModifier": 0
                 },
                 {
                   "id": "l",
                   "label": "50\"+",
+                  "labelMy": "50\"+",
                   "priceModifier": 0
                 }
               ]
@@ -2438,32 +2769,38 @@
             {
               "id": "symptom",
               "label": "Symptom",
+              "labelMy": "Gejala",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no_display",
                   "label": "No display",
+                  "labelMy": "Tiada paparan",
                   "priceModifier": 0
                 },
                 {
                   "id": "no_power",
                   "label": "No power",
+                  "labelMy": "Tiada kuasa",
                   "priceModifier": 0
                 },
                 {
                   "id": "lines",
                   "label": "Lines / spots",
+                  "labelMy": "Garisan / tompok",
                   "priceModifier": 0
                 },
                 {
                   "id": "no_sound",
                   "label": "No sound",
+                  "labelMy": "Tiada bunyi",
                   "priceModifier": 0
                 },
                 {
                   "id": "smart",
                   "label": "Smart / app fault",
+                  "labelMy": "Kerosakan pintar / aplikasi",
                   "priceModifier": 0
                 }
               ]
@@ -2487,22 +2824,26 @@
             {
               "id": "type",
               "label": "Fan type",
+              "labelMy": "Jenis kipas",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "ceiling",
                   "label": "Ceiling",
+                  "labelMy": "Siling",
                   "unitPrice": 45
                 },
                 {
                   "id": "wall",
                   "label": "Wall / Exhaust",
+                  "labelMy": "Dinding / Ekzos",
                   "unitPrice": 35
                 },
                 {
                   "id": "bldc",
                   "label": "BLDC / with remote",
+                  "labelMy": "BLDC / with remote",
                   "unitPrice": 60
                 }
               ]
@@ -2510,6 +2851,7 @@
             {
               "id": "point",
               "label": "New point needed?",
+              "labelMy": "Perlu titik baharu?",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -2519,11 +2861,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes (wiring/box, per unit)",
+                  "labelMy": "Ya (pendawaian/kotak, setiap unit)",
                   "priceModifier": 40
                 }
               ]
@@ -2540,27 +2884,32 @@
             {
               "id": "type",
               "label": "Light type",
+              "labelMy": "Jenis lampu",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "ceiling",
                   "label": "Ceiling / pendant",
+                  "labelMy": "Siling / gantung",
                   "unitPrice": 30
                 },
                 {
                   "id": "tube",
                   "label": "Tube / batten",
+                  "labelMy": "Tiub / batten",
                   "unitPrice": 22
                 },
                 {
                   "id": "chandelier",
                   "label": "Chandelier",
+                  "labelMy": "Lampu candelier",
                   "unitPrice": 80
                 },
                 {
                   "id": "downlight",
                   "label": "Downlight set",
+                  "labelMy": "Set lampu downlight",
                   "unitPrice": 25
                 }
               ]
@@ -2568,6 +2917,7 @@
             {
               "id": "point",
               "label": "New wiring point?",
+              "labelMy": "Titik pendawaian baharu?",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -2577,11 +2927,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes (per unit)",
+                  "labelMy": "Ya (setiap unit)",
                   "priceModifier": 35
                 }
               ]
@@ -2600,27 +2952,32 @@
             {
               "id": "item",
               "label": "What needs replacing?",
+              "labelMy": "Apa yang perlu diganti?",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "switch",
                   "label": "Switch",
+                  "labelMy": "Suis",
                   "priceModifier": 0
                 },
                 {
                   "id": "outlet",
                   "label": "Power Outlet",
+                  "labelMy": "Soket kuasa",
                   "priceModifier": 0
                 },
                 {
                   "id": "dimmer",
                   "label": "Dimmer Switch",
+                  "labelMy": "Suis peredup",
                   "priceModifier": 8
                 },
                 {
                   "id": "smart",
                   "label": "Smart Switch",
+                  "labelMy": "Suis pintar",
                   "priceModifier": 25
                 }
               ]
@@ -2628,6 +2985,7 @@
             {
               "id": "qty",
               "label": "How many units?",
+              "labelMy": "Berapa unit?",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -2640,22 +2998,26 @@
             {
               "id": "material",
               "label": "Who provides the part?",
+              "labelMy": "Siapa sediakan alat ganti?",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "customer",
                   "label": "I have the switch/outlet",
+                  "labelMy": "Saya ada suis/soket",
                   "priceModifier": 0
                 },
                 {
                   "id": "standard",
                   "label": "Technician brings standard part",
+                  "labelMy": "Juruteknik bawa alat ganti standard",
                   "priceModifier": 10
                 },
                 {
                   "id": "premium",
                   "label": "Technician brings premium part",
+                  "labelMy": "Juruteknik bawa alat ganti premium",
                   "priceModifier": 22
                 }
               ]
@@ -2673,27 +3035,32 @@
             {
               "id": "scope",
               "label": "Scope",
+              "labelMy": "Skop",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "add_point",
                   "label": "Add point",
+                  "labelMy": "Tambah titik",
                   "priceModifier": 0
                 },
                 {
                   "id": "rewire",
                   "label": "Rewire circuit",
+                  "labelMy": "Pendawaian semula litar",
                   "priceModifier": 0
                 },
                 {
                   "id": "fault",
                   "label": "Fault tracing",
+                  "labelMy": "Pengesanan kerosakan",
                   "priceModifier": 0
                 },
                 {
                   "id": "conduit",
                   "label": "Conduit / trunking",
+                  "labelMy": "Konduit / trunking",
                   "priceModifier": 0
                 }
               ]
@@ -2701,6 +3068,7 @@
             {
               "id": "hours",
               "label": "Estimated hours",
+              "labelMy": "Anggaran jam",
               "type": "HOURS_INPUT",
               "required": true,
               "config": {
@@ -2723,27 +3091,32 @@
             {
               "id": "issue",
               "label": "Issue",
+              "labelMy": "Masalah",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "trip",
                   "label": "Frequent tripping",
+                  "labelMy": "Kerap trip",
                   "priceModifier": 0
                 },
                 {
                   "id": "add",
                   "label": "Add MCB / RCCB",
+                  "labelMy": "Tambah MCB / RCCB",
                   "priceModifier": 0
                 },
                 {
                   "id": "upgrade",
                   "label": "Full DB upgrade",
+                  "labelMy": "Naik taraf penuh papan agihan",
                   "priceModifier": 0
                 },
                 {
                   "id": "burning",
                   "label": "Burning smell (urgent)",
+                  "labelMy": "Bau terbakar (segera)",
                   "priceModifier": 0
                 }
               ]
@@ -2751,6 +3124,7 @@
             {
               "id": "qty",
               "label": "No. of breakers to add/replace",
+              "labelMy": "Bilangan pemutus untuk ditambah/ditukar",
               "type": "QUANTITY",
               "required": false,
               "config": {
@@ -2772,22 +3146,26 @@
             {
               "id": "door",
               "label": "Door type",
+              "labelMy": "Jenis pintu",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "wood",
                   "label": "Wooden",
+                  "labelMy": "Kayu",
                   "unitPrice": 80
                 },
                 {
                   "id": "metal",
                   "label": "Metal / grille",
+                  "labelMy": "Logam / gril",
                   "unitPrice": 110
                 },
                 {
                   "id": "glass",
                   "label": "Glass",
+                  "labelMy": "Kaca",
                   "unitPrice": 140
                 }
               ]
@@ -2795,6 +3173,7 @@
             {
               "id": "removal",
               "label": "Old lock removal",
+              "labelMy": "Buang kunci lama",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -2804,11 +3183,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes (per door)",
+                  "labelMy": "Ya (setiap pintu)",
                   "priceModifier": 25
                 }
               ]
@@ -2816,6 +3197,7 @@
             {
               "id": "model",
               "label": "Lock brand/model (customer-supplied)",
+              "labelMy": "Jenama/model kunci (dibekalkan pelanggan)",
               "type": "INFO",
               "required": false
             }
@@ -2839,6 +3221,7 @@
             {
               "id": "qty",
               "label": "No. of taps",
+              "labelMy": "Bilangan paip",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -2851,22 +3234,26 @@
             {
               "id": "location",
               "label": "Location",
+              "labelMy": "Lokasi",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "kitchen",
                   "label": "Kitchen",
+                  "labelMy": "Dapur",
                   "priceModifier": 0
                 },
                 {
                   "id": "bathroom",
                   "label": "Bathroom",
+                  "labelMy": "Bilik air",
                   "priceModifier": 0
                 },
                 {
                   "id": "outdoor",
                   "label": "Outdoor",
+                  "labelMy": "Luaran",
                   "priceModifier": 5
                 }
               ]
@@ -2874,6 +3261,7 @@
             {
               "id": "issue",
               "label": "Issue",
+              "labelMy": "Masalah",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -2883,16 +3271,19 @@
                 {
                   "id": "leak",
                   "label": "Leaking",
+                  "labelMy": "Bocor",
                   "priceModifier": 0
                 },
                 {
                   "id": "flow",
                   "label": "Low flow",
+                  "labelMy": "Aliran perlahan",
                   "priceModifier": 0
                 },
                 {
                   "id": "replace",
                   "label": "Full replacement (per tap)",
+                  "labelMy": "Penggantian penuh (setiap paip)",
                   "priceModifier": 10
                 }
               ]
@@ -2900,17 +3291,20 @@
             {
               "id": "material",
               "label": "Who provides the tap?",
+              "labelMy": "Siapa sediakan paip?",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "customer",
                   "label": "Customer provides tap",
+                  "labelMy": "Pelanggan sediakan paip",
                   "priceModifier": 0
                 },
                 {
                   "id": "technician",
                   "label": "Technician supplies (quote on site)",
+                  "labelMy": "Juruteknik sediakan (sebut harga di lokasi)",
                   "priceModifier": 0
                 }
               ]
@@ -2928,27 +3322,32 @@
             {
               "id": "source",
               "label": "Source",
+              "labelMy": "Punca",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "joint",
                   "label": "Pipe joint",
+                  "labelMy": "Sambungan paip",
                   "priceModifier": 0
                 },
                 {
                   "id": "wall",
                   "label": "Wall seepage",
+                  "labelMy": "Resapan dinding",
                   "priceModifier": 0
                 },
                 {
                   "id": "ceiling",
                   "label": "Ceiling",
+                  "labelMy": "Siling",
                   "priceModifier": 0
                 },
                 {
                   "id": "concealed",
                   "label": "Concealed (needs tracing)",
+                  "labelMy": "Tersembunyi (perlu dikesan)",
                   "priceModifier": 30
                 }
               ]
@@ -2956,22 +3355,26 @@
             {
               "id": "location",
               "label": "Location",
+              "labelMy": "Lokasi",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "kitchen",
                   "label": "Kitchen",
+                  "labelMy": "Dapur",
                   "priceModifier": 0
                 },
                 {
                   "id": "bathroom",
                   "label": "Bathroom",
+                  "labelMy": "Bilik air",
                   "priceModifier": 0
                 },
                 {
                   "id": "outdoor",
                   "label": "Outdoor",
+                  "labelMy": "Luaran",
                   "priceModifier": 0
                 }
               ]
@@ -2989,6 +3392,7 @@
             {
               "id": "qty",
               "label": "No. of toilets",
+              "labelMy": "Bilangan tandas",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -3001,6 +3405,7 @@
             {
               "id": "problem",
               "label": "Problem",
+              "labelMy": "Masalah",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3010,21 +3415,25 @@
                 {
                   "id": "not_flush",
                   "label": "Not flushing",
+                  "labelMy": "Tidak dapat dipam",
                   "priceModifier": 0
                 },
                 {
                   "id": "running",
                   "label": "Continuous running",
+                  "labelMy": "Berjalan berterusan",
                   "priceModifier": 0
                 },
                 {
                   "id": "leak",
                   "label": "Leaking",
+                  "labelMy": "Bocor",
                   "priceModifier": 0
                 },
                 {
                   "id": "replace",
                   "label": "Full cistern replacement (per unit)",
+                  "labelMy": "Penggantian penuh tangki tandas (setiap unit)",
                   "priceModifier": 40
                 }
               ]
@@ -3041,22 +3450,26 @@
             {
               "id": "type",
               "label": "Basin type",
+              "labelMy": "Jenis besen",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "wall",
                   "label": "Wall-hung",
+                  "labelMy": "Gantung dinding",
                   "unitPrice": 90
                 },
                 {
                   "id": "counter",
                   "label": "Countertop",
+                  "labelMy": "Atas kaunter",
                   "unitPrice": 110
                 },
                 {
                   "id": "pedestal",
                   "label": "Pedestal",
+                  "labelMy": "Pedestal",
                   "unitPrice": 100
                 }
               ]
@@ -3064,17 +3477,20 @@
             {
               "id": "removal",
               "label": "Old basin removal",
+              "labelMy": "Buang besen lama",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes",
+                  "labelMy": "Ya",
                   "priceModifier": 30
                 }
               ]
@@ -3091,27 +3507,32 @@
             {
               "id": "location",
               "label": "Location",
+              "labelMy": "Lokasi",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "kitchen",
                   "label": "Kitchen sink",
+                  "labelMy": "Sinki dapur",
                   "priceModifier": 60
                 },
                 {
                   "id": "floor",
                   "label": "Bathroom floor trap",
+                  "labelMy": "Perangkap lantai bilik air",
                   "priceModifier": 60
                 },
                 {
                   "id": "toilet",
                   "label": "Toilet",
+                  "labelMy": "Tandas",
                   "priceModifier": 80
                 },
                 {
                   "id": "main",
                   "label": "Main / outdoor line",
+                  "labelMy": "Talian utama / luaran",
                   "priceModifier": 120
                 }
               ]
@@ -3119,22 +3540,26 @@
             {
               "id": "severity",
               "label": "Severity",
+              "labelMy": "Tahap keterukan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "slow",
                   "label": "Slow drain",
+                  "labelMy": "Saliran perlahan",
                   "priceModifier": 0
                 },
                 {
                   "id": "blocked",
                   "label": "Fully blocked",
+                  "labelMy": "Tersumbat sepenuhnya",
                   "priceModifier": 20
                 },
                 {
                   "id": "rodding",
                   "label": "Needs power rodding",
+                  "labelMy": "Perlu rodding berkuasa",
                   "priceModifier": 50
                 }
               ]
@@ -3152,22 +3577,26 @@
             {
               "id": "pipe",
               "label": "Pipe type",
+              "labelMy": "Jenis paip",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "supply",
                   "label": "Water supply (PVC/PPR)",
+                  "labelMy": "Bekalan air (PVC/PPR)",
                   "priceModifier": 0
                 },
                 {
                   "id": "drainage",
                   "label": "Drainage",
+                  "labelMy": "Saliran",
                   "priceModifier": 0
                 },
                 {
                   "id": "concealed",
                   "label": "Concealed (wall chasing)",
+                  "labelMy": "Tersembunyi (pahat dinding)",
                   "priceModifier": 50
                 }
               ]
@@ -3175,6 +3604,7 @@
             {
               "id": "hours",
               "label": "Estimated hours",
+              "labelMy": "Anggaran jam",
               "type": "HOURS_INPUT",
               "required": true,
               "config": {
@@ -3203,22 +3633,26 @@
             {
               "id": "items",
               "label": "Items by size",
+              "labelMy": "Barang mengikut saiz",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "small",
                   "label": "Small (chair/rack)",
+                  "labelMy": "Kecil (kerusi/rak)",
                   "unitPrice": 25
                 },
                 {
                   "id": "medium",
                   "label": "Medium (table/TV unit)",
+                  "labelMy": "Sederhana (meja/unit TV)",
                   "unitPrice": 45
                 },
                 {
                   "id": "large",
                   "label": "Large (wardrobe/bed)",
+                  "labelMy": "Besar (almari/katil)",
                   "unitPrice": 90
                 }
               ]
@@ -3226,6 +3660,7 @@
             {
               "id": "link",
               "label": "Brand / item link",
+              "labelMy": "Jenama / pautan barang",
               "type": "INFO",
               "required": false
             }
@@ -3241,32 +3676,38 @@
             {
               "id": "items",
               "label": "IKEA items",
+              "labelMy": "IKEA items",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "pax",
                   "label": "PAX wardrobe",
+                  "labelMy": "PAX wardrobe",
                   "unitPrice": 120
                 },
                 {
                   "id": "billy",
                   "label": "BILLY / shelf",
+                  "labelMy": "BILLY / shelf",
                   "unitPrice": 40
                 },
                 {
                   "id": "bed",
                   "label": "Bed frame",
+                  "labelMy": "Rangka katil",
                   "unitPrice": 80
                 },
                 {
                   "id": "desk",
                   "label": "Desk / table",
+                  "labelMy": "Meja",
                   "unitPrice": 45
                 },
                 {
                   "id": "drawer",
                   "label": "Drawer unit",
+                  "labelMy": "Unit laci",
                   "unitPrice": 50
                 }
               ]
@@ -3274,6 +3715,7 @@
             {
               "id": "anchor",
               "label": "Wall anchoring required",
+              "labelMy": "Perlu penambat dinding",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3283,11 +3725,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes (per item)",
+                  "labelMy": "Ya (setiap barang)",
                   "priceModifier": 20
                 }
               ]
@@ -3304,22 +3748,26 @@
             {
               "id": "issue",
               "label": "Issue",
+              "labelMy": "Masalah",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "hinge",
                   "label": "Hinge / alignment",
+                  "labelMy": "Engsel / penjajaran",
                   "unitPrice": 40
                 },
                 {
                   "id": "sag",
                   "label": "Sagging / planing",
+                  "labelMy": "Melendut / diketam",
                   "unitPrice": 60
                 },
                 {
                   "id": "handle",
                   "label": "Handle / lock",
+                  "labelMy": "Tombol / kunci",
                   "unitPrice": 45
                 }
               ]
@@ -3336,22 +3784,26 @@
             {
               "id": "type",
               "label": "Lock type",
+              "labelMy": "Jenis kunci",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "knob",
                   "label": "Knob / cylinder",
+                  "labelMy": "Tombol / silinder",
                   "unitPrice": 35
                 },
                 {
                   "id": "mortise",
                   "label": "Mortise",
+                  "labelMy": "Mortis",
                   "unitPrice": 55
                 },
                 {
                   "id": "deadbolt",
                   "label": "Deadbolt",
+                  "labelMy": "Deadbolt",
                   "unitPrice": 50
                 }
               ]
@@ -3359,17 +3811,20 @@
             {
               "id": "material",
               "label": "Who provides the lock?",
+              "labelMy": "Siapa sediakan kunci?",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "customer",
                   "label": "Customer provides lock",
+                  "labelMy": "Pelanggan sediakan kunci",
                   "priceModifier": 0
                 },
                 {
                   "id": "technician",
                   "label": "Technician supplies (quote)",
+                  "labelMy": "Juruteknik sediakan (sebut harga)",
                   "priceModifier": 0
                 }
               ]
@@ -3394,6 +3849,7 @@
             {
               "id": "area",
               "label": "Wall area (sqft)",
+              "labelMy": "Keluasan dinding (sqft)",
               "type": "AREA_INPUT",
               "required": true,
               "config": {
@@ -3407,6 +3863,7 @@
             {
               "id": "coats",
               "label": "Coats",
+              "labelMy": "Lapisan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3416,16 +3873,19 @@
                 {
                   "id": "1",
                   "label": "1 coat",
+                  "labelMy": "1 lapisan",
                   "priceModifierPerSqft": -0.3
                 },
                 {
                   "id": "2",
                   "label": "2 coats",
+                  "labelMy": "2 lapisan",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "3",
                   "label": "3 coats",
+                  "labelMy": "3 lapisan",
                   "priceModifierPerSqft": 0.5
                 }
               ]
@@ -3433,6 +3893,7 @@
             {
               "id": "grade",
               "label": "Paint grade",
+              "labelMy": "Gred cat",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3442,11 +3903,13 @@
                 {
                   "id": "std",
                   "label": "Standard emulsion",
+                  "labelMy": "Emulsi standard",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "premium",
                   "label": "Premium / washable",
+                  "labelMy": "Premium / boleh dicuci",
                   "priceModifierPerSqft": 0.8
                 }
               ]
@@ -3454,6 +3917,7 @@
             {
               "id": "prep",
               "label": "Surface prep",
+              "labelMy": "Penyediaan permukaan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3463,11 +3927,13 @@
                 {
                   "id": "minor",
                   "label": "Minor",
+                  "labelMy": "Kecil",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "putty",
                   "label": "Putty + sanding",
+                  "labelMy": "Putty + pengamplasan",
                   "priceModifierPerSqft": 0.6
                 }
               ]
@@ -3475,6 +3941,7 @@
             {
               "id": "material",
               "label": "Material",
+              "labelMy": "Bahan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3484,11 +3951,13 @@
                 {
                   "id": "included",
                   "label": "Included",
+                  "labelMy": "Termasuk",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "customer",
                   "label": "Customer supplies paint",
+                  "labelMy": "Pelanggan sediakan cat",
                   "priceModifierPerSqft": -1.2
                 }
               ]
@@ -3506,6 +3975,7 @@
             {
               "id": "area",
               "label": "Area (sqft)",
+              "labelMy": "Keluasan (sqft)",
               "type": "AREA_INPUT",
               "required": true,
               "config": {
@@ -3519,6 +3989,7 @@
             {
               "id": "height",
               "label": "Scaffolding / height",
+              "labelMy": "Perancah / ketinggian",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3528,11 +3999,13 @@
                 {
                   "id": "ground",
                   "label": "Ground / single",
+                  "labelMy": "Tingkat bawah / satu tingkat",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "double",
                   "label": "Double-storey",
+                  "labelMy": "Dua tingkat",
                   "priceModifierPerSqft": 0.7
                 }
               ]
@@ -3540,6 +4013,7 @@
             {
               "id": "weathershield",
               "label": "Weather-shield coat",
+              "labelMy": "Lapisan pelindung cuaca",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3549,11 +4023,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes",
+                  "labelMy": "Ya",
                   "priceModifierPerSqft": 0.9
                 }
               ]
@@ -3571,6 +4047,7 @@
             {
               "id": "area",
               "label": "Area (sqft)",
+              "labelMy": "Keluasan (sqft)",
               "type": "AREA_INPUT",
               "required": true,
               "config": {
@@ -3584,6 +4061,7 @@
             {
               "id": "system",
               "label": "System",
+              "labelMy": "Sistem",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3593,16 +4071,19 @@
                 {
                   "id": "acrylic",
                   "label": "Acrylic membrane",
+                  "labelMy": "Membran akrilik",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "pu",
                   "label": "PU coating",
+                  "labelMy": "PU coating",
                   "priceModifierPerSqft": 2
                 },
                 {
                   "id": "cement",
                   "label": "Cementitious + warranty",
+                  "labelMy": "Simentitius + jaminan",
                   "priceModifierPerSqft": 3
                 }
               ]
@@ -3610,6 +4091,7 @@
             {
               "id": "crack",
               "label": "Crack repair",
+              "labelMy": "Pembaikan retak",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3619,11 +4101,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes",
+                  "labelMy": "Ya",
                   "priceModifierPerSqft": 1
                 }
               ]
@@ -3641,6 +4125,7 @@
             {
               "id": "area",
               "label": "Area (sqft)",
+              "labelMy": "Keluasan (sqft)",
               "type": "AREA_INPUT",
               "required": true,
               "config": {
@@ -3654,6 +4139,7 @@
             {
               "id": "panel",
               "label": "Panel type",
+              "labelMy": "Jenis panel",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3663,16 +4149,19 @@
                 {
                   "id": "pvc",
                   "label": "PVC / WPC",
+                  "labelMy": "PVC / WPC",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "fluted",
                   "label": "Fluted / MDF",
+                  "labelMy": "Fluted / MDF",
                   "priceModifierPerSqft": 6
                 },
                 {
                   "id": "acoustic",
                   "label": "Acoustic",
+                  "labelMy": "Akustik",
                   "priceModifierPerSqft": 10
                 }
               ]
@@ -3680,6 +4169,7 @@
             {
               "id": "material",
               "label": "Material",
+              "labelMy": "Bahan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3689,11 +4179,13 @@
                 {
                   "id": "included",
                   "label": "Included",
+                  "labelMy": "Termasuk",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "customer",
                   "label": "Customer supplies (install only)",
+                  "labelMy": "Pelanggan sediakan (pemasangan sahaja)",
                   "priceModifierPerSqft": -12
                 }
               ]
@@ -3711,6 +4203,7 @@
             {
               "id": "area",
               "label": "Area (sqft)",
+              "labelMy": "Keluasan (sqft)",
               "type": "AREA_INPUT",
               "required": true,
               "config": {
@@ -3724,6 +4217,7 @@
             {
               "id": "supply",
               "label": "Wallpaper",
+              "labelMy": "Kertas dinding",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3733,16 +4227,19 @@
                 {
                   "id": "customer",
                   "label": "Customer supplies",
+                  "labelMy": "Pelanggan sediakan",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "std",
                   "label": "Supply standard",
+                  "labelMy": "Bekalkan standard",
                   "priceModifierPerSqft": 8
                 },
                 {
                   "id": "premium",
                   "label": "Supply premium",
+                  "labelMy": "Bekalkan premium",
                   "priceModifierPerSqft": 15
                 }
               ]
@@ -3750,6 +4247,7 @@
             {
               "id": "removal",
               "label": "Old wallpaper removal",
+              "labelMy": "Buang kertas dinding lama",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3759,11 +4257,13 @@
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifierPerSqft": 0
                 },
                 {
                   "id": "yes",
                   "label": "Yes",
+                  "labelMy": "Ya",
                   "priceModifierPerSqft": 2
                 }
               ]
@@ -3787,27 +4287,32 @@
             {
               "id": "size",
               "label": "TV size",
+              "labelMy": "Saiz TV",
               "type": "TIER_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "s",
                   "label": "32\" and below",
+                  "labelMy": "32\" and below",
                   "priceModifier": 60
                 },
                 {
                   "id": "m",
                   "label": "33-55\"",
+                  "labelMy": "33-55\"",
                   "priceModifier": 80
                 },
                 {
                   "id": "l",
                   "label": "56-75\"",
+                  "labelMy": "56-75\"",
                   "priceModifier": 110
                 },
                 {
                   "id": "xl",
                   "label": "75\"+",
+                  "labelMy": "75\"+",
                   "priceModifier": 150
                 }
               ]
@@ -3815,27 +4320,32 @@
             {
               "id": "bracket",
               "label": "Bracket",
+              "labelMy": "Pendakap",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "customer",
                   "label": "Customer has it",
+                  "labelMy": "Pelanggan sudah ada",
                   "priceModifier": 0
                 },
                 {
                   "id": "fixed",
                   "label": "Fixed bracket",
+                  "labelMy": "Pendakap tetap",
                   "priceModifier": 40
                 },
                 {
                   "id": "tilt",
                   "label": "Tilt",
+                  "labelMy": "Condong",
                   "priceModifier": 55
                 },
                 {
                   "id": "motion",
                   "label": "Full-motion",
+                  "labelMy": "Gerakan penuh",
                   "priceModifier": 90
                 }
               ]
@@ -3843,22 +4353,26 @@
             {
               "id": "wall",
               "label": "Wall type",
+              "labelMy": "Jenis dinding",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "brick",
                   "label": "Brick / concrete",
+                  "labelMy": "Bata / konkrit",
                   "priceModifier": 0
                 },
                 {
                   "id": "drywall",
                   "label": "Plaster / drywall",
+                  "labelMy": "Plaster / drywall",
                   "priceModifier": 20
                 },
                 {
                   "id": "tile",
                   "label": "Tile",
+                  "labelMy": "Jubin",
                   "priceModifier": 25
                 }
               ]
@@ -3866,22 +4380,26 @@
             {
               "id": "cable",
               "label": "Cable concealment",
+              "labelMy": "Penyembunyian kabel",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "no",
                   "label": "No",
+                  "labelMy": "Tidak",
                   "priceModifier": 0
                 },
                 {
                   "id": "trunking",
                   "label": "Trunking",
+                  "labelMy": "Trunking",
                   "priceModifier": 40
                 },
                 {
                   "id": "inwall",
                   "label": "In-wall conceal",
+                  "labelMy": "Sembunyi dalam dinding",
                   "priceModifier": 90
                 }
               ]
@@ -3899,6 +4417,7 @@
             {
               "id": "qty",
               "label": "No. of rods/tracks",
+              "labelMy": "Bilangan rod/trek",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -3911,6 +4430,7 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3920,16 +4440,19 @@
                 {
                   "id": "single",
                   "label": "Single rod",
+                  "labelMy": "Rod tunggal",
                   "priceModifier": 0
                 },
                 {
                   "id": "double",
                   "label": "Double rod (per unit)",
+                  "labelMy": "Rod berkembar (setiap unit)",
                   "priceModifier": 10
                 },
                 {
                   "id": "track",
                   "label": "Ceiling track (per unit)",
+                  "labelMy": "Trek siling (setiap unit)",
                   "priceModifier": 15
                 }
               ]
@@ -3937,6 +4460,7 @@
             {
               "id": "wall",
               "label": "Wall",
+              "labelMy": "Dinding",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3946,11 +4470,13 @@
                 {
                   "id": "concrete",
                   "label": "Concrete",
+                  "labelMy": "Konkrit",
                   "priceModifier": 0
                 },
                 {
                   "id": "tile",
                   "label": "Tile / glass (per unit)",
+                  "labelMy": "Jubin / kaca (setiap unit)",
                   "priceModifier": 8
                 }
               ]
@@ -3967,22 +4493,26 @@
             {
               "id": "size",
               "label": "Mirror size",
+              "labelMy": "Saiz cermin",
               "type": "TIER_QUANTITY",
               "required": true,
               "options": [
                 {
                   "id": "small",
                   "label": "Small (3ft and under)",
+                  "labelMy": "Kecil (3 kaki ke bawah)",
                   "unitPrice": 35
                 },
                 {
                   "id": "medium",
                   "label": "Medium (3-5ft)",
+                  "labelMy": "Sederhana (3-5 kaki)",
                   "unitPrice": 55
                 },
                 {
                   "id": "large",
                   "label": "Large (5ft+)",
+                  "labelMy": "Besar (5 kaki+)",
                   "unitPrice": 85
                 }
               ]
@@ -3990,6 +4520,7 @@
             {
               "id": "mount",
               "label": "Mount",
+              "labelMy": "Lekapan",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -3999,16 +4530,19 @@
                 {
                   "id": "adhesive",
                   "label": "Adhesive",
+                  "labelMy": "Pelekat",
                   "priceModifier": 0
                 },
                 {
                   "id": "clips",
                   "label": "Clips / screws",
+                  "labelMy": "Klip / skru",
                   "priceModifier": 10
                 },
                 {
                   "id": "frameless",
                   "label": "Frameless drill",
+                  "labelMy": "Gerudi tanpa bingkai",
                   "priceModifier": 20
                 }
               ]
@@ -4026,6 +4560,7 @@
             {
               "id": "qty",
               "label": "No. of shelves",
+              "labelMy": "Bilangan rak",
               "type": "QUANTITY",
               "required": true,
               "config": {
@@ -4038,6 +4573,7 @@
             {
               "id": "type",
               "label": "Type",
+              "labelMy": "Jenis",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -4047,16 +4583,19 @@
                 {
                   "id": "floating",
                   "label": "Floating",
+                  "labelMy": "Terapung",
                   "priceModifier": 0
                 },
                 {
                   "id": "bracket",
                   "label": "Bracket",
+                  "labelMy": "Pendakap",
                   "priceModifier": 0
                 },
                 {
                   "id": "heavy",
                   "label": "Heavy-duty / long (per unit)",
+                  "labelMy": "Berat / panjang (setiap unit)",
                   "priceModifier": 15
                 }
               ]
@@ -4064,6 +4603,7 @@
             {
               "id": "wall",
               "label": "Wall",
+              "labelMy": "Dinding",
               "type": "SINGLE_SELECT",
               "required": true,
               "config": {
@@ -4073,11 +4613,13 @@
                 {
                   "id": "concrete",
                   "label": "Concrete",
+                  "labelMy": "Konkrit",
                   "priceModifier": 0
                 },
                 {
                   "id": "drywall",
                   "label": "Drywall (per unit)",
+                  "labelMy": "Drywall (setiap unit)",
                   "priceModifier": 8
                 }
               ]
@@ -4102,6 +4644,7 @@
             {
               "id": "hours",
               "label": "Hours needed",
+              "labelMy": "Jam diperlukan",
               "type": "HOURS_INPUT",
               "required": true,
               "config": {
@@ -4114,32 +4657,38 @@
             {
               "id": "tasks",
               "label": "Task type",
+              "labelMy": "Jenis tugasan",
               "type": "MULTI_SELECT",
               "required": false,
               "options": [
                 {
                   "id": "mounting",
                   "label": "Mounting",
+                  "labelMy": "Pemasangan lekapan",
                   "priceModifier": 0
                 },
                 {
                   "id": "repair",
                   "label": "Minor repair",
+                  "labelMy": "Pembaikan kecil",
                   "priceModifier": 0
                 },
                 {
                   "id": "assembly",
                   "label": "Assembly",
+                  "labelMy": "Pemasangan",
                   "priceModifier": 0
                 },
                 {
                   "id": "odd",
                   "label": "Odd jobs",
+                  "labelMy": "Kerja-kerja kecil",
                   "priceModifier": 0
                 },
                 {
                   "id": "moving",
                   "label": "Moving help",
+                  "labelMy": "Bantuan pindah",
                   "priceModifier": 0
                 }
               ]
@@ -4147,17 +4696,20 @@
             {
               "id": "materials",
               "label": "Materials",
+              "labelMy": "Bahan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "none",
                   "label": "None / customer provides",
+                  "labelMy": "Tiada / pelanggan sediakan",
                   "priceModifier": 0
                 },
                 {
                   "id": "consumables",
                   "label": "Small consumables",
+                  "labelMy": "Bahan guna habis kecil",
                   "priceModifier": 15
                 }
               ]
@@ -4165,17 +4717,20 @@
             {
               "id": "when",
               "label": "When",
+              "labelMy": "Bila",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "scheduled",
                   "label": "Scheduled",
+                  "labelMy": "Dijadualkan",
                   "priceModifier": 0
                 },
                 {
                   "id": "urgent",
                   "label": "Within 2 hrs (urgent)",
+                  "labelMy": "Dalam 2 jam (segera)",
                   "priceModifier": 30
                 }
               ]
@@ -4194,32 +4749,38 @@
             {
               "id": "trade",
               "label": "Trade",
+              "labelMy": "Bidang kerja",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "electrical",
                   "label": "Electrical",
+                  "labelMy": "Elektrik",
                   "priceModifier": 0
                 },
                 {
                   "id": "plumbing",
                   "label": "Plumbing",
+                  "labelMy": "Kerja paip",
                   "priceModifier": 0
                 },
                 {
                   "id": "ac",
                   "label": "AC",
+                  "labelMy": "AC",
                   "priceModifier": 0
                 },
                 {
                   "id": "appliance",
                   "label": "Appliance",
+                  "labelMy": "Perkakas",
                   "priceModifier": 0
                 },
                 {
                   "id": "locksmith",
                   "label": "Locksmith",
+                  "labelMy": "Tukang kunci",
                   "priceModifier": 0
                 }
               ]
@@ -4227,22 +4788,26 @@
             {
               "id": "severity",
               "label": "Severity",
+              "labelMy": "Tahap keterukan",
               "type": "SINGLE_SELECT",
               "required": true,
               "options": [
                 {
                   "id": "urgent",
                   "label": "Urgent (today)",
+                  "labelMy": "Segera (hari ini)",
                   "priceModifier": 0
                 },
                 {
                   "id": "afterhours",
                   "label": "After-hours / night",
+                  "labelMy": "Luar waktu / malam",
                   "priceModifier": 30
                 },
                 {
                   "id": "holiday",
                   "label": "Public holiday",
+                  "labelMy": "Cuti umum",
                   "priceModifier": 40
                 }
               ]
@@ -4250,6 +4815,7 @@
             {
               "id": "describe",
               "label": "Describe emergency",
+              "labelMy": "Terangkan kecemasan",
               "type": "INFO",
               "required": false
             }
