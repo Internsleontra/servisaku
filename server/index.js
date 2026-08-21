@@ -147,7 +147,9 @@ app.use((err, req, res, next) => {
   const message = status >= 500 && process.env.NODE_ENV === 'production'
     ? 'Internal server error'
     : err.message;
-  res.status(status).json({ error: message });
+  // `details` is additive and only appears when a handler supplied it, so the
+  // long-standing `{ error }` shape is untouched for every existing client.
+  res.status(status).json(err.details ? { error: message, details: err.details } : { error: message });
 });
 
 // Wrap Express in a bare HTTP server so Socket.IO can share the same port.

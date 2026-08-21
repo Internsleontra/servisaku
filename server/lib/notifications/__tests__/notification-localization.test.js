@@ -46,9 +46,11 @@ describe('every event has a Malay translation', () => {
   });
 
   test('the overlay carries strings only — no business logic is duplicated', () => {
-    // category, priority, channels, role, actionUrl and the email/sms gating
-    // must live in catalog.js alone, or the two files can disagree about
-    // who gets notified and how.
+    // category, priority, channels, role, actionUrl and the email/sms GATING
+    // must live in catalog.js alone, or the two files can disagree about who
+    // gets notified and how. `email` and `sms` are the gates — their presence
+    // is what makes an event email- or sms-worthy — so the overlay carries
+    // `emailSubject` and `smsBody` instead, which are only ever text.
     const LOGIC = ['category', 'priority', 'channels', 'role', 'actionUrl', 'ctaLabel', 'email', 'sms', 'icon'];
     const leaked = [];
     for (const [e, def] of Object.entries(CATALOG_MS)) {
@@ -98,6 +100,39 @@ describe('renderEvent resolves fully in both languages', () => {
       const ms = renderEvent(e, { role: CATALOG[e].role }, 'ms');
       assert.notEqual(ms.title, en.title, `${e} fallback title is not translated`);
       assert.notEqual(ms.message, en.message, `${e} fallback message is not translated`);
+    }
+  });
+
+  test('email subjects follow the locale wherever an event is email-worthy', () => {
+    const englishLeft = [];
+    for (const e of EVENTS) {
+      if (!CATALOG[e].email) continue;
+      const en = renderEvent(e, DATA, 'en');
+      const ms = renderEvent(e, DATA, 'ms');
+      assert.ok(ms.emailSubject, `${e} lost its email subject under ms`);
+      if (ms.emailSubject === en.emailSubject) englishLeft.push(e);
+    }
+    assert.deepEqual(englishLeft, [], 'these email subjects are still English under ms');
+  });
+
+  test('SMS bodies follow the locale wherever an event is sms-worthy', () => {
+    const englishLeft = [];
+    for (const e of EVENTS) {
+      if (!CATALOG[e].sms) continue;
+      const en = renderEvent(e, DATA, 'en');
+      const ms = renderEvent(e, DATA, 'ms');
+      assert.ok(ms.smsBody, `${e} lost its SMS body under ms`);
+      if (ms.smsBody === en.smsBody) englishLeft.push(e);
+    }
+    assert.deepEqual(englishLeft, [], 'these SMS bodies are still English under ms');
+  });
+
+  test('a non-email event stays non-email in both locales', () => {
+    for (const e of EVENTS) {
+      const en = renderEvent(e, DATA, 'en');
+      const ms = renderEvent(e, DATA, 'ms');
+      assert.equal(Boolean(ms.emailSubject), Boolean(en.emailSubject), `${e} email-worthiness changed`);
+      assert.equal(Boolean(ms.smsBody), Boolean(en.smsBody), `${e} sms-worthiness changed`);
     }
   });
 

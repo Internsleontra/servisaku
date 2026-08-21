@@ -35,7 +35,7 @@ router.get('/categories', asyncHandler(async (req, res) => {
 
 // GET /categories/:slug/services — services within a category.
 router.get('/categories/:slug/services', asyncHandler(async (req, res) => {
-  const { category, services } = await getCategoryServicesOr404(req.params.slug);
+  const { category, services } = await getCategoryServicesOr404(req.params.slug, localeOf(req));
   res.json({ category: mapCategory(category), services: services.map(mapServiceSummary) });
 }));
 
@@ -49,7 +49,7 @@ router.get('/services', asyncHandler(async (req, res) => {
 // Returns the dynamic Step-A `questions` alongside legacy packages/addons, so the
 // spec's GET /services/:slug → { service, questions, pricingType, visitFee } holds.
 router.get('/services/:id', asyncHandler(async (req, res) => {
-  const service = await resolveServiceDetailOr404(req.params.id);
+  const service = await resolveServiceDetailOr404(req.params.id, localeOf(req));
   res.json(mapServiceDetail(service));
 }));
 
@@ -147,13 +147,13 @@ const dynamicCalcSchema = z.object({
 });
 
 router.post('/bookings/calculate', validate(dynamicCalcSchema), asyncHandler(async (req, res) => {
-  const service = await resolveServiceDetailOr404(req.body.service_slug);
+  const service = await resolveServiceDetailOr404(req.body.service_slug, localeOf(req));
   if (!service.pricingType) {
     throw new ApiError(400, `Service "${service.slug}" is not a dynamic-engine service`);
   }
   const engineService = toEngineService(service);
-  const { ok, errors } = validateAnswers(engineService, req.body.answers);
-  if (!ok) throw new ApiError(400, errors.join('; '));
+  const { ok, errors, details } = validateAnswers(engineService, req.body.answers, { locale: localeOf(req) });
+  if (!ok) throw new ApiError(400, errors.join('; '), details);
 
   const pricing = computePrice(engineService, req.body.answers, {
     globalConfig: await withLiveSstRate(GLOBAL_CONFIG),

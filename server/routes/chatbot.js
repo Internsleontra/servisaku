@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { localeOf } from '../lib/locale.js';
 import { z } from 'zod';
 import multer from 'multer';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
@@ -94,7 +95,8 @@ async function getConversationFor(req, id) {
 // GET /api/chatbot/faqs — public FAQ corpus; also feeds the Help page.
 router.get('/faqs', asyncHandler(async (req, res) => {
   const audience = req.query.audience === 'partner' ? 'partner' : 'consumer';
-  const locale = ['en', 'ms'].includes(req.query.locale) ? req.query.locale : 'en';
+  // Shared resolver: explicit ?locale, then Accept-Language, then English.
+  const locale = localeOf(req);
   res.json({ available: isChatbotReady(), faqs: publicFaqs(audience, locale) });
 }));
 

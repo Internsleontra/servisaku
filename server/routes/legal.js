@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { localeOf } from '../lib/locale.js';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
@@ -13,7 +14,6 @@ import {
 // so these are deliberately unauthenticated.
 const router = Router();
 
-const localeOf = (req) => (String(req.query.locale) === 'ms' ? 'ms' : 'en');
 
 router.get('/legal/documents', asyncHandler(async (req, res) => {
   const audience = ['consumer', 'partner'].includes(String(req.query.audience)) ? String(req.query.audience) : 'consumer';

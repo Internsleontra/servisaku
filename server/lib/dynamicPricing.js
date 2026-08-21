@@ -116,6 +116,28 @@ const ENGINE_LABELS = {
   },
 };
 
+/* Customer-visible validation copy. The field name inside each message is the
+   LOCALIZED question label, so a Malay error never says "Home size" — it says
+   "Saiz rumah". Codes stay English and stable; only the sentence is localized. */
+const VALIDATION_MESSAGES = {
+  en: {
+    required: (label) => `${label} is required`,
+    invalid_option: (label, value) => `${label}: invalid option "${value}"`,
+    invalid_tier: (label, value) => `${label}: invalid tier "${value}"`,
+    not_a_number: (label) => `${label}: must be a number`,
+    below_min: (label, min) => `${label}: minimum is ${min}`,
+    above_max: (label, max) => `${label}: maximum is ${max}`,
+  },
+  ms: {
+    required: (label) => `${label} diperlukan`,
+    invalid_option: (label, value) => `${label}: pilihan "${value}" tidak sah`,
+    invalid_tier: (label, value) => `${label}: tahap "${value}" tidak sah`,
+    not_a_number: (label) => `${label}: mesti berupa nombor`,
+    below_min: (label, min) => `${label}: minimum ialah ${min}`,
+    above_max: (label, max) => `${label}: maksimum ialah ${max}`,
+  },
+};
+
 /** Pick the localized label for a question/option/service, falling back to
  *  English when the Malay column is empty. Never returns undefined. */
 const pick = (node, locale) => (
@@ -290,8 +312,25 @@ export function computePrice(service, answers = {}, context = {}) {
  * Validate answers against a service's questions. Returns { ok, errors[] }.
  * Enforces required presence and option membership; safe to run before compute.
  */
-export function validateAnswers(service, answers = {}) {
+/**
+ * Validate a set of answers against a service's question schema.
+ *
+ * Returns `errors` (localized, customer-facing sentences — the existing
+ * contract, joined with "; " by the routes) alongside `details`, a stable
+ * machine-readable list of { code, questionId, label, value } so a client does
+ * not have to parse prose to know what failed. Unknown locales fall back to
+ * English.
+ */
+export function validateAnswers(service, answers = {}, { locale } = {}) {
+  const lang = locale === 'ms' ? 'ms' : 'en';
+  const M = VALIDATION_MESSAGES[lang];
   const errors = [];
+  const details = [];
+  const fail = (code, q, value, arg) => {
+    const label = pick(q, lang);
+    errors.push(M[code](label, arg !== undefined ? arg : value));
+    details.push({ code, questionId: q.id, label, ...(value !== undefined ? { value } : {}) });
+  };
   for (const q of service.questions || []) {
     const a = answers[q.id];
     const present = q.type === 'TIER_QUANTITY'
@@ -300,27 +339,27 @@ export function validateAnswers(service, answers = {}) {
         ? Array.isArray(a) && a.length > 0
         : a !== undefined && a !== null && a !== '';
 
-    if (q.required && !present) { errors.push(`${q.label} is required`); continue; }
+    if (q.required && !present) { fail('required', q); continue; }
     if (!present) continue;
 
     if (q.type === 'TIER_SELECT' || q.type === 'SINGLE_SELECT') {
-      if (!findOption(q, a)) errors.push(`${q.label}: invalid option "${a}"`);
+      if (!findOption(q, a)) fail('invalid_option', q, a);
     }
     if (q.type === 'MULTI_SELECT') {
-      for (const id of a) if (!findOption(q, id)) errors.push(`${q.label}: invalid option "${id}"`);
+      for (const id of a) if (!findOption(q, id)) fail('invalid_option', q, id);
     }
     if (q.type === 'TIER_QUANTITY') {
-      for (const id of Object.keys(a)) if (num(a[id]) > 0 && !findOption(q, id)) errors.push(`${q.label}: invalid tier "${id}"`);
+      for (const id of Object.keys(a)) if (num(a[id]) > 0 && !findOption(q, id)) fail('invalid_tier', q, id);
     }
     if ((q.type === 'QUANTITY' || q.type === 'AREA_INPUT' || q.type === 'HOURS_INPUT')) {
       const v = num(a, NaN);
-      if (Number.isNaN(v)) errors.push(`${q.label}: must be a number`);
+      if (Number.isNaN(v)) fail('not_a_number', q);
       else {
         const { min, max } = q.config || {};
-        if (min != null && v < min) errors.push(`${q.label}: minimum is ${min}`);
-        if (max != null && v > max) errors.push(`${q.label}: maximum is ${max}`);
+        if (min != null && v < min) fail('below_min', q, undefined, min);
+        if (max != null && v > max) fail('above_max', q, undefined, max);
       }
     }
   }
-  return { ok: errors.length === 0, errors };
+  return { ok: errors.length === 0, errors, details };
 }

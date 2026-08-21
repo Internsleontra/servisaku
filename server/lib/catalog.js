@@ -3,6 +3,7 @@
 // so there is one definition of how catalog rows map to the snake_case API contract.
 import { prisma } from '../db.js';
 import { ApiError } from './access.js';
+import { localizedError } from './errors.js';
 
 // Resolve a service by slug ("cleaning") or cuid id, with its category + packages +
 // active add-ons. Returns null if not found / inactive.
@@ -18,9 +19,9 @@ export async function resolveService(idOrSlug) {
   });
 }
 
-export async function resolveServiceOr404(idOrSlug) {
+export async function resolveServiceOr404(idOrSlug, locale) {
   const service = await resolveService(idOrSlug);
-  if (!service) throw new ApiError(404, `Service not found: ${idOrSlug}`);
+  if (!service) throw localizedError(404, 'service_not_found', locale, idOrSlug);
   return service;
 }
 
@@ -39,9 +40,9 @@ export async function resolveServiceDetail(idOrSlug) {
   });
 }
 
-export async function resolveServiceDetailOr404(idOrSlug) {
+export async function resolveServiceDetailOr404(idOrSlug, locale) {
   const service = await resolveServiceDetail(idOrSlug);
-  if (!service) throw new ApiError(404, `Service not found: ${idOrSlug}`);
+  if (!service) throw localizedError(404, 'service_not_found', locale, idOrSlug);
   return service;
 }
 
@@ -54,9 +55,9 @@ export async function listCategories() {
   });
 }
 
-export async function getCategoryServicesOr404(slug) {
+export async function getCategoryServicesOr404(slug, locale) {
   const category = await prisma.serviceCategory.findFirst({ where: { slug: String(slug), isActive: true } });
-  if (!category) throw new ApiError(404, `Category not found: ${slug}`);
+  if (!category) throw localizedError(404, 'category_not_found', locale, slug);
   const services = await prisma.service.findMany({
     where: { categoryId: category.id, isActive: true },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],

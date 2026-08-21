@@ -315,12 +315,12 @@ const dynamicCreateSchema = z.object({
 router.post('/dynamic', validate(dynamicCreateSchema), asyncHandler(async (req, res) => {
   const body = req.body;
 
-  const service = await resolveServiceDetailOr404(body.service_slug);
+  const service = await resolveServiceDetailOr404(body.service_slug, localeOf(req));
   if (!service.pricingType) throw new ApiError(400, `Service "${service.slug}" is not a dynamic-engine service`);
 
   const engineService = toEngineService(service);
-  const { ok, errors } = validateAnswers(engineService, body.answers);
-  if (!ok) throw new ApiError(400, errors.join('; '));
+  const { ok, errors, details } = validateAnswers(engineService, body.answers, { locale: localeOf(req) });
+  if (!ok) throw new ApiError(400, errors.join('; '), details);
 
   let partner = null;
   if (body.partner_email) {

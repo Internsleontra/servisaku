@@ -9,9 +9,18 @@ export const ADMIN_ROLES = ['admin', 'super_admin'];
 export const isAdmin = (user) => ADMIN_ROLES.includes(user?.role);
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  /**
+   * @param {number} status
+   * @param {string} message  customer-facing, already localized by the caller
+   * @param {Array}  [details] optional stable machine-readable causes, e.g.
+   *   [{ code: 'required', questionId: 'size', label: 'Saiz rumah' }]. Emitted
+   *   only when present, so the `{ error }` shape existing clients rely on is
+   *   unchanged — this is additive, not a new contract.
+   */
+  constructor(status, message, details) {
     super(message);
     this.status = status;
+    if (details && details.length) this.details = details;
   }
 }
 

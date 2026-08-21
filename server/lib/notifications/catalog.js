@@ -675,13 +675,23 @@ const call = (v, d) => (typeof v === 'function' ? v(d) : v);
  * translation was not written.
  */
 function localizedText(event, def, data, locale) {
-  const en = { title: call(def.title, data), message: call(def.message, data) };
+  const en = {
+    title: call(def.title, data),
+    message: call(def.message, data),
+    emailSubject: def.email ? call(def.email.subject, data) || 'ServisAku notification' : null,
+    smsBody: def.sms ? call(def.sms, data) : null,
+  };
   if (locale !== 'ms') return en;
   const m = CATALOG_MS[event];
   if (!m) return en;
+  // Email and SMS follow the same locale as the in-app card. An event that is
+  // email- or sms-worthy is decided by catalog.js alone; this only picks which
+  // language that channel speaks.
   return {
     title: call(m.title, data) || en.title,
     message: call(m.message, data) || en.message,
+    emailSubject: en.emailSubject && (call(m.emailSubject, data) || en.emailSubject),
+    smsBody: en.smsBody && (call(m.smsBody, data) || en.smsBody),
   };
 }
 
@@ -714,8 +724,8 @@ export function renderEvent(event, data = {}, locale = 'en') {
     actionUrl: def.actionUrl ? call(def.actionUrl, data) : null,
     ctaLabel: def.ctaLabel || null,
     channels: def.channels || ['in_app'],
-    emailSubject: def.email ? call(def.email.subject, data) || 'ServisAku notification' : null,
-    smsBody: def.sms ? call(def.sms, data) : null,
+    emailSubject: text.emailSubject,
+    smsBody: text.smsBody,
   };
 }
 
