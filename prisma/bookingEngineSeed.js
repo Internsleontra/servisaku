@@ -83,7 +83,10 @@ async function seedService(prisma, categoryId, svc, sortOrder) {
   const data = {
     categoryId,
     name: svc.name,
-    nameMy: svc.name, // Malay copy can be filled later; required field
+    // Malay comes from the config. Falling back to the English name would
+    // re-introduce the bug this replaced: a populated *_my column that is not
+    // actually a translation, which tField() then correctly refuses to use.
+    nameMy: svc.nameMy || svc.name,
     basePrice: svc.basePrice ?? 0,
     pricingModel: PRICING_MODEL[svc.pricingType] || 'flat',
     pricingType: svc.pricingType,
@@ -142,7 +145,7 @@ export async function seedBookingEngine(prisma) {
     const priceFrom = Math.min(...cat.services.map(serviceFromPrice));
     const catData = {
       name: cat.name,
-      nameMy: cat.name,
+      nameMy: cat.nameMy || cat.name,
       iconKey: meta.iconKey || 'Home',
       accent: meta.accent || 'emerald',
       sortOrder: catIdx,

@@ -17,7 +17,7 @@ const PRICING_LABEL = {
 export default function CatalogCategory() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, tField } = useTranslation();
 
   const { data, isLoading } = useQuery({
     queryKey: ['catalog-category', slug],
@@ -61,7 +61,7 @@ export default function CatalogCategory() {
               <Icon className="size-7" />
             </span>
             <div>
-              <h1 className="text-display-2 text-white">{category.name}</h1>
+              <h1 className="text-display-2 text-white">{tField(category, 'name')}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-5 text-md text-white/80">
                 <span className="sa-num inline-flex items-center gap-1.5">
                   {services.length} {t('services')}
@@ -87,8 +87,8 @@ export default function CatalogCategory() {
           {services.map((s) => (
             <ServiceCard
               key={s.id}
-              name={s.name}
-              category={category.name}
+              name={tField(s, 'name')}
+              category={tField(category, 'name')}
               icon={Icon}
               image={serviceImageFor(s.slug)}
               price={s.price_from > 0 ? formatMYR(s.price_from) : '—'}

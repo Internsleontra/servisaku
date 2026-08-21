@@ -24,174 +24,733 @@
     {
       "slug": "beauty-wellness-women",
       "name": "Beauty & Wellness for Women",
+      "nameMy": "Kecantikan & Kesihatan Wanita",
       "services": [
         {
-          "slug": "womens-haircut-styling", "name": "Haircut & Styling (Women)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "womens-haircut-styling",
+          "name": "Haircut & Styling (Women)",
+          "nameMy": "Potong & Gaya Rambut (Wanita)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "length", "label": "Hair length", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "short", "label": "Short", "priceModifier": 45, "isDefault": true },
-              { "id": "medium", "label": "Medium", "priceModifier": 65 },
-              { "id": "long", "label": "Long", "priceModifier": 85 } ] },
-            { "id": "service", "label": "Service", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "cut", "label": "Cut only", "priceModifier": 0 },
-              { "id": "cut_blow", "label": "Cut + Blow-dry", "priceModifier": 25 },
-              { "id": "cut_wash_style", "label": "Cut + Wash + Style", "priceModifier": 40 } ] },
-            { "id": "ref", "label": "Reference style photo?", "type": "INFO", "required": false }
+            {
+              "id": "length",
+              "label": "Hair length",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "short",
+                  "label": "Short",
+                  "priceModifier": 45,
+                  "isDefault": true
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium",
+                  "priceModifier": 65
+                },
+                {
+                  "id": "long",
+                  "label": "Long",
+                  "priceModifier": 85
+                }
+              ]
+            },
+            {
+              "id": "service",
+              "label": "Service",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "cut",
+                  "label": "Cut only",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "cut_blow",
+                  "label": "Cut + Blow-dry",
+                  "priceModifier": 25
+                },
+                {
+                  "id": "cut_wash_style",
+                  "label": "Cut + Wash + Style",
+                  "priceModifier": 40
+                }
+              ]
+            },
+            {
+              "id": "ref",
+              "label": "Reference style photo?",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "hair-spa-treatment", "name": "Hair Spa / Treatment", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "hair-spa-treatment",
+          "name": "Hair Spa / Treatment",
+          "nameMy": "Rawatan Spa Rambut",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "length", "label": "Hair length", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "short", "label": "Short", "priceModifier": 70 },
-              { "id": "medium", "label": "Medium", "priceModifier": 95 },
-              { "id": "long", "label": "Long", "priceModifier": 130 } ] },
-            { "id": "type", "label": "Treatment type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "moisture", "label": "Moisture", "priceModifier": 0 },
-              { "id": "dandruff", "label": "Anti-dandruff", "priceModifier": 10 },
-              { "id": "hairfall", "label": "Anti-hairfall", "priceModifier": 20 } ] }
+            {
+              "id": "length",
+              "label": "Hair length",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "short",
+                  "label": "Short",
+                  "priceModifier": 70
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium",
+                  "priceModifier": 95
+                },
+                {
+                  "id": "long",
+                  "label": "Long",
+                  "priceModifier": 130
+                }
+              ]
+            },
+            {
+              "id": "type",
+              "label": "Treatment type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "moisture",
+                  "label": "Moisture",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "dandruff",
+                  "label": "Anti-dandruff",
+                  "priceModifier": 10
+                },
+                {
+                  "id": "hairfall",
+                  "label": "Anti-hairfall",
+                  "priceModifier": 20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "hair-colouring", "name": "Hair Colouring (Full Colour / Highlights)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "hair-colouring",
+          "name": "Hair Colouring (Full Colour / Highlights)",
+          "nameMy": "Pewarnaan Rambut (Warna Penuh / Highlight)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "length", "label": "Hair length", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "short", "label": "Short", "priceModifier": 120 },
-              { "id": "medium", "label": "Medium", "priceModifier": 180 },
-              { "id": "long", "label": "Long", "priceModifier": 250 } ] },
-            { "id": "coverage", "label": "Coverage", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "full", "label": "Full colour", "priceModifier": 0 },
-              { "id": "highlights", "label": "Highlights", "priceModifier": 40 },
-              { "id": "global_high", "label": "Global + highlights", "priceModifier": 90 } ] },
-            { "id": "grade", "label": "Colour grade", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "standard", "label": "Standard", "priceModifier": 0 },
-              { "id": "premium", "label": "Premium / ammonia-free", "priceModifier": 50 } ] }
+            {
+              "id": "length",
+              "label": "Hair length",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "short",
+                  "label": "Short",
+                  "priceModifier": 120
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium",
+                  "priceModifier": 180
+                },
+                {
+                  "id": "long",
+                  "label": "Long",
+                  "priceModifier": 250
+                }
+              ]
+            },
+            {
+              "id": "coverage",
+              "label": "Coverage",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "full",
+                  "label": "Full colour",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "highlights",
+                  "label": "Highlights",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "global_high",
+                  "label": "Global + highlights",
+                  "priceModifier": 90
+                }
+              ]
+            },
+            {
+              "id": "grade",
+              "label": "Colour grade",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "standard",
+                  "label": "Standard",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "premium",
+                  "label": "Premium / ammonia-free",
+                  "priceModifier": 50
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "hair-smoothening-rebonding", "name": "Hair Smoothening (Rebonding)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "hair-smoothening-rebonding",
+          "name": "Hair Smoothening (Rebonding)",
+          "nameMy": "Pelurusan Rambut (Rebonding)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "length", "label": "Hair length", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "short", "label": "Short", "priceModifier": 250 },
-              { "id": "medium", "label": "Medium", "priceModifier": 380 },
-              { "id": "long", "label": "Long", "priceModifier": 520 } ] },
-            { "id": "last_treat", "label": "Last chemical treatment date", "type": "INFO", "required": false }
+            {
+              "id": "length",
+              "label": "Hair length",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "short",
+                  "label": "Short",
+                  "priceModifier": 250
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium",
+                  "priceModifier": 380
+                },
+                {
+                  "id": "long",
+                  "label": "Long",
+                  "priceModifier": 520
+                }
+              ]
+            },
+            {
+              "id": "last_treat",
+              "label": "Last chemical treatment date",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "keratin-treatment", "name": "Keratin Treatment", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "keratin-treatment",
+          "name": "Keratin Treatment",
+          "nameMy": "Rawatan Keratin",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "length", "label": "Hair length", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "short", "label": "Short", "priceModifier": 300 },
-              { "id": "medium", "label": "Medium", "priceModifier": 450 },
-              { "id": "long", "label": "Long", "priceModifier": 600 } ] },
-            { "id": "addon", "label": "Add-on", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "none", "label": "None", "priceModifier": 0 },
-              { "id": "kit", "label": "Take-home aftercare kit", "priceModifier": 60 } ] }
+            {
+              "id": "length",
+              "label": "Hair length",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "short",
+                  "label": "Short",
+                  "priceModifier": 300
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium",
+                  "priceModifier": 450
+                },
+                {
+                  "id": "long",
+                  "label": "Long",
+                  "priceModifier": 600
+                }
+              ]
+            },
+            {
+              "id": "addon",
+              "label": "Add-on",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "none",
+                  "label": "None",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "kit",
+                  "label": "Take-home aftercare kit",
+                  "priceModifier": 60
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "hair-botox", "name": "Hair Botox", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "hair-botox",
+          "name": "Hair Botox",
+          "nameMy": "Rawatan Botox Rambut",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "length", "label": "Hair length", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "short", "label": "Short", "priceModifier": 280 },
-              { "id": "medium", "label": "Medium", "priceModifier": 420 },
-              { "id": "long", "label": "Long", "priceModifier": 560 } ] }
+            {
+              "id": "length",
+              "label": "Hair length",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "short",
+                  "label": "Short",
+                  "priceModifier": 280
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium",
+                  "priceModifier": 420
+                },
+                {
+                  "id": "long",
+                  "label": "Long",
+                  "priceModifier": 560
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "facial-standard", "name": "Facial Treatment (Standard)", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 0,
+          "slug": "facial-standard",
+          "name": "Facial Treatment (Standard)",
+          "nameMy": "Rawatan Muka (Standard)",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 0,
           "questions": [
-            { "id": "facial", "label": "Facial", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "cleanup", "label": "Cleanup", "priceModifier": 60 },
-              { "id": "fruit", "label": "Fruit", "priceModifier": 90 },
-              { "id": "gold", "label": "Gold", "priceModifier": 130 },
-              { "id": "antiage", "label": "Anti-ageing", "priceModifier": 160 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "detan", "label": "De-tan", "priceModifier": 25 },
-              { "id": "undereye", "label": "Under-eye treatment", "priceModifier": 20 },
-              { "id": "massage", "label": "Face massage 15min", "priceModifier": 15 } ] }
+            {
+              "id": "facial",
+              "label": "Facial",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "cleanup",
+                  "label": "Cleanup",
+                  "priceModifier": 60
+                },
+                {
+                  "id": "fruit",
+                  "label": "Fruit",
+                  "priceModifier": 90
+                },
+                {
+                  "id": "gold",
+                  "label": "Gold",
+                  "priceModifier": 130
+                },
+                {
+                  "id": "antiage",
+                  "label": "Anti-ageing",
+                  "priceModifier": 160
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "detan",
+                  "label": "De-tan",
+                  "priceModifier": 25
+                },
+                {
+                  "id": "undereye",
+                  "label": "Under-eye treatment",
+                  "priceModifier": 20
+                },
+                {
+                  "id": "massage",
+                  "label": "Face massage 15min",
+                  "priceModifier": 15
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "hydrafacial", "name": "HydraFacial / Advanced Hydradermabrasion", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "hydrafacial",
+          "name": "HydraFacial / Advanced Hydradermabrasion",
+          "nameMy": "HydraFacial / Hidradermabrasi Lanjutan",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "tier", "label": "Tier", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "express", "label": "Express", "priceModifier": 180 },
-              { "id": "signature", "label": "Signature", "priceModifier": 280 },
-              { "id": "deluxe", "label": "Deluxe (+booster)", "priceModifier": 400 } ] },
-            { "id": "concern", "label": "Skin concern", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "hydration", "label": "Hydration", "priceModifier": 0 },
-              { "id": "brightening", "label": "Brightening", "priceModifier": 30 },
-              { "id": "acne", "label": "Acne / pore", "priceModifier": 30 } ] }
+            {
+              "id": "tier",
+              "label": "Tier",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "express",
+                  "label": "Express",
+                  "priceModifier": 180
+                },
+                {
+                  "id": "signature",
+                  "label": "Signature",
+                  "priceModifier": 280
+                },
+                {
+                  "id": "deluxe",
+                  "label": "Deluxe (+booster)",
+                  "priceModifier": 400
+                }
+              ]
+            },
+            {
+              "id": "concern",
+              "label": "Skin concern",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "hydration",
+                  "label": "Hydration",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "brightening",
+                  "label": "Brightening",
+                  "priceModifier": 30
+                },
+                {
+                  "id": "acne",
+                  "label": "Acne / pore",
+                  "priceModifier": 30
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "rica-waxing-full-leg", "name": "Rica Waxing (Full Leg)", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 0,
+          "slug": "rica-waxing-full-leg",
+          "name": "Rica Waxing (Full Leg)",
+          "nameMy": "Waxing Rica (Seluruh Kaki)",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Area", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "full_leg", "label": "Full leg", "priceModifier": 80 },
-              { "id": "half_leg", "label": "Half leg", "priceModifier": 50 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "full_arm", "label": "Full arm", "priceModifier": 45 },
-              { "id": "underarm", "label": "Underarm", "priceModifier": 25 },
-              { "id": "bikini", "label": "Bikini", "priceModifier": 60 },
-              { "id": "full_body", "label": "Full body upgrade", "priceModifier": 120 } ] }
+            {
+              "id": "area",
+              "label": "Area",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "full_leg",
+                  "label": "Full leg",
+                  "priceModifier": 80
+                },
+                {
+                  "id": "half_leg",
+                  "label": "Half leg",
+                  "priceModifier": 50
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "full_arm",
+                  "label": "Full arm",
+                  "priceModifier": 45
+                },
+                {
+                  "id": "underarm",
+                  "label": "Underarm",
+                  "priceModifier": 25
+                },
+                {
+                  "id": "bikini",
+                  "label": "Bikini",
+                  "priceModifier": 60
+                },
+                {
+                  "id": "full_body",
+                  "label": "Full body upgrade",
+                  "priceModifier": 120
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "face-threading-full-face", "name": "Face Threading (Full Face)", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 0,
+          "slug": "face-threading-full-face",
+          "name": "Face Threading (Full Face)",
+          "nameMy": "Threading Muka (Seluruh Muka)",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 0,
           "questions": [
-            { "id": "service", "label": "Service", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "full_face", "label": "Full face", "priceModifier": 40 },
-              { "id": "eyebrow", "label": "Eyebrow only", "priceModifier": 12 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "upperlip", "label": "Upper lip", "priceModifier": 8 },
-              { "id": "chin", "label": "Chin", "priceModifier": 8 },
-              { "id": "forehead", "label": "Forehead", "priceModifier": 8 } ] }
+            {
+              "id": "service",
+              "label": "Service",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "full_face",
+                  "label": "Full face",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "eyebrow",
+                  "label": "Eyebrow only",
+                  "priceModifier": 12
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "upperlip",
+                  "label": "Upper lip",
+                  "priceModifier": 8
+                },
+                {
+                  "id": "chin",
+                  "label": "Chin",
+                  "priceModifier": 8
+                },
+                {
+                  "id": "forehead",
+                  "label": "Forehead",
+                  "priceModifier": 8
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "gel-nails", "name": "Gel Nails (Manicure / Pedicure)", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 0,
+          "slug": "gel-nails",
+          "name": "Gel Nails (Manicure / Pedicure)",
+          "nameMy": "Kuku Gel (Manikur / Pedikur)",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 0,
           "questions": [
-            { "id": "service", "label": "Service", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "gel_mani", "label": "Gel Manicure", "priceModifier": 80 },
-              { "id": "gel_pedi", "label": "Gel Pedicure", "priceModifier": 95 },
-              { "id": "combo", "label": "Mani + Pedi combo", "priceModifier": 160 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "art", "label": "Nail art (per set)", "priceModifier": 30 },
-              { "id": "removal", "label": "Gel removal", "priceModifier": 20 },
-              { "id": "french", "label": "French tip", "priceModifier": 15 } ] }
+            {
+              "id": "service",
+              "label": "Service",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "gel_mani",
+                  "label": "Gel Manicure",
+                  "priceModifier": 80
+                },
+                {
+                  "id": "gel_pedi",
+                  "label": "Gel Pedicure",
+                  "priceModifier": 95
+                },
+                {
+                  "id": "combo",
+                  "label": "Mani + Pedi combo",
+                  "priceModifier": 160
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "art",
+                  "label": "Nail art (per set)",
+                  "priceModifier": 30
+                },
+                {
+                  "id": "removal",
+                  "label": "Gel removal",
+                  "priceModifier": 20
+                },
+                {
+                  "id": "french",
+                  "label": "French tip",
+                  "priceModifier": 15
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "bridal-makeup-hairdo", "name": "Bridal Makeup & Hairdo", "pricingType": "BASE_PLUS_ADDONS", "basePrice": 0, "visitFee": 20,
+          "slug": "bridal-makeup-hairdo",
+          "name": "Bridal Makeup & Hairdo",
+          "nameMy": "Solekan & Dandanan Rambut Pengantin",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "basePrice": 0,
+          "visitFee": 20,
           "questions": [
-            { "id": "package", "label": "Package", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "engagement", "label": "Engagement", "priceModifier": 450 },
-              { "id": "reception", "label": "Reception", "priceModifier": 650 },
-              { "id": "full_hd", "label": "Full bridal (HD)", "priceModifier": 950 } ] },
-            { "id": "trial", "label": "Trial session", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes", "priceModifier": 150 } ] },
-            { "id": "members", "label": "Additional family members' makeup", "type": "QUANTITY", "required": false, "config": { "min": 0, "max": 15, "step": 1, "pricePerUnit": 120 } },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "draping", "label": "Saree/dress draping", "priceModifier": 50 },
-              { "id": "lashes", "label": "Lashes", "priceModifier": 30 },
-              { "id": "early", "label": "Early call (<7am)", "priceModifier": 80 } ] }
+            {
+              "id": "package",
+              "label": "Package",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "engagement",
+                  "label": "Engagement",
+                  "priceModifier": 450
+                },
+                {
+                  "id": "reception",
+                  "label": "Reception",
+                  "priceModifier": 650
+                },
+                {
+                  "id": "full_hd",
+                  "label": "Full bridal (HD)",
+                  "priceModifier": 950
+                }
+              ]
+            },
+            {
+              "id": "trial",
+              "label": "Trial session",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes",
+                  "priceModifier": 150
+                }
+              ]
+            },
+            {
+              "id": "members",
+              "label": "Additional family members' makeup",
+              "type": "QUANTITY",
+              "required": false,
+              "config": {
+                "min": 0,
+                "max": 15,
+                "step": 1,
+                "pricePerUnit": 120
+              }
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "draping",
+                  "label": "Saree/dress draping",
+                  "priceModifier": 50
+                },
+                {
+                  "id": "lashes",
+                  "label": "Lashes",
+                  "priceModifier": 30
+                },
+                {
+                  "id": "early",
+                  "label": "Early call (<7am)",
+                  "priceModifier": 80
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "body-massage-women", "name": "Body Massage (60 Min Swedish / Relaxation)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "body-massage-women",
+          "name": "Body Massage (60 Min Swedish / Relaxation)",
+          "nameMy": "Urutan Badan (Swedish / Relaksasi 60 Minit)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "duration", "label": "Duration", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "60", "label": "60 min", "priceModifier": 130 },
-              { "id": "90", "label": "90 min", "priceModifier": 180 },
-              { "id": "120", "label": "120 min", "priceModifier": 230 } ] },
-            { "id": "gender", "label": "Therapist gender preference", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "any", "label": "Any", "priceModifier": 0 },
-              { "id": "specific", "label": "Specific", "priceModifier": 10 } ] },
-            { "id": "health", "label": "Pregnant / medical conditions?", "type": "INFO", "required": false }
+            {
+              "id": "duration",
+              "label": "Duration",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "60",
+                  "label": "60 min",
+                  "priceModifier": 130
+                },
+                {
+                  "id": "90",
+                  "label": "90 min",
+                  "priceModifier": 180
+                },
+                {
+                  "id": "120",
+                  "label": "120 min",
+                  "priceModifier": 230
+                }
+              ]
+            },
+            {
+              "id": "gender",
+              "label": "Therapist gender preference",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "any",
+                  "label": "Any",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "specific",
+                  "label": "Specific",
+                  "priceModifier": 10
+                }
+              ]
+            },
+            {
+              "id": "health",
+              "label": "Pregnant / medical conditions?",
+              "type": "INFO",
+              "required": false
+            }
           ]
         }
       ]
@@ -199,68 +758,253 @@
     {
       "slug": "mens-grooming-massage",
       "name": "Men's Grooming & Massage",
+      "nameMy": "Dandanan & Urutan Lelaki",
       "services": [
         {
-          "slug": "mens-haircut", "name": "Haircut (Men)", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 0,
+          "slug": "mens-haircut",
+          "name": "Haircut (Men)",
+          "nameMy": "Potong Rambut (Lelaki)",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 0,
           "questions": [
-            { "id": "style", "label": "Style", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "standard", "label": "Standard", "priceModifier": 35 },
-              { "id": "fade", "label": "Fade / skin fade", "priceModifier": 45 },
-              { "id": "kids", "label": "Kids (<12)", "priceModifier": 28 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "wash", "label": "Wash + style", "priceModifier": 15 },
-              { "id": "massage", "label": "Head massage 10min", "priceModifier": 15 } ] }
+            {
+              "id": "style",
+              "label": "Style",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "standard",
+                  "label": "Standard",
+                  "priceModifier": 35
+                },
+                {
+                  "id": "fade",
+                  "label": "Fade / skin fade",
+                  "priceModifier": 45
+                },
+                {
+                  "id": "kids",
+                  "label": "Kids (<12)",
+                  "priceModifier": 28
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "wash",
+                  "label": "Wash + style",
+                  "priceModifier": 15
+                },
+                {
+                  "id": "massage",
+                  "label": "Head massage 10min",
+                  "priceModifier": 15
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "beard-styling", "name": "Beard Styling / Trim", "pricingType": "FIXED", "visitFee": 0,
+          "slug": "beard-styling",
+          "name": "Beard Styling / Trim",
+          "nameMy": "Gaya / Kemas Janggut",
+          "pricingType": "FIXED",
+          "visitFee": 0,
           "questions": [
-            { "id": "service", "label": "Service", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "trim", "label": "Trim & shape", "priceModifier": 25 },
-              { "id": "shave", "label": "Hot-towel shave", "priceModifier": 40 },
-              { "id": "colour", "label": "Beard colour", "priceModifier": 55 } ] }
+            {
+              "id": "service",
+              "label": "Service",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "trim",
+                  "label": "Trim & shape",
+                  "priceModifier": 25
+                },
+                {
+                  "id": "shave",
+                  "label": "Hot-towel shave",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "colour",
+                  "label": "Beard colour",
+                  "priceModifier": 55
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "mens-hair-colour", "name": "Hair Colour (Men)", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 0,
+          "slug": "mens-hair-colour",
+          "name": "Hair Colour (Men)",
+          "nameMy": "Pewarnaan Rambut (Lelaki)",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 0,
           "questions": [
-            { "id": "coverage", "label": "Coverage", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "touchup", "label": "Touch-up (greys)", "priceModifier": 50 },
-              { "id": "full", "label": "Full colour", "priceModifier": 80 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "beard", "label": "Beard colour", "priceModifier": 25 },
-              { "id": "premium", "label": "Premium ammonia-free", "priceModifier": 30 } ] }
+            {
+              "id": "coverage",
+              "label": "Coverage",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "touchup",
+                  "label": "Touch-up (greys)",
+                  "priceModifier": 50
+                },
+                {
+                  "id": "full",
+                  "label": "Full colour",
+                  "priceModifier": 80
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "beard",
+                  "label": "Beard colour",
+                  "priceModifier": 25
+                },
+                {
+                  "id": "premium",
+                  "label": "Premium ammonia-free",
+                  "priceModifier": 30
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "mens-facial", "name": "Facial (Men)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "mens-facial",
+          "name": "Facial (Men)",
+          "nameMy": "Rawatan Muka (Lelaki)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "facial", "label": "Facial", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "cleanup", "label": "Cleanup", "priceModifier": 55 },
-              { "id": "detan", "label": "De-tan", "priceModifier": 80 },
-              { "id": "antiage", "label": "Anti-ageing", "priceModifier": 120 } ] }
+            {
+              "id": "facial",
+              "label": "Facial",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "cleanup",
+                  "label": "Cleanup",
+                  "priceModifier": 55
+                },
+                {
+                  "id": "detan",
+                  "label": "De-tan",
+                  "priceModifier": 80
+                },
+                {
+                  "id": "antiage",
+                  "label": "Anti-ageing",
+                  "priceModifier": 120
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "swedish-massage-men", "name": "Swedish Massage (60 Min)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "swedish-massage-men",
+          "name": "Swedish Massage (60 Min)",
+          "nameMy": "Urutan Swedish (60 Minit)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "duration", "label": "Duration", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "60", "label": "60 min", "priceModifier": 120 },
-              { "id": "90", "label": "90 min", "priceModifier": 170 },
-              { "id": "120", "label": "120 min", "priceModifier": 220 } ] },
-            { "id": "focus", "label": "Focus", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "full", "label": "Full body", "priceModifier": 0 },
-              { "id": "back", "label": "Back & shoulder only", "priceModifier": -20 } ] }
+            {
+              "id": "duration",
+              "label": "Duration",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "60",
+                  "label": "60 min",
+                  "priceModifier": 120
+                },
+                {
+                  "id": "90",
+                  "label": "90 min",
+                  "priceModifier": 170
+                },
+                {
+                  "id": "120",
+                  "label": "120 min",
+                  "priceModifier": 220
+                }
+              ]
+            },
+            {
+              "id": "focus",
+              "label": "Focus",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "full",
+                  "label": "Full body",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "back",
+                  "label": "Back & shoulder only",
+                  "priceModifier": -20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "deep-tissue-massage", "name": "Deep Tissue Massage (60 Min)", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "deep-tissue-massage",
+          "name": "Deep Tissue Massage (60 Min)",
+          "nameMy": "Urutan Tisu Dalam (60 Minit)",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "duration", "label": "Duration", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "60", "label": "60 min", "priceModifier": 150 },
-              { "id": "90", "label": "90 min", "priceModifier": 200 },
-              { "id": "120", "label": "120 min", "priceModifier": 250 } ] },
-            { "id": "injury", "label": "Injury / pain area", "type": "INFO", "required": false }
+            {
+              "id": "duration",
+              "label": "Duration",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "60",
+                  "label": "60 min",
+                  "priceModifier": 150
+                },
+                {
+                  "id": "90",
+                  "label": "90 min",
+                  "priceModifier": 200
+                },
+                {
+                  "id": "120",
+                  "label": "120 min",
+                  "priceModifier": 250
+                }
+              ]
+            },
+            {
+              "id": "injury",
+              "label": "Injury / pain area",
+              "type": "INFO",
+              "required": false
+            }
           ]
         }
       ]
@@ -268,92 +1012,390 @@
     {
       "slug": "cleaning",
       "name": "Cleaning Services",
+      "nameMy": "Perkhidmatan Pembersihan",
       "services": [
         {
-          "slug": "full-house-cleaning", "name": "Full House Cleaning", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "full-house-cleaning",
+          "name": "Full House Cleaning",
+          "nameMy": "Pembersihan Seluruh Rumah",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "size", "label": "Home size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "studio", "label": "Studio / 1BR", "priceModifier": 120 },
-              { "id": "2br", "label": "2BR", "priceModifier": 160 },
-              { "id": "3br", "label": "3BR", "priceModifier": 210 },
-              { "id": "4br", "label": "4BR", "priceModifier": 270 },
-              { "id": "5br", "label": "Bungalow / 5BR+", "priceModifier": 350 } ] },
-            { "id": "furnished", "label": "Furnished?", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "yes", "label": "Furnished", "priceModifier": 0 },
-              { "id": "empty", "label": "Empty (faster)", "priceModifier": -20 } ] }
+            {
+              "id": "size",
+              "label": "Home size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "studio",
+                  "label": "Studio / 1BR",
+                  "priceModifier": 120
+                },
+                {
+                  "id": "2br",
+                  "label": "2BR",
+                  "priceModifier": 160
+                },
+                {
+                  "id": "3br",
+                  "label": "3BR",
+                  "priceModifier": 210
+                },
+                {
+                  "id": "4br",
+                  "label": "4BR",
+                  "priceModifier": 270
+                },
+                {
+                  "id": "5br",
+                  "label": "Bungalow / 5BR+",
+                  "priceModifier": 350
+                }
+              ]
+            },
+            {
+              "id": "furnished",
+              "label": "Furnished?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "yes",
+                  "label": "Furnished",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "empty",
+                  "label": "Empty (faster)",
+                  "priceModifier": -20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "deep-cleaning", "name": "Deep Cleaning", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "deep-cleaning",
+          "name": "Deep Cleaning",
+          "nameMy": "Pembersihan Mendalam",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "size", "label": "Home size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "1br", "label": "1BR", "priceModifier": 220 },
-              { "id": "2br", "label": "2BR", "priceModifier": 300 },
-              { "id": "3br", "label": "3BR", "priceModifier": 400 },
-              { "id": "4br", "label": "4BR", "priceModifier": 520 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "fridge", "label": "Inside fridge", "priceModifier": 40 },
-              { "id": "oven", "label": "Inside oven", "priceModifier": 40 },
-              { "id": "balcony", "label": "Balcony", "priceModifier": 30 },
-              { "id": "windows", "label": "Windows (interior)", "priceModifier": 50 } ] }
+            {
+              "id": "size",
+              "label": "Home size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "1br",
+                  "label": "1BR",
+                  "priceModifier": 220
+                },
+                {
+                  "id": "2br",
+                  "label": "2BR",
+                  "priceModifier": 300
+                },
+                {
+                  "id": "3br",
+                  "label": "3BR",
+                  "priceModifier": 400
+                },
+                {
+                  "id": "4br",
+                  "label": "4BR",
+                  "priceModifier": 520
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "fridge",
+                  "label": "Inside fridge",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "oven",
+                  "label": "Inside oven",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "balcony",
+                  "label": "Balcony",
+                  "priceModifier": 30
+                },
+                {
+                  "id": "windows",
+                  "label": "Windows (interior)",
+                  "priceModifier": 50
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "move-in-out-cleaning", "name": "Move-In / Move-Out Cleaning", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "move-in-out-cleaning",
+          "name": "Move-In / Move-Out Cleaning",
+          "nameMy": "Pembersihan Pindah Masuk / Pindah Keluar",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "size", "label": "Home size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "1br", "label": "1BR", "priceModifier": 260 },
-              { "id": "2br", "label": "2BR", "priceModifier": 360 },
-              { "id": "3br", "label": "3BR", "priceModifier": 480 },
-              { "id": "4br", "label": "4BR", "priceModifier": 620 } ] },
-            { "id": "carpet", "label": "Carpet shampoo", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes", "priceModifier": 80 } ] }
+            {
+              "id": "size",
+              "label": "Home size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "1br",
+                  "label": "1BR",
+                  "priceModifier": 260
+                },
+                {
+                  "id": "2br",
+                  "label": "2BR",
+                  "priceModifier": 360
+                },
+                {
+                  "id": "3br",
+                  "label": "3BR",
+                  "priceModifier": 480
+                },
+                {
+                  "id": "4br",
+                  "label": "4BR",
+                  "priceModifier": 620
+                }
+              ]
+            },
+            {
+              "id": "carpet",
+              "label": "Carpet shampoo",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes",
+                  "priceModifier": 80
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "chimney-hood-cleaning", "name": "Chimney / Hood Cleaning", "pricingType": "PER_UNIT", "unitPrice": 90, "visitFee": 0,
+          "slug": "chimney-hood-cleaning",
+          "name": "Chimney / Hood Cleaning",
+          "nameMy": "Pembersihan Hud Dapur",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 90,
+          "visitFee": 0,
           "questions": [
-            { "id": "qty", "label": "No. of hoods/chimneys", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 10, "step": 1, "pricePerUnit": 90 } },
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "wall", "label": "Wall hood", "priceModifier": 0 },
-              { "id": "island", "label": "Island / auto-clean", "priceModifier": 30 } ] }
+            {
+              "id": "qty",
+              "label": "No. of hoods/chimneys",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 10,
+                "step": 1,
+                "pricePerUnit": 90
+              }
+            },
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "wall",
+                  "label": "Wall hood",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "island",
+                  "label": "Island / auto-clean",
+                  "priceModifier": 30
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "deep-sanitisation-bathroom", "name": "Deep Sanitisation (Bathroom)", "pricingType": "PER_UNIT", "unitPrice": 55, "visitFee": 0,
+          "slug": "deep-sanitisation-bathroom",
+          "name": "Deep Sanitisation (Bathroom)",
+          "nameMy": "Sanitasi Mendalam (Bilik Air)",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 55,
+          "visitFee": 0,
           "questions": [
-            { "id": "qty", "label": "No. of bathrooms", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 12, "step": 1, "pricePerUnit": 55 } },
-            { "id": "condition", "label": "Condition", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "normal", "label": "Normal", "priceModifier": 0 },
-              { "id": "heavy", "label": "Heavy stain / mould (per unit)", "priceModifier": 20 } ] }
+            {
+              "id": "qty",
+              "label": "No. of bathrooms",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 12,
+                "step": 1,
+                "pricePerUnit": 55
+              }
+            },
+            {
+              "id": "condition",
+              "label": "Condition",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "normal",
+                  "label": "Normal",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "heavy",
+                  "label": "Heavy stain / mould (per unit)",
+                  "priceModifier": 20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "sofa-cleaning", "name": "Sofa Cleaning", "pricingType": "TIER_QUANTITY", "visitFee": 0,
+          "slug": "sofa-cleaning",
+          "name": "Sofa Cleaning",
+          "nameMy": "Pembersihan Sofa",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 0,
           "questions": [
-            { "id": "seats", "label": "Sofa pieces", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "1s", "label": "1-seater", "unitPrice": 30 },
-              { "id": "2s", "label": "2-seater", "unitPrice": 50 },
-              { "id": "3s", "label": "3-seater", "unitPrice": 75 },
-              { "id": "l", "label": "L-shape", "unitPrice": 130 },
-              { "id": "u", "label": "U-shape", "unitPrice": 170 } ] },
-            { "id": "material", "label": "Material", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "fabric", "label": "Fabric", "priceModifier": 0 },
-              { "id": "leather", "label": "Leather (per unit)", "priceModifier": 15 },
-              { "id": "suede", "label": "Suede (per unit)", "priceModifier": 20 } ] }
+            {
+              "id": "seats",
+              "label": "Sofa pieces",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "1s",
+                  "label": "1-seater",
+                  "unitPrice": 30
+                },
+                {
+                  "id": "2s",
+                  "label": "2-seater",
+                  "unitPrice": 50
+                },
+                {
+                  "id": "3s",
+                  "label": "3-seater",
+                  "unitPrice": 75
+                },
+                {
+                  "id": "l",
+                  "label": "L-shape",
+                  "unitPrice": 130
+                },
+                {
+                  "id": "u",
+                  "label": "U-shape",
+                  "unitPrice": 170
+                }
+              ]
+            },
+            {
+              "id": "material",
+              "label": "Material",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "fabric",
+                  "label": "Fabric",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "leather",
+                  "label": "Leather (per unit)",
+                  "priceModifier": 15
+                },
+                {
+                  "id": "suede",
+                  "label": "Suede (per unit)",
+                  "priceModifier": 20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "mattress-cleaning", "name": "Mattress Cleaning", "pricingType": "TIER_QUANTITY", "visitFee": 0,
+          "slug": "mattress-cleaning",
+          "name": "Mattress Cleaning",
+          "nameMy": "Pembersihan Tilam",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 0,
           "questions": [
-            { "id": "size", "label": "Mattress size", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "single", "label": "Single", "unitPrice": 45 },
-              { "id": "queen", "label": "Queen", "unitPrice": 65 },
-              { "id": "king", "label": "King", "unitPrice": 85 } ] },
-            { "id": "treatment", "label": "Treatment", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "shampoo", "label": "Vacuum + shampoo", "priceModifier": 0 },
-              { "id": "uv", "label": "+ UV dust-mite (per unit)", "priceModifier": 25 } ] }
+            {
+              "id": "size",
+              "label": "Mattress size",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "single",
+                  "label": "Single",
+                  "unitPrice": 45
+                },
+                {
+                  "id": "queen",
+                  "label": "Queen",
+                  "unitPrice": 65
+                },
+                {
+                  "id": "king",
+                  "label": "King",
+                  "unitPrice": 85
+                }
+              ]
+            },
+            {
+              "id": "treatment",
+              "label": "Treatment",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "shampoo",
+                  "label": "Vacuum + shampoo",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "uv",
+                  "label": "+ UV dust-mite (per unit)",
+                  "priceModifier": 25
+                }
+              ]
+            }
           ]
         }
       ]
@@ -361,77 +1403,312 @@
     {
       "slug": "pest-control",
       "name": "Pest Control",
+      "nameMy": "Kawalan Serangga Perosak",
       "services": [
         {
-          "slug": "cockroach-control", "name": "Cockroach Control", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "cockroach-control",
+          "name": "Cockroach Control",
+          "nameMy": "Kawalan Lipas",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "property", "label": "Property type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "apartment", "label": "Apartment", "priceModifier": 0 },
-              { "id": "house", "label": "House", "priceModifier": 0 },
-              { "id": "shop", "label": "Shop / F&B", "priceModifier": 40 } ] },
-            { "id": "size", "label": "Property size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "s", "label": "Below 1000 sqft", "priceModifier": 180 },
-              { "id": "m", "label": "1000-2000 sqft", "priceModifier": 250 },
-              { "id": "l", "label": "2000+ sqft", "priceModifier": 350 } ] },
-            { "id": "plan", "label": "Plan", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "once", "label": "One-time", "priceModifier": 0 },
-              { "id": "quarterly", "label": "3-visit quarterly", "priceModifier": 120 } ] }
+            {
+              "id": "property",
+              "label": "Property type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "apartment",
+                  "label": "Apartment",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "house",
+                  "label": "House",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "shop",
+                  "label": "Shop / F&B",
+                  "priceModifier": 40
+                }
+              ]
+            },
+            {
+              "id": "size",
+              "label": "Property size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "s",
+                  "label": "Below 1000 sqft",
+                  "priceModifier": 180
+                },
+                {
+                  "id": "m",
+                  "label": "1000-2000 sqft",
+                  "priceModifier": 250
+                },
+                {
+                  "id": "l",
+                  "label": "2000+ sqft",
+                  "priceModifier": 350
+                }
+              ]
+            },
+            {
+              "id": "plan",
+              "label": "Plan",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "once",
+                  "label": "One-time",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "quarterly",
+                  "label": "3-visit quarterly",
+                  "priceModifier": 120
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "ant-control", "name": "Ant Control", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "ant-control",
+          "name": "Ant Control",
+          "nameMy": "Kawalan Semut",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "size", "label": "Property size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "s", "label": "Below 1000 sqft", "priceModifier": 150 },
-              { "id": "m", "label": "1000-2000 sqft", "priceModifier": 210 },
-              { "id": "l", "label": "2000+ sqft", "priceModifier": 300 } ] }
+            {
+              "id": "size",
+              "label": "Property size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "s",
+                  "label": "Below 1000 sqft",
+                  "priceModifier": 150
+                },
+                {
+                  "id": "m",
+                  "label": "1000-2000 sqft",
+                  "priceModifier": 210
+                },
+                {
+                  "id": "l",
+                  "label": "2000+ sqft",
+                  "priceModifier": 300
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "mosquito-fogging", "name": "Mosquito Control / Fogging", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "mosquito-fogging",
+          "name": "Mosquito Control / Fogging",
+          "nameMy": "Kawalan Nyamuk / Semburan Kabus",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Area", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "indoor", "label": "Indoor", "priceModifier": 0 },
-              { "id": "outdoor", "label": "Outdoor / compound", "priceModifier": 50 },
-              { "id": "both", "label": "Both", "priceModifier": 80 } ] },
-            { "id": "size", "label": "Property size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "s", "label": "Below 1000 sqft", "priceModifier": 160 },
-              { "id": "m", "label": "1000-2000 sqft", "priceModifier": 230 },
-              { "id": "l", "label": "2000+ sqft", "priceModifier": 320 } ] }
+            {
+              "id": "area",
+              "label": "Area",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "indoor",
+                  "label": "Indoor",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "outdoor",
+                  "label": "Outdoor / compound",
+                  "priceModifier": 50
+                },
+                {
+                  "id": "both",
+                  "label": "Both",
+                  "priceModifier": 80
+                }
+              ]
+            },
+            {
+              "id": "size",
+              "label": "Property size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "s",
+                  "label": "Below 1000 sqft",
+                  "priceModifier": 160
+                },
+                {
+                  "id": "m",
+                  "label": "1000-2000 sqft",
+                  "priceModifier": 230
+                },
+                {
+                  "id": "l",
+                  "label": "2000+ sqft",
+                  "priceModifier": 320
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "bed-bug-treatment", "name": "Bed Bug Treatment", "pricingType": "PER_UNIT", "unitPrice": 120, "visitFee": 0,
+          "slug": "bed-bug-treatment",
+          "name": "Bed Bug Treatment",
+          "nameMy": "Rawatan Pepijat",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 120,
+          "visitFee": 0,
           "questions": [
-            { "id": "rooms", "label": "No. of rooms", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 12, "step": 1, "pricePerUnit": 120 } },
-            { "id": "severity", "label": "Severity", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "mild", "label": "Mild", "priceModifier": 0 },
-              { "id": "severe", "label": "Severe (2-visit)", "priceModifier": 90 } ] }
+            {
+              "id": "rooms",
+              "label": "No. of rooms",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 12,
+                "step": 1,
+                "pricePerUnit": 120
+              }
+            },
+            {
+              "id": "severity",
+              "label": "Severity",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "mild",
+                  "label": "Mild",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "severe",
+                  "label": "Severe (2-visit)",
+                  "priceModifier": 90
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "termite-treatment", "name": "Termite Treatment", "pricingType": "TIERED", "visitFee": 0, "convertsToQuote": true,
+          "slug": "termite-treatment",
+          "name": "Termite Treatment",
+          "nameMy": "Rawatan Anai-Anai",
+          "pricingType": "TIERED",
+          "visitFee": 0,
+          "convertsToQuote": true,
           "questions": [
-            { "id": "size", "label": "Property size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "s", "label": "Below 1500 sqft", "priceModifier": 450 },
-              { "id": "m", "label": "1500-3000 sqft", "priceModifier": 700 },
-              { "id": "l", "label": "3000+ sqft", "priceModifier": 1000 } ] },
-            { "id": "method", "label": "Method", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "soil", "label": "Soil treatment", "priceModifier": 0 },
-              { "id": "bait", "label": "Baiting system", "priceModifier": 200 },
-              { "id": "warranty", "label": "Corrective + warranty", "priceModifier": 350 } ] }
+            {
+              "id": "size",
+              "label": "Property size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "s",
+                  "label": "Below 1500 sqft",
+                  "priceModifier": 450
+                },
+                {
+                  "id": "m",
+                  "label": "1500-3000 sqft",
+                  "priceModifier": 700
+                },
+                {
+                  "id": "l",
+                  "label": "3000+ sqft",
+                  "priceModifier": 1000
+                }
+              ]
+            },
+            {
+              "id": "method",
+              "label": "Method",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "soil",
+                  "label": "Soil treatment",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "bait",
+                  "label": "Baiting system",
+                  "priceModifier": 200
+                },
+                {
+                  "id": "warranty",
+                  "label": "Corrective + warranty",
+                  "priceModifier": 350
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "rodent-control", "name": "Rodent Control", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "rodent-control",
+          "name": "Rodent Control",
+          "nameMy": "Kawalan Tikus",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "property", "label": "Property type", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "apartment", "label": "Apartment", "priceModifier": 160 },
-              { "id": "house", "label": "House", "priceModifier": 220 },
-              { "id": "shop", "label": "Shop / Restaurant", "priceModifier": 320 } ] },
-            { "id": "plan", "label": "Plan", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "once", "label": "One-time", "priceModifier": 0 },
-              { "id": "monthly", "label": "Monthly (3 visits)", "priceModifier": 150 } ] }
+            {
+              "id": "property",
+              "label": "Property type",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "apartment",
+                  "label": "Apartment",
+                  "priceModifier": 160
+                },
+                {
+                  "id": "house",
+                  "label": "House",
+                  "priceModifier": 220
+                },
+                {
+                  "id": "shop",
+                  "label": "Shop / Restaurant",
+                  "priceModifier": 320
+                }
+              ]
+            },
+            {
+              "id": "plan",
+              "label": "Plan",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "once",
+                  "label": "One-time",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "monthly",
+                  "label": "Monthly (3 visits)",
+                  "priceModifier": 150
+                }
+              ]
+            }
           ]
         }
       ]
@@ -439,89 +1716,397 @@
     {
       "slug": "ac-services",
       "name": "AC Services",
+      "nameMy": "Perkhidmatan Penyaman Udara",
       "services": [
         {
-          "slug": "ac-servicing", "name": "AC Servicing / General Cleaning", "pricingType": "TIER_QUANTITY", "visitFee": 0,
+          "slug": "ac-servicing",
+          "name": "AC Servicing / General Cleaning",
+          "nameMy": "Servis Penyaman Udara / Pencucian Am",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 0,
           "questions": [
-            { "id": "units", "label": "AC units by HP", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "1hp", "label": "1.0 HP", "unitPrice": 89 },
-              { "id": "1_5hp", "label": "1.5 HP", "unitPrice": 109 },
-              { "id": "2hp", "label": "2.0 HP", "unitPrice": 129 },
-              { "id": "3hp", "label": "3.0 HP", "unitPrice": 159 } ] },
-            { "id": "mount", "label": "Mount type", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "wall", "label": "Wall-mounted", "priceModifier": 0 },
-              { "id": "cassette", "label": "Cassette / ceiling (per unit)", "priceModifier": 40 } ] },
-            { "id": "last_service", "label": "Last service date", "type": "INFO", "required": false }
+            {
+              "id": "units",
+              "label": "AC units by HP",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "1hp",
+                  "label": "1.0 HP",
+                  "unitPrice": 89
+                },
+                {
+                  "id": "1_5hp",
+                  "label": "1.5 HP",
+                  "unitPrice": 109
+                },
+                {
+                  "id": "2hp",
+                  "label": "2.0 HP",
+                  "unitPrice": 129
+                },
+                {
+                  "id": "3hp",
+                  "label": "3.0 HP",
+                  "unitPrice": 159
+                }
+              ]
+            },
+            {
+              "id": "mount",
+              "label": "Mount type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "wall",
+                  "label": "Wall-mounted",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "cassette",
+                  "label": "Cassette / ceiling (per unit)",
+                  "priceModifier": 40
+                }
+              ]
+            },
+            {
+              "id": "last_service",
+              "label": "Last service date",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "ac-chemical-cleaning", "name": "Deep / Chemical AC Cleaning", "pricingType": "TIER_QUANTITY", "visitFee": 0,
+          "slug": "ac-chemical-cleaning",
+          "name": "Deep / Chemical AC Cleaning",
+          "nameMy": "Pencucian Kimia Penyaman Udara",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 0,
           "questions": [
-            { "id": "units", "label": "AC units by HP", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "1hp", "label": "1.0 HP", "unitPrice": 150 },
-              { "id": "1_5hp", "label": "1.5 HP", "unitPrice": 180 },
-              { "id": "2hp", "label": "2.0 HP", "unitPrice": 220 },
-              { "id": "3hp", "label": "3.0 HP", "unitPrice": 280 } ] },
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "wash", "label": "Chemical wash", "priceModifier": 0 },
-              { "id": "overhaul", "label": "Chemical overhaul / dismantle (per unit)", "priceModifier": 60 } ] }
+            {
+              "id": "units",
+              "label": "AC units by HP",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "1hp",
+                  "label": "1.0 HP",
+                  "unitPrice": 150
+                },
+                {
+                  "id": "1_5hp",
+                  "label": "1.5 HP",
+                  "unitPrice": 180
+                },
+                {
+                  "id": "2hp",
+                  "label": "2.0 HP",
+                  "unitPrice": 220
+                },
+                {
+                  "id": "3hp",
+                  "label": "3.0 HP",
+                  "unitPrice": 280
+                }
+              ]
+            },
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "wash",
+                  "label": "Chemical wash",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "overhaul",
+                  "label": "Chemical overhaul / dismantle (per unit)",
+                  "priceModifier": 60
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "ac-cooling-repair", "name": "Cooling Issue Diagnosis & Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "ac-cooling-repair",
+          "name": "Cooling Issue Diagnosis & Repair",
+          "nameMy": "Diagnosis & Pembaikan Masalah Penyejukan",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "symptom", "label": "Symptom", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no_cool", "label": "Not cooling", "priceModifier": 0 },
-              { "id": "weak", "label": "Weak airflow", "priceModifier": 0 },
-              { "id": "noisy", "label": "Noisy", "priceModifier": 0 },
-              { "id": "trip", "label": "Auto-trip", "priceModifier": 0 } ] },
-            { "id": "qty", "label": "No. of units affected", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 10, "step": 1, "pricePerUnit": 0 } },
-            { "id": "brand", "label": "Brand & approx. age", "type": "INFO", "required": false }
+            {
+              "id": "symptom",
+              "label": "Symptom",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no_cool",
+                  "label": "Not cooling",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "weak",
+                  "label": "Weak airflow",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "noisy",
+                  "label": "Noisy",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "trip",
+                  "label": "Auto-trip",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "qty",
+              "label": "No. of units affected",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 10,
+                "step": 1,
+                "pricePerUnit": 0
+              }
+            },
+            {
+              "id": "brand",
+              "label": "Brand & approx. age",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "ac-water-leakage", "name": "Water Leakage Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "ac-water-leakage",
+          "name": "Water Leakage Repair",
+          "nameMy": "Pembaikan Kebocoran Air",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "point", "label": "Leak point", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "indoor", "label": "Indoor unit dripping", "priceModifier": 0 },
-              { "id": "outdoor", "label": "Outdoor", "priceModifier": 0 },
-              { "id": "joint", "label": "Pipe joint", "priceModifier": 0 } ] },
-            { "id": "qty", "label": "No. of units", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 10, "step": 1, "pricePerUnit": 0 } }
+            {
+              "id": "point",
+              "label": "Leak point",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "indoor",
+                  "label": "Indoor unit dripping",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "outdoor",
+                  "label": "Outdoor",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "joint",
+                  "label": "Pipe joint",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "qty",
+              "label": "No. of units",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 10,
+                "step": 1,
+                "pricePerUnit": 0
+              }
+            }
           ]
         },
         {
-          "slug": "ac-gas-refill", "name": "Gas Refill / Top-Up", "pricingType": "TIERED", "visitFee": 0,
+          "slug": "ac-gas-refill",
+          "name": "Gas Refill / Top-Up",
+          "nameMy": "Isi Semula / Tambah Gas",
+          "pricingType": "TIERED",
+          "visitFee": 0,
           "questions": [
-            { "id": "hp", "label": "HP", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "1hp", "label": "1.0 HP", "priceModifier": 130 },
-              { "id": "1_5hp", "label": "1.5 HP", "priceModifier": 160 },
-              { "id": "2hp", "label": "2.0 HP", "priceModifier": 190 },
-              { "id": "3hp", "label": "3.0 HP", "priceModifier": 240 } ] },
-            { "id": "gas", "label": "Gas type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "r32", "label": "R32", "priceModifier": 0 },
-              { "id": "r410a", "label": "R410A", "priceModifier": 20 },
-              { "id": "r22", "label": "R22", "priceModifier": 30 } ] },
-            { "id": "leak", "label": "Leak test", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "std", "label": "Standard", "priceModifier": 0 },
-              { "id": "test", "label": "+ Pressure / leak test", "priceModifier": 40 } ] }
+            {
+              "id": "hp",
+              "label": "HP",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "1hp",
+                  "label": "1.0 HP",
+                  "priceModifier": 130
+                },
+                {
+                  "id": "1_5hp",
+                  "label": "1.5 HP",
+                  "priceModifier": 160
+                },
+                {
+                  "id": "2hp",
+                  "label": "2.0 HP",
+                  "priceModifier": 190
+                },
+                {
+                  "id": "3hp",
+                  "label": "3.0 HP",
+                  "priceModifier": 240
+                }
+              ]
+            },
+            {
+              "id": "gas",
+              "label": "Gas type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "r32",
+                  "label": "R32",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "r410a",
+                  "label": "R410A",
+                  "priceModifier": 20
+                },
+                {
+                  "id": "r22",
+                  "label": "R22",
+                  "priceModifier": 30
+                }
+              ]
+            },
+            {
+              "id": "leak",
+              "label": "Leak test",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "std",
+                  "label": "Standard",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "test",
+                  "label": "+ Pressure / leak test",
+                  "priceModifier": 40
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "ac-installation", "name": "New AC Installation", "pricingType": "TIER_QUANTITY", "visitFee": 0,
+          "slug": "ac-installation",
+          "name": "New AC Installation",
+          "nameMy": "Pemasangan Penyaman Udara Baharu",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 0,
           "questions": [
-            { "id": "units", "label": "Units by HP", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "1hp", "label": "1.0 HP", "unitPrice": 170 },
-              { "id": "1_5hp", "label": "1.5 HP", "unitPrice": 200 },
-              { "id": "2hp", "label": "2.0 HP", "unitPrice": 240 },
-              { "id": "3hp", "label": "3.0 HP", "unitPrice": 300 } ] },
-            { "id": "bracket", "label": "Bracket", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "existing", "label": "Existing", "priceModifier": 0 },
-              { "id": "new", "label": "New wall bracket", "priceModifier": 60 } ] },
-            { "id": "piping", "label": "Extra copper piping (ft beyond 3ft)", "type": "QUANTITY", "required": false, "config": { "min": 0, "max": 30, "step": 1, "pricePerUnit": 25 } },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "trunking", "label": "Conceal / trunking", "priceModifier": 90 },
-              { "id": "dismantle", "label": "Dismantle old unit", "priceModifier": 50 },
-              { "id": "scaffold", "label": "High-floor / scaffold", "priceModifier": 100 } ] }
+            {
+              "id": "units",
+              "label": "Units by HP",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "1hp",
+                  "label": "1.0 HP",
+                  "unitPrice": 170
+                },
+                {
+                  "id": "1_5hp",
+                  "label": "1.5 HP",
+                  "unitPrice": 200
+                },
+                {
+                  "id": "2hp",
+                  "label": "2.0 HP",
+                  "unitPrice": 240
+                },
+                {
+                  "id": "3hp",
+                  "label": "3.0 HP",
+                  "unitPrice": 300
+                }
+              ]
+            },
+            {
+              "id": "bracket",
+              "label": "Bracket",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "existing",
+                  "label": "Existing",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "new",
+                  "label": "New wall bracket",
+                  "priceModifier": 60
+                }
+              ]
+            },
+            {
+              "id": "piping",
+              "label": "Extra copper piping (ft beyond 3ft)",
+              "type": "QUANTITY",
+              "required": false,
+              "config": {
+                "min": 0,
+                "max": 30,
+                "step": 1,
+                "pricePerUnit": 25
+              }
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "trunking",
+                  "label": "Conceal / trunking",
+                  "priceModifier": 90
+                },
+                {
+                  "id": "dismantle",
+                  "label": "Dismantle old unit",
+                  "priceModifier": 50
+                },
+                {
+                  "id": "scaffold",
+                  "label": "High-floor / scaffold",
+                  "priceModifier": 100
+                }
+              ]
+            }
           ]
         }
       ]
@@ -529,87 +2114,360 @@
     {
       "slug": "appliance-repair",
       "name": "Appliance Repair & Maintenance",
+      "nameMy": "Pembaikan & Penyelenggaraan Perkakas",
       "services": [
         {
-          "slug": "microwave-repair", "name": "Microwave Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "microwave-repair",
+          "name": "Microwave Repair",
+          "nameMy": "Pembaikan Ketuhar Gelombang Mikro",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "symptom", "label": "Symptom", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no_heat", "label": "Not heating", "priceModifier": 0 },
-              { "id": "no_power", "label": "No power", "priceModifier": 0 },
-              { "id": "spark", "label": "Sparking", "priceModifier": 0 },
-              { "id": "turntable", "label": "Turntable fault", "priceModifier": 0 } ] },
-            { "id": "model", "label": "Brand / model, solo or convection", "type": "INFO", "required": false }
+            {
+              "id": "symptom",
+              "label": "Symptom",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no_heat",
+                  "label": "Not heating",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "no_power",
+                  "label": "No power",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "spark",
+                  "label": "Sparking",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "turntable",
+                  "label": "Turntable fault",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "model",
+              "label": "Brand / model, solo or convection",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "refrigerator-repair", "name": "Refrigerator Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "refrigerator-repair",
+          "name": "Refrigerator Repair",
+          "nameMy": "Pembaikan Peti Sejuk",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "symptom", "label": "Symptom", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no_cool", "label": "Not cooling", "priceModifier": 0 },
-              { "id": "leak", "label": "Water leak", "priceModifier": 0 },
-              { "id": "noisy", "label": "Noisy", "priceModifier": 0 },
-              { "id": "freezer", "label": "Freezer-only fault", "priceModifier": 0 } ] },
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "single", "label": "Single-door", "priceModifier": 0 },
-              { "id": "double", "label": "Double-door", "priceModifier": 0 },
-              { "id": "sbs", "label": "Side-by-side", "priceModifier": 20 } ] },
-            { "id": "age", "label": "Brand & age", "type": "INFO", "required": false }
+            {
+              "id": "symptom",
+              "label": "Symptom",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no_cool",
+                  "label": "Not cooling",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "leak",
+                  "label": "Water leak",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "noisy",
+                  "label": "Noisy",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "freezer",
+                  "label": "Freezer-only fault",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "single",
+                  "label": "Single-door",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "double",
+                  "label": "Double-door",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "sbs",
+                  "label": "Side-by-side",
+                  "priceModifier": 20
+                }
+              ]
+            },
+            {
+              "id": "age",
+              "label": "Brand & age",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "washing-machine-repair", "name": "Washing Machine Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "washing-machine-repair",
+          "name": "Washing Machine Repair",
+          "nameMy": "Pembaikan Mesin Basuh",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "top", "label": "Top-load", "priceModifier": 0 },
-              { "id": "front", "label": "Front-load", "priceModifier": 15 },
-              { "id": "semi", "label": "Semi-auto", "priceModifier": 0 } ] },
-            { "id": "symptom", "label": "Symptom", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "spin", "label": "Not spinning", "priceModifier": 0 },
-              { "id": "drain", "label": "Not draining", "priceModifier": 0 },
-              { "id": "leak", "label": "Leaking", "priceModifier": 0 },
-              { "id": "error", "label": "Error code", "priceModifier": 0 },
-              { "id": "noise", "label": "Drum noise", "priceModifier": 0 } ] }
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "top",
+                  "label": "Top-load",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "front",
+                  "label": "Front-load",
+                  "priceModifier": 15
+                },
+                {
+                  "id": "semi",
+                  "label": "Semi-auto",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "symptom",
+              "label": "Symptom",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "spin",
+                  "label": "Not spinning",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "drain",
+                  "label": "Not draining",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "leak",
+                  "label": "Leaking",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "error",
+                  "label": "Error code",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "noise",
+                  "label": "Drum noise",
+                  "priceModifier": 0
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "ro-system-repair", "name": "RO System Repair / Servicing", "pricingType": "BASE_PLUS_ADDONS", "visitFee": 20,
+          "slug": "ro-system-repair",
+          "name": "RO System Repair / Servicing",
+          "nameMy": "Pembaikan / Servis Sistem Penapis RO",
+          "pricingType": "BASE_PLUS_ADDONS",
+          "visitFee": 20,
           "questions": [
-            { "id": "service", "label": "Service", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "general", "label": "General service", "priceModifier": 80 },
-              { "id": "filter", "label": "Filter change", "priceModifier": 120 },
-              { "id": "diag", "label": "Not-working diagnosis (call-out then quote)", "priceModifier": 0 } ] },
-            { "id": "addons", "label": "Add-ons", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "membrane", "label": "Membrane replacement", "priceModifier": 150 },
-              { "id": "uv", "label": "UV lamp", "priceModifier": 90 },
-              { "id": "pump", "label": "Pump", "priceModifier": 120 } ] }
+            {
+              "id": "service",
+              "label": "Service",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "general",
+                  "label": "General service",
+                  "priceModifier": 80
+                },
+                {
+                  "id": "filter",
+                  "label": "Filter change",
+                  "priceModifier": 120
+                },
+                {
+                  "id": "diag",
+                  "label": "Not-working diagnosis (call-out then quote)",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "addons",
+              "label": "Add-ons",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "membrane",
+                  "label": "Membrane replacement",
+                  "priceModifier": 150
+                },
+                {
+                  "id": "uv",
+                  "label": "UV lamp",
+                  "priceModifier": 90
+                },
+                {
+                  "id": "pump",
+                  "label": "Pump",
+                  "priceModifier": 120
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "geyser-repair", "name": "Geyser / Water Heater Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "geyser-repair",
+          "name": "Geyser / Water Heater Repair",
+          "nameMy": "Pembaikan Pemanas Air",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "instant", "label": "Instant", "priceModifier": 0 },
-              { "id": "storage", "label": "Storage tank", "priceModifier": 0 } ] },
-            { "id": "symptom", "label": "Symptom", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no_hot", "label": "No hot water", "priceModifier": 0 },
-              { "id": "trip", "label": "Tripping (ELCB)", "priceModifier": 0 },
-              { "id": "leak", "label": "Leaking", "priceModifier": 0 },
-              { "id": "no_power", "label": "No power", "priceModifier": 0 } ] }
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "instant",
+                  "label": "Instant",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "storage",
+                  "label": "Storage tank",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "symptom",
+              "label": "Symptom",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no_hot",
+                  "label": "No hot water",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "trip",
+                  "label": "Tripping (ELCB)",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "leak",
+                  "label": "Leaking",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "no_power",
+                  "label": "No power",
+                  "priceModifier": 0
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "tv-repair", "name": "TV Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "tv-repair",
+          "name": "TV Repair",
+          "nameMy": "Pembaikan TV",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "size", "label": "Screen size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "s", "label": "32\" and below", "priceModifier": 0 },
-              { "id": "m", "label": "33-50\"", "priceModifier": 0 },
-              { "id": "l", "label": "50\"+", "priceModifier": 0 } ] },
-            { "id": "symptom", "label": "Symptom", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no_display", "label": "No display", "priceModifier": 0 },
-              { "id": "no_power", "label": "No power", "priceModifier": 0 },
-              { "id": "lines", "label": "Lines / spots", "priceModifier": 0 },
-              { "id": "no_sound", "label": "No sound", "priceModifier": 0 },
-              { "id": "smart", "label": "Smart / app fault", "priceModifier": 0 } ] }
+            {
+              "id": "size",
+              "label": "Screen size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "s",
+                  "label": "32\" and below",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "m",
+                  "label": "33-50\"",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "l",
+                  "label": "50\"+",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "symptom",
+              "label": "Symptom",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no_display",
+                  "label": "No display",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "no_power",
+                  "label": "No power",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "lines",
+                  "label": "Lines / spots",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "no_sound",
+                  "label": "No sound",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "smart",
+                  "label": "Smart / app fault",
+                  "priceModifier": 0
+                }
+              ]
+            }
           ]
         }
       ]
@@ -617,80 +2475,350 @@
     {
       "slug": "electrician",
       "name": "Electrician Services",
+      "nameMy": "Perkhidmatan Juruelektrik",
       "services": [
         {
-          "slug": "fan-installation", "name": "Fan Installation", "pricingType": "PER_UNIT", "visitFee": 20,
+          "slug": "fan-installation",
+          "name": "Fan Installation",
+          "nameMy": "Pemasangan Kipas",
+          "pricingType": "PER_UNIT",
+          "visitFee": 20,
           "questions": [
-            { "id": "type", "label": "Fan type", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "ceiling", "label": "Ceiling", "unitPrice": 45 },
-              { "id": "wall", "label": "Wall / Exhaust", "unitPrice": 35 },
-              { "id": "bldc", "label": "BLDC / with remote", "unitPrice": 60 } ] },
-            { "id": "point", "label": "New point needed?", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes (wiring/box, per unit)", "priceModifier": 40 } ] }
+            {
+              "id": "type",
+              "label": "Fan type",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "ceiling",
+                  "label": "Ceiling",
+                  "unitPrice": 45
+                },
+                {
+                  "id": "wall",
+                  "label": "Wall / Exhaust",
+                  "unitPrice": 35
+                },
+                {
+                  "id": "bldc",
+                  "label": "BLDC / with remote",
+                  "unitPrice": 60
+                }
+              ]
+            },
+            {
+              "id": "point",
+              "label": "New point needed?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes (wiring/box, per unit)",
+                  "priceModifier": 40
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "light-installation", "name": "Light Installation", "pricingType": "PER_UNIT", "visitFee": 20,
+          "slug": "light-installation",
+          "name": "Light Installation",
+          "nameMy": "Pemasangan Lampu",
+          "pricingType": "PER_UNIT",
+          "visitFee": 20,
           "questions": [
-            { "id": "type", "label": "Light type", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "ceiling", "label": "Ceiling / pendant", "unitPrice": 30 },
-              { "id": "tube", "label": "Tube / batten", "unitPrice": 22 },
-              { "id": "chandelier", "label": "Chandelier", "unitPrice": 80 },
-              { "id": "downlight", "label": "Downlight set", "unitPrice": 25 } ] },
-            { "id": "point", "label": "New wiring point?", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes (per unit)", "priceModifier": 35 } ] }
+            {
+              "id": "type",
+              "label": "Light type",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "ceiling",
+                  "label": "Ceiling / pendant",
+                  "unitPrice": 30
+                },
+                {
+                  "id": "tube",
+                  "label": "Tube / batten",
+                  "unitPrice": 22
+                },
+                {
+                  "id": "chandelier",
+                  "label": "Chandelier",
+                  "unitPrice": 80
+                },
+                {
+                  "id": "downlight",
+                  "label": "Downlight set",
+                  "unitPrice": 25
+                }
+              ]
+            },
+            {
+              "id": "point",
+              "label": "New wiring point?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes (per unit)",
+                  "priceModifier": 35
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "switch-outlet-replacement", "name": "Switch / Outlet Replacement", "pricingType": "PER_UNIT", "unitPrice": 15, "visitFee": 20, "minQty": 1,
+          "slug": "switch-outlet-replacement",
+          "name": "Switch / Outlet Replacement",
+          "nameMy": "Penggantian Suis / Soket",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 15,
+          "visitFee": 20,
+          "minQty": 1,
           "questions": [
-            { "id": "item", "label": "What needs replacing?", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "switch", "label": "Switch", "priceModifier": 0 },
-              { "id": "outlet", "label": "Power Outlet", "priceModifier": 0 },
-              { "id": "dimmer", "label": "Dimmer Switch", "priceModifier": 8 },
-              { "id": "smart", "label": "Smart Switch", "priceModifier": 25 } ] },
-            { "id": "qty", "label": "How many units?", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 30, "step": 1, "pricePerUnit": 15 } },
-            { "id": "material", "label": "Who provides the part?", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "customer", "label": "I have the switch/outlet", "priceModifier": 0 },
-              { "id": "standard", "label": "Technician brings standard part", "priceModifier": 10 },
-              { "id": "premium", "label": "Technician brings premium part", "priceModifier": 22 } ] }
+            {
+              "id": "item",
+              "label": "What needs replacing?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "switch",
+                  "label": "Switch",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "outlet",
+                  "label": "Power Outlet",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "dimmer",
+                  "label": "Dimmer Switch",
+                  "priceModifier": 8
+                },
+                {
+                  "id": "smart",
+                  "label": "Smart Switch",
+                  "priceModifier": 25
+                }
+              ]
+            },
+            {
+              "id": "qty",
+              "label": "How many units?",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 30,
+                "step": 1,
+                "pricePerUnit": 15
+              }
+            },
+            {
+              "id": "material",
+              "label": "Who provides the part?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "customer",
+                  "label": "I have the switch/outlet",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "standard",
+                  "label": "Technician brings standard part",
+                  "priceModifier": 10
+                },
+                {
+                  "id": "premium",
+                  "label": "Technician brings premium part",
+                  "priceModifier": 22
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "wiring-work", "name": "Wiring Work", "pricingType": "PER_HOUR", "rate": 60, "visitFee": 20,
+          "slug": "wiring-work",
+          "name": "Wiring Work",
+          "nameMy": "Kerja Pendawaian",
+          "pricingType": "PER_HOUR",
+          "rate": 60,
+          "visitFee": 20,
           "questions": [
-            { "id": "scope", "label": "Scope", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "add_point", "label": "Add point", "priceModifier": 0 },
-              { "id": "rewire", "label": "Rewire circuit", "priceModifier": 0 },
-              { "id": "fault", "label": "Fault tracing", "priceModifier": 0 },
-              { "id": "conduit", "label": "Conduit / trunking", "priceModifier": 0 } ] },
-            { "id": "hours", "label": "Estimated hours", "type": "HOURS_INPUT", "required": true, "config": { "min": 1, "max": 12, "step": 0.5, "ratePerHour": 60 } }
+            {
+              "id": "scope",
+              "label": "Scope",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "add_point",
+                  "label": "Add point",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "rewire",
+                  "label": "Rewire circuit",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "fault",
+                  "label": "Fault tracing",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "conduit",
+                  "label": "Conduit / trunking",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "hours",
+              "label": "Estimated hours",
+              "type": "HOURS_INPUT",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 12,
+                "step": 0.5,
+                "ratePerHour": 60
+              }
+            }
           ]
         },
         {
-          "slug": "mcb-db-repair", "name": "MCB / Distribution Board Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "mcb-db-repair",
+          "name": "MCB / Distribution Board Repair",
+          "nameMy": "Pembaikan MCB / Papan Agihan",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "issue", "label": "Issue", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "trip", "label": "Frequent tripping", "priceModifier": 0 },
-              { "id": "add", "label": "Add MCB / RCCB", "priceModifier": 0 },
-              { "id": "upgrade", "label": "Full DB upgrade", "priceModifier": 0 },
-              { "id": "burning", "label": "Burning smell (urgent)", "priceModifier": 0 } ] },
-            { "id": "qty", "label": "No. of breakers to add/replace", "type": "QUANTITY", "required": false, "config": { "min": 0, "max": 20, "step": 1, "pricePerUnit": 45 } }
+            {
+              "id": "issue",
+              "label": "Issue",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "trip",
+                  "label": "Frequent tripping",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "add",
+                  "label": "Add MCB / RCCB",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "upgrade",
+                  "label": "Full DB upgrade",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "burning",
+                  "label": "Burning smell (urgent)",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "qty",
+              "label": "No. of breakers to add/replace",
+              "type": "QUANTITY",
+              "required": false,
+              "config": {
+                "min": 0,
+                "max": 20,
+                "step": 1,
+                "pricePerUnit": 45
+              }
+            }
           ]
         },
         {
-          "slug": "smart-lock-installation", "name": "Smart Lock Installation", "pricingType": "PER_UNIT", "visitFee": 20,
+          "slug": "smart-lock-installation",
+          "name": "Smart Lock Installation",
+          "nameMy": "Pemasangan Kunci Pintar",
+          "pricingType": "PER_UNIT",
+          "visitFee": 20,
           "questions": [
-            { "id": "door", "label": "Door type", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "wood", "label": "Wooden", "unitPrice": 80 },
-              { "id": "metal", "label": "Metal / grille", "unitPrice": 110 },
-              { "id": "glass", "label": "Glass", "unitPrice": 140 } ] },
-            { "id": "removal", "label": "Old lock removal", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes (per door)", "priceModifier": 25 } ] },
-            { "id": "model", "label": "Lock brand/model (customer-supplied)", "type": "INFO", "required": false }
+            {
+              "id": "door",
+              "label": "Door type",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "wood",
+                  "label": "Wooden",
+                  "unitPrice": 80
+                },
+                {
+                  "id": "metal",
+                  "label": "Metal / grille",
+                  "unitPrice": 110
+                },
+                {
+                  "id": "glass",
+                  "label": "Glass",
+                  "unitPrice": 140
+                }
+              ]
+            },
+            {
+              "id": "removal",
+              "label": "Old lock removal",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes (per door)",
+                  "priceModifier": 25
+                }
+              ]
+            },
+            {
+              "id": "model",
+              "label": "Lock brand/model (customer-supplied)",
+              "type": "INFO",
+              "required": false
+            }
           ]
         }
       ]
@@ -698,83 +2826,364 @@
     {
       "slug": "plumbing",
       "name": "Plumbing Services",
+      "nameMy": "Perkhidmatan Paip",
       "services": [
         {
-          "slug": "tap-repair-replacement", "name": "Tap Repair / Replacement", "pricingType": "PER_UNIT", "unitPrice": 35, "visitFee": 20,
+          "slug": "tap-repair-replacement",
+          "name": "Tap Repair / Replacement",
+          "nameMy": "Pembaikan / Penggantian Paip Air",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 35,
+          "visitFee": 20,
           "questions": [
-            { "id": "qty", "label": "No. of taps", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 20, "step": 1, "pricePerUnit": 35 } },
-            { "id": "location", "label": "Location", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "kitchen", "label": "Kitchen", "priceModifier": 0 },
-              { "id": "bathroom", "label": "Bathroom", "priceModifier": 0 },
-              { "id": "outdoor", "label": "Outdoor", "priceModifier": 5 } ] },
-            { "id": "issue", "label": "Issue", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "leak", "label": "Leaking", "priceModifier": 0 },
-              { "id": "flow", "label": "Low flow", "priceModifier": 0 },
-              { "id": "replace", "label": "Full replacement (per tap)", "priceModifier": 10 } ] },
-            { "id": "material", "label": "Who provides the tap?", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "customer", "label": "Customer provides tap", "priceModifier": 0 },
-              { "id": "technician", "label": "Technician supplies (quote on site)", "priceModifier": 0 } ] }
+            {
+              "id": "qty",
+              "label": "No. of taps",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 20,
+                "step": 1,
+                "pricePerUnit": 35
+              }
+            },
+            {
+              "id": "location",
+              "label": "Location",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "kitchen",
+                  "label": "Kitchen",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "bathroom",
+                  "label": "Bathroom",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "outdoor",
+                  "label": "Outdoor",
+                  "priceModifier": 5
+                }
+              ]
+            },
+            {
+              "id": "issue",
+              "label": "Issue",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "leak",
+                  "label": "Leaking",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "flow",
+                  "label": "Low flow",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "replace",
+                  "label": "Full replacement (per tap)",
+                  "priceModifier": 10
+                }
+              ]
+            },
+            {
+              "id": "material",
+              "label": "Who provides the tap?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "customer",
+                  "label": "Customer provides tap",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "technician",
+                  "label": "Technician supplies (quote on site)",
+                  "priceModifier": 0
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "leakage-repair", "name": "Leakage Repair", "pricingType": "DIAGNOSTIC", "basePrice": 20, "visitFee": 20,
+          "slug": "leakage-repair",
+          "name": "Leakage Repair",
+          "nameMy": "Pembaikan Kebocoran",
+          "pricingType": "DIAGNOSTIC",
+          "basePrice": 20,
+          "visitFee": 20,
           "questions": [
-            { "id": "source", "label": "Source", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "joint", "label": "Pipe joint", "priceModifier": 0 },
-              { "id": "wall", "label": "Wall seepage", "priceModifier": 0 },
-              { "id": "ceiling", "label": "Ceiling", "priceModifier": 0 },
-              { "id": "concealed", "label": "Concealed (needs tracing)", "priceModifier": 30 } ] },
-            { "id": "location", "label": "Location", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "kitchen", "label": "Kitchen", "priceModifier": 0 },
-              { "id": "bathroom", "label": "Bathroom", "priceModifier": 0 },
-              { "id": "outdoor", "label": "Outdoor", "priceModifier": 0 } ] }
+            {
+              "id": "source",
+              "label": "Source",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "joint",
+                  "label": "Pipe joint",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "wall",
+                  "label": "Wall seepage",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "ceiling",
+                  "label": "Ceiling",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "concealed",
+                  "label": "Concealed (needs tracing)",
+                  "priceModifier": 30
+                }
+              ]
+            },
+            {
+              "id": "location",
+              "label": "Location",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "kitchen",
+                  "label": "Kitchen",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "bathroom",
+                  "label": "Bathroom",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "outdoor",
+                  "label": "Outdoor",
+                  "priceModifier": 0
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "flush-cistern-repair", "name": "Flush / Cistern Repair", "pricingType": "PER_UNIT", "unitPrice": 45, "visitFee": 20,
+          "slug": "flush-cistern-repair",
+          "name": "Flush / Cistern Repair",
+          "nameMy": "Pembaikan Sistem Pam Tandas",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 45,
+          "visitFee": 20,
           "questions": [
-            { "id": "qty", "label": "No. of toilets", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 10, "step": 1, "pricePerUnit": 45 } },
-            { "id": "problem", "label": "Problem", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "not_flush", "label": "Not flushing", "priceModifier": 0 },
-              { "id": "running", "label": "Continuous running", "priceModifier": 0 },
-              { "id": "leak", "label": "Leaking", "priceModifier": 0 },
-              { "id": "replace", "label": "Full cistern replacement (per unit)", "priceModifier": 40 } ] }
+            {
+              "id": "qty",
+              "label": "No. of toilets",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 10,
+                "step": 1,
+                "pricePerUnit": 45
+              }
+            },
+            {
+              "id": "problem",
+              "label": "Problem",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "not_flush",
+                  "label": "Not flushing",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "running",
+                  "label": "Continuous running",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "leak",
+                  "label": "Leaking",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "replace",
+                  "label": "Full cistern replacement (per unit)",
+                  "priceModifier": 40
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "wash-basin-installation", "name": "Wash Basin Installation", "pricingType": "PER_UNIT", "visitFee": 20,
+          "slug": "wash-basin-installation",
+          "name": "Wash Basin Installation",
+          "nameMy": "Pemasangan Besen Cuci Tangan",
+          "pricingType": "PER_UNIT",
+          "visitFee": 20,
           "questions": [
-            { "id": "type", "label": "Basin type", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "wall", "label": "Wall-hung", "unitPrice": 90 },
-              { "id": "counter", "label": "Countertop", "unitPrice": 110 },
-              { "id": "pedestal", "label": "Pedestal", "unitPrice": 100 } ] },
-            { "id": "removal", "label": "Old basin removal", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes", "priceModifier": 30 } ] }
+            {
+              "id": "type",
+              "label": "Basin type",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "wall",
+                  "label": "Wall-hung",
+                  "unitPrice": 90
+                },
+                {
+                  "id": "counter",
+                  "label": "Countertop",
+                  "unitPrice": 110
+                },
+                {
+                  "id": "pedestal",
+                  "label": "Pedestal",
+                  "unitPrice": 100
+                }
+              ]
+            },
+            {
+              "id": "removal",
+              "label": "Old basin removal",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes",
+                  "priceModifier": 30
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "blocked-drain-cleaning", "name": "Blocked Drain Cleaning", "pricingType": "TIERED", "visitFee": 20,
+          "slug": "blocked-drain-cleaning",
+          "name": "Blocked Drain Cleaning",
+          "nameMy": "Pembersihan Saluran Tersumbat",
+          "pricingType": "TIERED",
+          "visitFee": 20,
           "questions": [
-            { "id": "location", "label": "Location", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "kitchen", "label": "Kitchen sink", "priceModifier": 60 },
-              { "id": "floor", "label": "Bathroom floor trap", "priceModifier": 60 },
-              { "id": "toilet", "label": "Toilet", "priceModifier": 80 },
-              { "id": "main", "label": "Main / outdoor line", "priceModifier": 120 } ] },
-            { "id": "severity", "label": "Severity", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "slow", "label": "Slow drain", "priceModifier": 0 },
-              { "id": "blocked", "label": "Fully blocked", "priceModifier": 20 },
-              { "id": "rodding", "label": "Needs power rodding", "priceModifier": 50 } ] }
+            {
+              "id": "location",
+              "label": "Location",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "kitchen",
+                  "label": "Kitchen sink",
+                  "priceModifier": 60
+                },
+                {
+                  "id": "floor",
+                  "label": "Bathroom floor trap",
+                  "priceModifier": 60
+                },
+                {
+                  "id": "toilet",
+                  "label": "Toilet",
+                  "priceModifier": 80
+                },
+                {
+                  "id": "main",
+                  "label": "Main / outdoor line",
+                  "priceModifier": 120
+                }
+              ]
+            },
+            {
+              "id": "severity",
+              "label": "Severity",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "slow",
+                  "label": "Slow drain",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "blocked",
+                  "label": "Fully blocked",
+                  "priceModifier": 20
+                },
+                {
+                  "id": "rodding",
+                  "label": "Needs power rodding",
+                  "priceModifier": 50
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "pipe-replacement", "name": "Pipe Replacement", "pricingType": "PER_HOUR", "rate": 65, "visitFee": 20,
+          "slug": "pipe-replacement",
+          "name": "Pipe Replacement",
+          "nameMy": "Penggantian Paip",
+          "pricingType": "PER_HOUR",
+          "rate": 65,
+          "visitFee": 20,
           "questions": [
-            { "id": "pipe", "label": "Pipe type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "supply", "label": "Water supply (PVC/PPR)", "priceModifier": 0 },
-              { "id": "drainage", "label": "Drainage", "priceModifier": 0 },
-              { "id": "concealed", "label": "Concealed (wall chasing)", "priceModifier": 50 } ] },
-            { "id": "hours", "label": "Estimated hours", "type": "HOURS_INPUT", "required": true, "config": { "min": 1, "max": 12, "step": 0.5, "ratePerHour": 65 } }
+            {
+              "id": "pipe",
+              "label": "Pipe type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "supply",
+                  "label": "Water supply (PVC/PPR)",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "drainage",
+                  "label": "Drainage",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "concealed",
+                  "label": "Concealed (wall chasing)",
+                  "priceModifier": 50
+                }
+              ]
+            },
+            {
+              "id": "hours",
+              "label": "Estimated hours",
+              "type": "HOURS_INPUT",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 12,
+                "step": 0.5,
+                "ratePerHour": 65
+              }
+            }
           ]
         }
       ]
@@ -782,50 +3191,189 @@
     {
       "slug": "carpenter",
       "name": "Carpenter Services",
+      "nameMy": "Perkhidmatan Tukang Kayu",
       "services": [
         {
-          "slug": "furniture-assembly", "name": "Furniture Assembly", "pricingType": "TIER_QUANTITY", "visitFee": 20,
+          "slug": "furniture-assembly",
+          "name": "Furniture Assembly",
+          "nameMy": "Pemasangan Perabot",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 20,
           "questions": [
-            { "id": "items", "label": "Items by size", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "small", "label": "Small (chair/rack)", "unitPrice": 25 },
-              { "id": "medium", "label": "Medium (table/TV unit)", "unitPrice": 45 },
-              { "id": "large", "label": "Large (wardrobe/bed)", "unitPrice": 90 } ] },
-            { "id": "link", "label": "Brand / item link", "type": "INFO", "required": false }
+            {
+              "id": "items",
+              "label": "Items by size",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "small",
+                  "label": "Small (chair/rack)",
+                  "unitPrice": 25
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium (table/TV unit)",
+                  "unitPrice": 45
+                },
+                {
+                  "id": "large",
+                  "label": "Large (wardrobe/bed)",
+                  "unitPrice": 90
+                }
+              ]
+            },
+            {
+              "id": "link",
+              "label": "Brand / item link",
+              "type": "INFO",
+              "required": false
+            }
           ]
         },
         {
-          "slug": "ikea-furniture-assembly", "name": "IKEA Furniture Assembly", "pricingType": "TIER_QUANTITY", "visitFee": 20,
+          "slug": "ikea-furniture-assembly",
+          "name": "IKEA Furniture Assembly",
+          "nameMy": "Pemasangan Perabot IKEA",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 20,
           "questions": [
-            { "id": "items", "label": "IKEA items", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "pax", "label": "PAX wardrobe", "unitPrice": 120 },
-              { "id": "billy", "label": "BILLY / shelf", "unitPrice": 40 },
-              { "id": "bed", "label": "Bed frame", "unitPrice": 80 },
-              { "id": "desk", "label": "Desk / table", "unitPrice": 45 },
-              { "id": "drawer", "label": "Drawer unit", "unitPrice": 50 } ] },
-            { "id": "anchor", "label": "Wall anchoring required", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "yes", "label": "Yes (per item)", "priceModifier": 20 } ] }
+            {
+              "id": "items",
+              "label": "IKEA items",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "pax",
+                  "label": "PAX wardrobe",
+                  "unitPrice": 120
+                },
+                {
+                  "id": "billy",
+                  "label": "BILLY / shelf",
+                  "unitPrice": 40
+                },
+                {
+                  "id": "bed",
+                  "label": "Bed frame",
+                  "unitPrice": 80
+                },
+                {
+                  "id": "desk",
+                  "label": "Desk / table",
+                  "unitPrice": 45
+                },
+                {
+                  "id": "drawer",
+                  "label": "Drawer unit",
+                  "unitPrice": 50
+                }
+              ]
+            },
+            {
+              "id": "anchor",
+              "label": "Wall anchoring required",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes (per item)",
+                  "priceModifier": 20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "door-repair", "name": "Door Repair", "pricingType": "TIER_QUANTITY", "visitFee": 20,
+          "slug": "door-repair",
+          "name": "Door Repair",
+          "nameMy": "Pembaikan Pintu",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 20,
           "questions": [
-            { "id": "issue", "label": "Issue", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "hinge", "label": "Hinge / alignment", "unitPrice": 40 },
-              { "id": "sag", "label": "Sagging / planing", "unitPrice": 60 },
-              { "id": "handle", "label": "Handle / lock", "unitPrice": 45 } ] }
+            {
+              "id": "issue",
+              "label": "Issue",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "hinge",
+                  "label": "Hinge / alignment",
+                  "unitPrice": 40
+                },
+                {
+                  "id": "sag",
+                  "label": "Sagging / planing",
+                  "unitPrice": 60
+                },
+                {
+                  "id": "handle",
+                  "label": "Handle / lock",
+                  "unitPrice": 45
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "lock-replacement", "name": "Lock Replacement", "pricingType": "TIER_QUANTITY", "visitFee": 20,
+          "slug": "lock-replacement",
+          "name": "Lock Replacement",
+          "nameMy": "Penggantian Kunci",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 20,
           "questions": [
-            { "id": "type", "label": "Lock type", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "knob", "label": "Knob / cylinder", "unitPrice": 35 },
-              { "id": "mortise", "label": "Mortise", "unitPrice": 55 },
-              { "id": "deadbolt", "label": "Deadbolt", "unitPrice": 50 } ] },
-            { "id": "material", "label": "Who provides the lock?", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "customer", "label": "Customer provides lock", "priceModifier": 0 },
-              { "id": "technician", "label": "Technician supplies (quote)", "priceModifier": 0 } ] }
+            {
+              "id": "type",
+              "label": "Lock type",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "knob",
+                  "label": "Knob / cylinder",
+                  "unitPrice": 35
+                },
+                {
+                  "id": "mortise",
+                  "label": "Mortise",
+                  "unitPrice": 55
+                },
+                {
+                  "id": "deadbolt",
+                  "label": "Deadbolt",
+                  "unitPrice": 50
+                }
+              ]
+            },
+            {
+              "id": "material",
+              "label": "Who provides the lock?",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "customer",
+                  "label": "Customer provides lock",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "technician",
+                  "label": "Technician supplies (quote)",
+                  "priceModifier": 0
+                }
+              ]
+            }
           ]
         }
       ]
@@ -833,75 +3381,393 @@
     {
       "slug": "painting-renovation",
       "name": "Painting & Home Renovation",
+      "nameMy": "Mengecat & Pengubahsuaian Rumah",
       "services": [
         {
-          "slug": "interior-painting", "name": "Interior Painting", "pricingType": "PER_SQFT", "rate": 2.5, "visitFee": 0,
+          "slug": "interior-painting",
+          "name": "Interior Painting",
+          "nameMy": "Mengecat Dalaman",
+          "pricingType": "PER_SQFT",
+          "rate": 2.5,
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Wall area (sqft)", "type": "AREA_INPUT", "required": true, "config": { "min": 50, "max": 10000, "step": 10, "unit": "sqft", "ratePerSqft": 2.5 } },
-            { "id": "coats", "label": "Coats", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "1", "label": "1 coat", "priceModifierPerSqft": -0.3 },
-              { "id": "2", "label": "2 coats", "priceModifierPerSqft": 0 },
-              { "id": "3", "label": "3 coats", "priceModifierPerSqft": 0.5 } ] },
-            { "id": "grade", "label": "Paint grade", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "std", "label": "Standard emulsion", "priceModifierPerSqft": 0 },
-              { "id": "premium", "label": "Premium / washable", "priceModifierPerSqft": 0.8 } ] },
-            { "id": "prep", "label": "Surface prep", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "minor", "label": "Minor", "priceModifierPerSqft": 0 },
-              { "id": "putty", "label": "Putty + sanding", "priceModifierPerSqft": 0.6 } ] },
-            { "id": "material", "label": "Material", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "included", "label": "Included", "priceModifierPerSqft": 0 },
-              { "id": "customer", "label": "Customer supplies paint", "priceModifierPerSqft": -1.2 } ] }
+            {
+              "id": "area",
+              "label": "Wall area (sqft)",
+              "type": "AREA_INPUT",
+              "required": true,
+              "config": {
+                "min": 50,
+                "max": 10000,
+                "step": 10,
+                "unit": "sqft",
+                "ratePerSqft": 2.5
+              }
+            },
+            {
+              "id": "coats",
+              "label": "Coats",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "1",
+                  "label": "1 coat",
+                  "priceModifierPerSqft": -0.3
+                },
+                {
+                  "id": "2",
+                  "label": "2 coats",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "3",
+                  "label": "3 coats",
+                  "priceModifierPerSqft": 0.5
+                }
+              ]
+            },
+            {
+              "id": "grade",
+              "label": "Paint grade",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "std",
+                  "label": "Standard emulsion",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "premium",
+                  "label": "Premium / washable",
+                  "priceModifierPerSqft": 0.8
+                }
+              ]
+            },
+            {
+              "id": "prep",
+              "label": "Surface prep",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "minor",
+                  "label": "Minor",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "putty",
+                  "label": "Putty + sanding",
+                  "priceModifierPerSqft": 0.6
+                }
+              ]
+            },
+            {
+              "id": "material",
+              "label": "Material",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "included",
+                  "label": "Included",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "customer",
+                  "label": "Customer supplies paint",
+                  "priceModifierPerSqft": -1.2
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "exterior-painting", "name": "Exterior Painting", "pricingType": "PER_SQFT", "rate": 3.2, "visitFee": 0,
+          "slug": "exterior-painting",
+          "name": "Exterior Painting",
+          "nameMy": "Mengecat Luaran",
+          "pricingType": "PER_SQFT",
+          "rate": 3.2,
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Area (sqft)", "type": "AREA_INPUT", "required": true, "config": { "min": 50, "max": 20000, "step": 10, "unit": "sqft", "ratePerSqft": 3.2 } },
-            { "id": "height", "label": "Scaffolding / height", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "ground", "label": "Ground / single", "priceModifierPerSqft": 0 },
-              { "id": "double", "label": "Double-storey", "priceModifierPerSqft": 0.7 } ] },
-            { "id": "weathershield", "label": "Weather-shield coat", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "no", "label": "No", "priceModifierPerSqft": 0 },
-              { "id": "yes", "label": "Yes", "priceModifierPerSqft": 0.9 } ] }
+            {
+              "id": "area",
+              "label": "Area (sqft)",
+              "type": "AREA_INPUT",
+              "required": true,
+              "config": {
+                "min": 50,
+                "max": 20000,
+                "step": 10,
+                "unit": "sqft",
+                "ratePerSqft": 3.2
+              }
+            },
+            {
+              "id": "height",
+              "label": "Scaffolding / height",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "ground",
+                  "label": "Ground / single",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "double",
+                  "label": "Double-storey",
+                  "priceModifierPerSqft": 0.7
+                }
+              ]
+            },
+            {
+              "id": "weathershield",
+              "label": "Weather-shield coat",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes",
+                  "priceModifierPerSqft": 0.9
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "terrace-waterproofing", "name": "Terrace Waterproofing", "pricingType": "PER_SQFT", "rate": 6, "visitFee": 0,
+          "slug": "terrace-waterproofing",
+          "name": "Terrace Waterproofing",
+          "nameMy": "Kalis Air Teres",
+          "pricingType": "PER_SQFT",
+          "rate": 6,
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Area (sqft)", "type": "AREA_INPUT", "required": true, "config": { "min": 20, "max": 10000, "step": 10, "unit": "sqft", "ratePerSqft": 6 } },
-            { "id": "system", "label": "System", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "acrylic", "label": "Acrylic membrane", "priceModifierPerSqft": 0 },
-              { "id": "pu", "label": "PU coating", "priceModifierPerSqft": 2 },
-              { "id": "cement", "label": "Cementitious + warranty", "priceModifierPerSqft": 3 } ] },
-            { "id": "crack", "label": "Crack repair", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "no", "label": "No", "priceModifierPerSqft": 0 },
-              { "id": "yes", "label": "Yes", "priceModifierPerSqft": 1 } ] }
+            {
+              "id": "area",
+              "label": "Area (sqft)",
+              "type": "AREA_INPUT",
+              "required": true,
+              "config": {
+                "min": 20,
+                "max": 10000,
+                "step": 10,
+                "unit": "sqft",
+                "ratePerSqft": 6
+              }
+            },
+            {
+              "id": "system",
+              "label": "System",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "acrylic",
+                  "label": "Acrylic membrane",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "pu",
+                  "label": "PU coating",
+                  "priceModifierPerSqft": 2
+                },
+                {
+                  "id": "cement",
+                  "label": "Cementitious + warranty",
+                  "priceModifierPerSqft": 3
+                }
+              ]
+            },
+            {
+              "id": "crack",
+              "label": "Crack repair",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes",
+                  "priceModifierPerSqft": 1
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "wall-panels-installation", "name": "Wall Panels Installation", "pricingType": "PER_SQFT", "rate": 18, "visitFee": 0,
+          "slug": "wall-panels-installation",
+          "name": "Wall Panels Installation",
+          "nameMy": "Pemasangan Panel Dinding",
+          "pricingType": "PER_SQFT",
+          "rate": 18,
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Area (sqft)", "type": "AREA_INPUT", "required": true, "config": { "min": 10, "max": 5000, "step": 5, "unit": "sqft", "ratePerSqft": 18 } },
-            { "id": "panel", "label": "Panel type", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "pvc", "label": "PVC / WPC", "priceModifierPerSqft": 0 },
-              { "id": "fluted", "label": "Fluted / MDF", "priceModifierPerSqft": 6 },
-              { "id": "acoustic", "label": "Acoustic", "priceModifierPerSqft": 10 } ] },
-            { "id": "material", "label": "Material", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "included", "label": "Included", "priceModifierPerSqft": 0 },
-              { "id": "customer", "label": "Customer supplies (install only)", "priceModifierPerSqft": -12 } ] }
+            {
+              "id": "area",
+              "label": "Area (sqft)",
+              "type": "AREA_INPUT",
+              "required": true,
+              "config": {
+                "min": 10,
+                "max": 5000,
+                "step": 5,
+                "unit": "sqft",
+                "ratePerSqft": 18
+              }
+            },
+            {
+              "id": "panel",
+              "label": "Panel type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "pvc",
+                  "label": "PVC / WPC",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "fluted",
+                  "label": "Fluted / MDF",
+                  "priceModifierPerSqft": 6
+                },
+                {
+                  "id": "acoustic",
+                  "label": "Acoustic",
+                  "priceModifierPerSqft": 10
+                }
+              ]
+            },
+            {
+              "id": "material",
+              "label": "Material",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "included",
+                  "label": "Included",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "customer",
+                  "label": "Customer supplies (install only)",
+                  "priceModifierPerSqft": -12
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "wallpaper-installation", "name": "Wallpaper Installation", "pricingType": "PER_SQFT", "rate": 4.5, "visitFee": 0,
+          "slug": "wallpaper-installation",
+          "name": "Wallpaper Installation",
+          "nameMy": "Pemasangan Kertas Dinding",
+          "pricingType": "PER_SQFT",
+          "rate": 4.5,
+          "visitFee": 0,
           "questions": [
-            { "id": "area", "label": "Area (sqft)", "type": "AREA_INPUT", "required": true, "config": { "min": 10, "max": 5000, "step": 5, "unit": "sqft", "ratePerSqft": 4.5 } },
-            { "id": "supply", "label": "Wallpaper", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "customer", "label": "Customer supplies", "priceModifierPerSqft": 0 },
-              { "id": "std", "label": "Supply standard", "priceModifierPerSqft": 8 },
-              { "id": "premium", "label": "Supply premium", "priceModifierPerSqft": 15 } ] },
-            { "id": "removal", "label": "Old wallpaper removal", "type": "SINGLE_SELECT", "required": true, "config": { "perSqft": true }, "options": [
-              { "id": "no", "label": "No", "priceModifierPerSqft": 0 },
-              { "id": "yes", "label": "Yes", "priceModifierPerSqft": 2 } ] }
+            {
+              "id": "area",
+              "label": "Area (sqft)",
+              "type": "AREA_INPUT",
+              "required": true,
+              "config": {
+                "min": 10,
+                "max": 5000,
+                "step": 5,
+                "unit": "sqft",
+                "ratePerSqft": 4.5
+              }
+            },
+            {
+              "id": "supply",
+              "label": "Wallpaper",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "customer",
+                  "label": "Customer supplies",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "std",
+                  "label": "Supply standard",
+                  "priceModifierPerSqft": 8
+                },
+                {
+                  "id": "premium",
+                  "label": "Supply premium",
+                  "priceModifierPerSqft": 15
+                }
+              ]
+            },
+            {
+              "id": "removal",
+              "label": "Old wallpaper removal",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perSqft": true
+              },
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifierPerSqft": 0
+                },
+                {
+                  "id": "yes",
+                  "label": "Yes",
+                  "priceModifierPerSqft": 2
+                }
+              ]
+            }
           ]
         }
       ]
@@ -909,67 +3775,313 @@
     {
       "slug": "handyman-installation",
       "name": "Home Installation & Handyman Services",
+      "nameMy": "Pemasangan Rumah & Tukang Serba Boleh",
       "services": [
         {
-          "slug": "tv-mounting", "name": "TV Mounting", "pricingType": "TIERED", "visitFee": 20,
+          "slug": "tv-mounting",
+          "name": "TV Mounting",
+          "nameMy": "Pemasangan Dinding TV",
+          "pricingType": "TIERED",
+          "visitFee": 20,
           "questions": [
-            { "id": "size", "label": "TV size", "type": "TIER_SELECT", "required": true, "options": [
-              { "id": "s", "label": "32\" and below", "priceModifier": 60 },
-              { "id": "m", "label": "33-55\"", "priceModifier": 80 },
-              { "id": "l", "label": "56-75\"", "priceModifier": 110 },
-              { "id": "xl", "label": "75\"+", "priceModifier": 150 } ] },
-            { "id": "bracket", "label": "Bracket", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "customer", "label": "Customer has it", "priceModifier": 0 },
-              { "id": "fixed", "label": "Fixed bracket", "priceModifier": 40 },
-              { "id": "tilt", "label": "Tilt", "priceModifier": 55 },
-              { "id": "motion", "label": "Full-motion", "priceModifier": 90 } ] },
-            { "id": "wall", "label": "Wall type", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "brick", "label": "Brick / concrete", "priceModifier": 0 },
-              { "id": "drywall", "label": "Plaster / drywall", "priceModifier": 20 },
-              { "id": "tile", "label": "Tile", "priceModifier": 25 } ] },
-            { "id": "cable", "label": "Cable concealment", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "no", "label": "No", "priceModifier": 0 },
-              { "id": "trunking", "label": "Trunking", "priceModifier": 40 },
-              { "id": "inwall", "label": "In-wall conceal", "priceModifier": 90 } ] }
+            {
+              "id": "size",
+              "label": "TV size",
+              "type": "TIER_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "s",
+                  "label": "32\" and below",
+                  "priceModifier": 60
+                },
+                {
+                  "id": "m",
+                  "label": "33-55\"",
+                  "priceModifier": 80
+                },
+                {
+                  "id": "l",
+                  "label": "56-75\"",
+                  "priceModifier": 110
+                },
+                {
+                  "id": "xl",
+                  "label": "75\"+",
+                  "priceModifier": 150
+                }
+              ]
+            },
+            {
+              "id": "bracket",
+              "label": "Bracket",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "customer",
+                  "label": "Customer has it",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "fixed",
+                  "label": "Fixed bracket",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "tilt",
+                  "label": "Tilt",
+                  "priceModifier": 55
+                },
+                {
+                  "id": "motion",
+                  "label": "Full-motion",
+                  "priceModifier": 90
+                }
+              ]
+            },
+            {
+              "id": "wall",
+              "label": "Wall type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "brick",
+                  "label": "Brick / concrete",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "drywall",
+                  "label": "Plaster / drywall",
+                  "priceModifier": 20
+                },
+                {
+                  "id": "tile",
+                  "label": "Tile",
+                  "priceModifier": 25
+                }
+              ]
+            },
+            {
+              "id": "cable",
+              "label": "Cable concealment",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "no",
+                  "label": "No",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "trunking",
+                  "label": "Trunking",
+                  "priceModifier": 40
+                },
+                {
+                  "id": "inwall",
+                  "label": "In-wall conceal",
+                  "priceModifier": 90
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "curtain-rod-installation", "name": "Curtain Rod Installation", "pricingType": "PER_UNIT", "unitPrice": 30, "visitFee": 20,
+          "slug": "curtain-rod-installation",
+          "name": "Curtain Rod Installation",
+          "nameMy": "Pemasangan Rod Langsir",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 30,
+          "visitFee": 20,
           "questions": [
-            { "id": "qty", "label": "No. of rods/tracks", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 20, "step": 1, "pricePerUnit": 30 } },
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "single", "label": "Single rod", "priceModifier": 0 },
-              { "id": "double", "label": "Double rod (per unit)", "priceModifier": 10 },
-              { "id": "track", "label": "Ceiling track (per unit)", "priceModifier": 15 } ] },
-            { "id": "wall", "label": "Wall", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "concrete", "label": "Concrete", "priceModifier": 0 },
-              { "id": "tile", "label": "Tile / glass (per unit)", "priceModifier": 8 } ] }
+            {
+              "id": "qty",
+              "label": "No. of rods/tracks",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 20,
+                "step": 1,
+                "pricePerUnit": 30
+              }
+            },
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "single",
+                  "label": "Single rod",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "double",
+                  "label": "Double rod (per unit)",
+                  "priceModifier": 10
+                },
+                {
+                  "id": "track",
+                  "label": "Ceiling track (per unit)",
+                  "priceModifier": 15
+                }
+              ]
+            },
+            {
+              "id": "wall",
+              "label": "Wall",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "concrete",
+                  "label": "Concrete",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "tile",
+                  "label": "Tile / glass (per unit)",
+                  "priceModifier": 8
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "mirror-installation", "name": "Mirror Installation", "pricingType": "TIER_QUANTITY", "visitFee": 20,
+          "slug": "mirror-installation",
+          "name": "Mirror Installation",
+          "nameMy": "Pemasangan Cermin",
+          "pricingType": "TIER_QUANTITY",
+          "visitFee": 20,
           "questions": [
-            { "id": "size", "label": "Mirror size", "type": "TIER_QUANTITY", "required": true, "options": [
-              { "id": "small", "label": "Small (3ft and under)", "unitPrice": 35 },
-              { "id": "medium", "label": "Medium (3-5ft)", "unitPrice": 55 },
-              { "id": "large", "label": "Large (5ft+)", "unitPrice": 85 } ] },
-            { "id": "mount", "label": "Mount", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "adhesive", "label": "Adhesive", "priceModifier": 0 },
-              { "id": "clips", "label": "Clips / screws", "priceModifier": 10 },
-              { "id": "frameless", "label": "Frameless drill", "priceModifier": 20 } ] }
+            {
+              "id": "size",
+              "label": "Mirror size",
+              "type": "TIER_QUANTITY",
+              "required": true,
+              "options": [
+                {
+                  "id": "small",
+                  "label": "Small (3ft and under)",
+                  "unitPrice": 35
+                },
+                {
+                  "id": "medium",
+                  "label": "Medium (3-5ft)",
+                  "unitPrice": 55
+                },
+                {
+                  "id": "large",
+                  "label": "Large (5ft+)",
+                  "unitPrice": 85
+                }
+              ]
+            },
+            {
+              "id": "mount",
+              "label": "Mount",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "adhesive",
+                  "label": "Adhesive",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "clips",
+                  "label": "Clips / screws",
+                  "priceModifier": 10
+                },
+                {
+                  "id": "frameless",
+                  "label": "Frameless drill",
+                  "priceModifier": 20
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "shelf-installation", "name": "Shelf Installation", "pricingType": "PER_UNIT", "unitPrice": 30, "visitFee": 20,
+          "slug": "shelf-installation",
+          "name": "Shelf Installation",
+          "nameMy": "Pemasangan Rak",
+          "pricingType": "PER_UNIT",
+          "unitPrice": 30,
+          "visitFee": 20,
           "questions": [
-            { "id": "qty", "label": "No. of shelves", "type": "QUANTITY", "required": true, "config": { "min": 1, "max": 20, "step": 1, "pricePerUnit": 30 } },
-            { "id": "type", "label": "Type", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "floating", "label": "Floating", "priceModifier": 0 },
-              { "id": "bracket", "label": "Bracket", "priceModifier": 0 },
-              { "id": "heavy", "label": "Heavy-duty / long (per unit)", "priceModifier": 15 } ] },
-            { "id": "wall", "label": "Wall", "type": "SINGLE_SELECT", "required": true, "config": { "perUnit": true }, "options": [
-              { "id": "concrete", "label": "Concrete", "priceModifier": 0 },
-              { "id": "drywall", "label": "Drywall (per unit)", "priceModifier": 8 } ] }
+            {
+              "id": "qty",
+              "label": "No. of shelves",
+              "type": "QUANTITY",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 20,
+                "step": 1,
+                "pricePerUnit": 30
+              }
+            },
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "floating",
+                  "label": "Floating",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "bracket",
+                  "label": "Bracket",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "heavy",
+                  "label": "Heavy-duty / long (per unit)",
+                  "priceModifier": 15
+                }
+              ]
+            },
+            {
+              "id": "wall",
+              "label": "Wall",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "config": {
+                "perUnit": true
+              },
+              "options": [
+                {
+                  "id": "concrete",
+                  "label": "Concrete",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "drywall",
+                  "label": "Drywall (per unit)",
+                  "priceModifier": 8
+                }
+              ]
+            }
           ]
         }
       ]
@@ -977,39 +4089,170 @@
     {
       "slug": "instant-help",
       "name": "Instant Help",
+      "nameMy": "Bantuan Segera",
       "services": [
         {
-          "slug": "instant-hourly-handyman", "name": "Instant Hourly Handyman", "pricingType": "PER_HOUR", "rate": 55, "visitFee": 0,
+          "slug": "instant-hourly-handyman",
+          "name": "Instant Hourly Handyman",
+          "nameMy": "Tukang Serba Boleh Ikut Jam",
+          "pricingType": "PER_HOUR",
+          "rate": 55,
+          "visitFee": 0,
           "questions": [
-            { "id": "hours", "label": "Hours needed", "type": "HOURS_INPUT", "required": true, "config": { "min": 1, "max": 8, "step": 0.5, "ratePerHour": 55 } },
-            { "id": "tasks", "label": "Task type", "type": "MULTI_SELECT", "required": false, "options": [
-              { "id": "mounting", "label": "Mounting", "priceModifier": 0 },
-              { "id": "repair", "label": "Minor repair", "priceModifier": 0 },
-              { "id": "assembly", "label": "Assembly", "priceModifier": 0 },
-              { "id": "odd", "label": "Odd jobs", "priceModifier": 0 },
-              { "id": "moving", "label": "Moving help", "priceModifier": 0 } ] },
-            { "id": "materials", "label": "Materials", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "none", "label": "None / customer provides", "priceModifier": 0 },
-              { "id": "consumables", "label": "Small consumables", "priceModifier": 15 } ] },
-            { "id": "when", "label": "When", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "scheduled", "label": "Scheduled", "priceModifier": 0 },
-              { "id": "urgent", "label": "Within 2 hrs (urgent)", "priceModifier": 30 } ] }
+            {
+              "id": "hours",
+              "label": "Hours needed",
+              "type": "HOURS_INPUT",
+              "required": true,
+              "config": {
+                "min": 1,
+                "max": 8,
+                "step": 0.5,
+                "ratePerHour": 55
+              }
+            },
+            {
+              "id": "tasks",
+              "label": "Task type",
+              "type": "MULTI_SELECT",
+              "required": false,
+              "options": [
+                {
+                  "id": "mounting",
+                  "label": "Mounting",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "repair",
+                  "label": "Minor repair",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "assembly",
+                  "label": "Assembly",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "odd",
+                  "label": "Odd jobs",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "moving",
+                  "label": "Moving help",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "materials",
+              "label": "Materials",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "none",
+                  "label": "None / customer provides",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "consumables",
+                  "label": "Small consumables",
+                  "priceModifier": 15
+                }
+              ]
+            },
+            {
+              "id": "when",
+              "label": "When",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "scheduled",
+                  "label": "Scheduled",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "urgent",
+                  "label": "Within 2 hrs (urgent)",
+                  "priceModifier": 30
+                }
+              ]
+            }
           ]
         },
         {
-          "slug": "emergency-callout", "name": "Emergency Diagnostic / Call-Out", "pricingType": "FIXED", "basePrice": 50, "visitFee": 0, "calloutNonWaivable": true,
+          "slug": "emergency-callout",
+          "name": "Emergency Diagnostic / Call-Out",
+          "nameMy": "Diagnostik Kecemasan / Panggilan Keluar",
+          "pricingType": "FIXED",
+          "basePrice": 50,
+          "visitFee": 0,
+          "calloutNonWaivable": true,
           "questions": [
-            { "id": "trade", "label": "Trade", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "electrical", "label": "Electrical", "priceModifier": 0 },
-              { "id": "plumbing", "label": "Plumbing", "priceModifier": 0 },
-              { "id": "ac", "label": "AC", "priceModifier": 0 },
-              { "id": "appliance", "label": "Appliance", "priceModifier": 0 },
-              { "id": "locksmith", "label": "Locksmith", "priceModifier": 0 } ] },
-            { "id": "severity", "label": "Severity", "type": "SINGLE_SELECT", "required": true, "options": [
-              { "id": "urgent", "label": "Urgent (today)", "priceModifier": 0 },
-              { "id": "afterhours", "label": "After-hours / night", "priceModifier": 30 },
-              { "id": "holiday", "label": "Public holiday", "priceModifier": 40 } ] },
-            { "id": "describe", "label": "Describe emergency", "type": "INFO", "required": false }
+            {
+              "id": "trade",
+              "label": "Trade",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "electrical",
+                  "label": "Electrical",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "plumbing",
+                  "label": "Plumbing",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "ac",
+                  "label": "AC",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "appliance",
+                  "label": "Appliance",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "locksmith",
+                  "label": "Locksmith",
+                  "priceModifier": 0
+                }
+              ]
+            },
+            {
+              "id": "severity",
+              "label": "Severity",
+              "type": "SINGLE_SELECT",
+              "required": true,
+              "options": [
+                {
+                  "id": "urgent",
+                  "label": "Urgent (today)",
+                  "priceModifier": 0
+                },
+                {
+                  "id": "afterhours",
+                  "label": "After-hours / night",
+                  "priceModifier": 30
+                },
+                {
+                  "id": "holiday",
+                  "label": "Public holiday",
+                  "priceModifier": 40
+                }
+              ]
+            },
+            {
+              "id": "describe",
+              "label": "Describe emergency",
+              "type": "INFO",
+              "required": false
+            }
           ]
         }
       ]

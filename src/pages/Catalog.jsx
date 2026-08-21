@@ -24,7 +24,7 @@ const INSTANT_SERVICES = ['Instant Hourly Handyman', 'Emergency Diagnostic / Cal
  */
 export default function Catalog() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, tField } = useTranslation();
   const { data: categories, isLoading } = useQuery({
     queryKey: ['catalog-categories'],
     queryFn: () => servisaku.catalog.getCategories(),
@@ -63,7 +63,7 @@ export default function Catalog() {
           {bookable.map((c) => (
             <CategoryTile
               key={c.id}
-              label={c.name}
+              label={tField(c, 'name')}
               image={avatarFor(c.slug)}
               icon={CATEGORY_ICON[c.slug]}
               count={c.service_count ?? undefined}

@@ -65,7 +65,7 @@ const RING = 'shadow-[inset_0_0_0_1px_rgb(var(--hairline))]';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, tField } = useTranslation();
   const [q, setQ] = useState('');
 
   const { data: categories } = useQuery({
@@ -170,7 +170,7 @@ export default function Home() {
                       {s.category_name || t('Service')}
                     </span>
                     <span className="mt-0.5 block truncate font-display font-semibold text-ink">
-                      {s.name}
+                      {tField(s, 'name')}
                     </span>
                     <span className="mt-1 flex items-center gap-2 text-caption text-ink-secondary">
                       <span className="sa-num inline-flex items-center gap-1 text-ink">
@@ -222,7 +222,7 @@ export default function Home() {
                     <Icon className="size-[22px]" />
                   </span>
                 )}
-                <span className="text-caption font-semibold leading-snug text-ink">{c.name}</span>
+                <span className="text-caption font-semibold leading-snug text-ink">{tField(c, 'name')}</span>
                 <span className="sa-num text-xs text-ink-tertiary">
                   {c.service_count ?? 0} services
                 </span>
