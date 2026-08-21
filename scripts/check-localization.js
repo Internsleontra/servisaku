@@ -152,11 +152,6 @@ async function main() {
     failures += badMy.length;
   }
 
-  // Surfaces that have no Malay column at all — reported, not failed, because
-  // fixing them is a schema change rather than a data fix.
-  console.log('\n  Surfaces with no Malay column (schema-level gaps):');
-  const n = await prisma.notification.count();
-  console.log(`    Notification title/body: ${n} rows, no titleMy/bodyMy`);
 
   console.log(`\n  RESULT: ${failures === 0 ? 'PASS — no fake or missing translations' : `FAIL — ${failures} record(s)`}`);
   await prisma.$disconnect();

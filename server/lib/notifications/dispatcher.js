@@ -99,6 +99,11 @@ export async function notify(params) {
     };
 
     const rendered = renderEvent(params.event, { ...data, role: recipient.role });
+    // Both languages are produced from the same catalog entry and the same
+    // render data, so they can never describe different facts. Malay is stored
+    // now because the data needed to interpolate it exists only at this moment
+    // — see the migration note on why read-time re-rendering is unsafe.
+    const renderedMs = renderEvent(params.event, { ...data, role: recipient.role }, 'ms');
     const pref = await getOrCreatePreference(recipient.id);
     const requested = params.channels || rendered.channels;
     const channels = resolveChannels(pref, requested, {
@@ -116,6 +121,8 @@ export async function notify(params) {
         role: recipient.role,
         title: rendered.title,
         body: rendered.message,
+        titleMy: renderedMs.title,
+        bodyMy: renderedMs.message,
         type: legacyType(rendered.category),
         category: rendered.category,
         priority: rendered.priority,
@@ -347,14 +354,32 @@ function inferEvent(row) {
 }
 
 // Canonical snake_case output shared by dispatcher + routes.
-export function mapOut(n) {
+/**
+ * Canonical snake_case output.
+ *
+ * `locale` selects which stored rendering `title`/`body` carry. English is the
+ * default, so a client that passes nothing sees exactly what it saw before this
+ * existed. Rows created before the Malay columns have titleMy = NULL and fall
+ * back to English rather than rendering blank — they cannot be reconstructed
+ * (see the migration note), and a half-filled sentence would be worse than the
+ * original English.
+ *
+ * `title_en` / `title_my` are exposed alongside so a client can hold both
+ * without a second request.
+ */
+export function mapOut(n, { locale = 'en' } = {}) {
+  const useMs = locale === 'ms' && n.titleMy;
   return {
     id: n.id,
     user_id: n.userId,
     role: n.role,
-    title: n.title,
-    body: n.body,
-    message: n.body, // legacy alias
+    title: useMs ? n.titleMy : n.title,
+    body: useMs ? (n.bodyMy ?? n.body) : n.body,
+    title_en: n.title,
+    body_en: n.body,
+    title_my: n.titleMy ?? null,
+    body_my: n.bodyMy ?? null,
+    message: useMs ? (n.bodyMy ?? n.body) : n.body, // legacy alias
     type: n.type,
     category: n.category,
     priority: n.priority,

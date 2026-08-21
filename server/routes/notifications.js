@@ -6,6 +6,7 @@ import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError, findUserByEmail } from '../lib/access.js';
 import { CATEGORIES } from '../lib/notifications/catalog.js';
 import { mapOut } from '../lib/notifications/dispatcher.js';
+import { localeOf } from '../lib/locale.js';
 import { emitNotification, emitUnreadCount, emitNotificationUpdate } from '../lib/notifications/realtime.js';
 
 const router = Router();
@@ -66,7 +67,7 @@ router.get('/', asyncHandler(async (req, res) => {
   res.set('X-Unread-Count', String(unread));
   res.set('X-Page', String(page));
   res.set('X-Has-More', String(skip + items.length < total));
-  res.json(items.map(mapOut));
+  res.json(items.map((n) => mapOut(n, { locale: localeOf(req) })));
 }));
 
 // ─── GET /api/notifications/unread ───────────────────────────────────────────
@@ -76,7 +77,7 @@ router.get('/unread', asyncHandler(async (req, res) => {
     where: { userId: req.user.id, isRead: false, isArchived: false },
     take: limit, orderBy: { createdAt: 'desc' },
   });
-  res.json(items.map(mapOut));
+  res.json(items.map((n) => mapOut(n, { locale: localeOf(req) })));
 }));
 
 // ─── GET /api/notifications/count ────────────────────────────────────────────
@@ -170,7 +171,7 @@ router.post('/', validate(createSchema), asyncHandler(async (req, res) => {
       channel: 'in_app', deliveryStatus: 'sent', sentAt: new Date(),
     },
   });
-  const out = mapOut(item);
+  const out = mapOut(item, { locale: localeOf(req) });
   emitNotification(target.id, out);
   await pushUnread(target.id);
   res.status(201).json(out);
@@ -187,7 +188,7 @@ async function ownedOr404(id, userId) {
 // GET /api/notifications/:id
 router.get('/:id', asyncHandler(async (req, res) => {
   const n = await ownedOr404(req.params.id, req.user.id);
-  res.json(mapOut(n));
+  res.json(mapOut(n, { locale: localeOf(req) }));
 }));
 
 // PATCH /api/notifications/:id/read  { is_read? } — defaults to marking read.
@@ -197,7 +198,7 @@ router.patch('/:id/read', validate(readSchema), asyncHandler(async (req, res) =>
   const item = await prisma.notification.update({ where: { id: n.id }, data: { isRead: req.body.is_read } });
   const unread = await pushUnread(req.user.id);
   emitNotificationUpdate(req.user.id, { action: 'read', id: n.id, is_read: item.isRead, unread });
-  res.json(mapOut(item));
+  res.json(mapOut(item, { locale: localeOf(req) }));
 }));
 
 // PATCH /api/notifications/:id/archive  { is_archived? } — defaults to archiving.
@@ -207,7 +208,7 @@ router.patch('/:id/archive', validate(archiveSchema), asyncHandler(async (req, r
   const item = await prisma.notification.update({ where: { id: n.id }, data: { isArchived: req.body.is_archived } });
   const unread = await pushUnread(req.user.id);
   emitNotificationUpdate(req.user.id, { action: 'archive', id: n.id, is_archived: item.isArchived, unread });
-  res.json(mapOut(item));
+  res.json(mapOut(item, { locale: localeOf(req) }));
 }));
 
 // PATCH /api/notifications/:id — legacy path: update read/archive state.
@@ -223,7 +224,7 @@ router.patch('/:id', validate(patchSchema), asyncHandler(async (req, res) => {
   const item = await prisma.notification.update({ where: { id: n.id }, data });
   const unread = await pushUnread(req.user.id);
   emitNotificationUpdate(req.user.id, { action: 'update', id: n.id, unread });
-  res.json(mapOut(item));
+  res.json(mapOut(item, { locale: localeOf(req) }));
 }));
 
 // DELETE /api/notifications/:id

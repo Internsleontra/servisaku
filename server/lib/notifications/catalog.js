@@ -17,6 +17,8 @@
 // Keep this file free of side effects: it only describes notifications.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { CATALOG_MS } from './catalog.ms.js';
+
 export const CATEGORIES = [
   'bookings', 'jobs', 'payments', 'wallet',
   'promotions', 'support', 'security', 'reviews', 'system',
@@ -665,11 +667,30 @@ export const CATALOG = {
 const call = (v, d) => (typeof v === 'function' ? v(d) : v);
 
 /**
+ * Localized title/message for an event.
+ *
+ * catalog.js stays the single source of behaviour; CATALOG_MS carries only the
+ * Malay strings. A missing Malay entry, a missing slot, or an empty result all
+ * fall back to English — a notification is never rendered blank because a
+ * translation was not written.
+ */
+function localizedText(event, def, data, locale) {
+  const en = { title: call(def.title, data), message: call(def.message, data) };
+  if (locale !== 'ms') return en;
+  const m = CATALOG_MS[event];
+  if (!m) return en;
+  return {
+    title: call(m.title, data) || en.title,
+    message: call(m.message, data) || en.message,
+  };
+}
+
+/**
  * Render a catalog event into a concrete, deliverable notification payload.
  * Unknown events fall back to a generic system notification so a missing catalog
  * entry never crashes a lifecycle hook.
  */
-export function renderEvent(event, data = {}) {
+export function renderEvent(event, data = {}, locale = 'en') {
   const def = CATALOG[event];
   if (!def) {
     return {
@@ -681,14 +702,15 @@ export function renderEvent(event, data = {}) {
       channels: ['in_app'], emailSubject: null, smsBody: null,
     };
   }
+  const text = localizedText(event, def, data, locale);
   return {
     event,
     category: def.category,
     priority: def.priority || 'normal',
     icon: def.icon || '🔔',
     role: def.role || data.role || 'consumer',
-    title: call(def.title, data),
-    message: call(def.message, data),
+    title: text.title,
+    message: text.message,
     actionUrl: def.actionUrl ? call(def.actionUrl, data) : null,
     ctaLabel: def.ctaLabel || null,
     channels: def.channels || ['in_app'],
