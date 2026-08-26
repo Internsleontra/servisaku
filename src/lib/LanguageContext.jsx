@@ -13,11 +13,13 @@ const IS_PARTNER = import.meta.env.VITE_APP === 'partner';
 
 // Languages the dictionary actually carries. Anything else falls back to the
 // default rather than leaving the UI in a language we cannot render.
-export const SUPPORTED_LANGS = IS_PARTNER ? ['en'] : ['ms', 'en'];
+// English first: this is the order a language switcher renders.
+export const SUPPORTED_LANGS = IS_PARTNER ? ['en'] : ['en', 'ms'];
 
-// ServisAku is a Malaysian marketplace, so Bahasa Malaysia is the default for
-// anyone who has not chosen otherwise. A stored preference always wins.
-export const DEFAULT_LANG = IS_PARTNER ? 'en' : 'ms';
+// English for anyone who has not chosen otherwise, in both apps. A stored
+// preference always wins, and the full Bahasa Malaysia translation stays
+// available on the consumer app through the language switcher.
+export const DEFAULT_LANG = 'en';
 
 // Exported so the API client can read the same key rather than repeating the
 // literal — the request layer is not a component and cannot use the context.

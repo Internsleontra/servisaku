@@ -136,8 +136,10 @@ describe('language defaults [wiring]', () => {
 
   test('partner is pinned to English at compile time', () => {
     assert.match(ctx, /VITE_APP === 'partner'/);
-    assert.match(ctx, /SUPPORTED_LANGS = IS_PARTNER \? \['en'\] : \['ms', 'en'\]/);
-    assert.match(ctx, /DEFAULT_LANG = IS_PARTNER \? 'en' : 'ms'/);
+    assert.match(ctx, /SUPPORTED_LANGS = IS_PARTNER \? \['en'\] : \['en', 'ms'\]/);
+    // English is the default in BOTH apps; Malay stays reachable on the consumer
+    // app through the switcher, and is not in the partner supported set at all.
+    assert.match(ctx, /DEFAULT_LANG = 'en'/);
   });
 
   test("partner's supported set excludes ms, so a stored preference is coerced away", () => {
