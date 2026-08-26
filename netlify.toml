@@ -40,14 +40,14 @@
 # Replace the host below with the deployed backend origin (no trailing slash).
 [[redirects]]
   from = "/api/*"
-  to = "https://api.servisaku.my/api/:splat"
+  to = "https://servisaku-staging-api.onrender.com/api/:splat"
   status = 200
   force = true
 
 # Socket.IO (real-time notifications) negotiates over HTTP before upgrading.
 [[redirects]]
   from = "/socket.io/*"
-  to = "https://api.servisaku.my/socket.io/:splat"
+  to = "https://servisaku-staging-api.onrender.com/socket.io/:splat"
   status = 200
   force = true
 

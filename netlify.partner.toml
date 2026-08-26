@@ -24,13 +24,13 @@
 # caller's role, so there is nothing partner-specific to route differently.
 [[redirects]]
   from = "/api/*"
-  to = "https://api.servisaku.my/api/:splat"
+  to = "https://servisaku-staging-api.onrender.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/socket.io/*"
-  to = "https://api.servisaku.my/socket.io/:splat"
+  to = "https://servisaku-staging-api.onrender.com/socket.io/:splat"
   status = 200
   force = true
 
