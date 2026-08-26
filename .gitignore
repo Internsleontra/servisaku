@@ -58,3 +58,6 @@ __pycache__/
 .venv/
 .coverage
 htmlcov/
+
+# Netlify CLI build state — machine-local, contains absolute paths
+.netlify/
